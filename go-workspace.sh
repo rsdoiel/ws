@@ -5,4 +5,4 @@ if [ "$GOROOT" = "" ]; then
     exit 1
 fi
 echo "Found Golang, setting workspace to $(pwd)"
-export GOPATH=$(pwd)
+export GOPATH=$(pwd)/../..
