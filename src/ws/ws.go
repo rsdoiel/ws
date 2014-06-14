@@ -28,7 +28,7 @@ type Profile struct {
 	Key	 string
 }
 
-func LoadProfile(cli_docroot string, cli_port int) (*Profile, error) {
+func LoadProfile(cli_docroot string, cli_port int, cli_cert string, cli_key string) (*Profile, error) {
 	ws_user, user_error := user.Current()
 	if user_error != nil {
 		return nil, user_error
@@ -76,6 +76,12 @@ func LoadProfile(cli_docroot string, cli_port int) (*Profile, error) {
     }
     if cli_port != 0 {
         port = strconv.Itoa(cli_port)
+    }
+    if cli_cert != "" {
+        cert = cli_cert
+    }
+    if cli_key != "" {
+        key = cli_key
     }
 
 	return &Profile{
@@ -137,9 +143,12 @@ func init() {
 func main() {
     cli_docroot := flag.String("docroot", "", "Path to the docment root")
     cli_port := flag.Int("port", 0, "Port number to listen on")
-	flag.Parse()
+    cli_cert := flag.String("cert", "", "Path to your SSL cert.pem")
+    cli_key  := flag.String("key", "", "Path to your SSL key.pem")
 
-	ws_user, _ := LoadProfile(*cli_docroot, *cli_port)
+    flag.Parse()
+
+	ws_user, _ := LoadProfile(*cli_docroot, *cli_port, *cli_cert, *cli_key)
 	err := ssl_webserver(ws_user)
 	if err != nil {
 		log.Fatal(err)
