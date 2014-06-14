@@ -7,5 +7,10 @@
 4. go build
 5. If everything builds OK
     - go install
-6. If necessary symlink $GOPATH/bin/ws to someplace in your path.
+6. cd extra
+7. go build
+8. If everything OK
+    - mv ws-gencert $GOPATH/bin
+
+Your runable binaries should be in $GOPATH/bin.
 
