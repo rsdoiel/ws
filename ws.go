@@ -1,6 +1,7 @@
 /**
- * ws.go - A simple ad-hoc web server like httpster but providing TLS
- * support by default.
+ * ws.go - A light weight webserver for static content development.
+ * Supports both http and https protocols.
+ *
  * @author R. S. Doiel, <rsdoiel@yahoo.com>
  * copyright (c) 2014
  * Released under the BSD 2-Clause License
@@ -23,12 +24,13 @@ type Profile struct {
 	Username string
 	Hostname string
 	Port     string
+    Use_TLS  bool
     Docroot  string
 	Cert	 string
-	Key	 string
+	Key      string
 }
 
-func LoadProfile(cli_docroot string, cli_port int, cli_cert string, cli_key string) (*Profile, error) {
+func LoadProfile(cli_docroot string, cli_port int, cli_use_tls bool, cli_cert string, cli_key string) (*Profile, error) {
 	ws_user, user_error := user.Current()
 	if user_error != nil {
 		return nil, user_error
@@ -37,6 +39,9 @@ func LoadProfile(cli_docroot string, cli_port int, cli_cert string, cli_key stri
 	if hostname_error != nil {
 		return nil, hostname_error
 	}
+	port := "8000"
+    use_tls := false
+    
 	cert, err := ConfigPathTo("cert.pem")
 	if err != nil {
 		return nil, err
@@ -45,18 +50,22 @@ func LoadProfile(cli_docroot string, cli_port int, cli_cert string, cli_key stri
 	if err != nil {
 		return nil, err
 	}
-	port := "8443"
     docroot := "./"
 
 	// now overwrite with any environment settings found. 
 	env_host := os.Getenv("WS_HOST")
 	env_port := os.Getenv("WS_PORT")
+    env_use_tls := os.Getenv("WS_TLS")
 	env_cert := os.Getenv("WS_CERT")
 	env_key := os.Getenv("WS_KEY")
     env_docroot := os.Getenv("WS_DOCROOT")
 	if env_host != "" {
 		hostname = env_host
 	}
+    if env_use_tls == "true" {
+        use_tls = true
+        port = "8443"
+    }
 	if env_port != "" {
 		port = env_port
 	}
@@ -74,6 +83,12 @@ func LoadProfile(cli_docroot string, cli_port int, cli_cert string, cli_key stri
     if cli_docroot != "" {
         docroot = cli_docroot
     }
+    if cli_use_tls == true {
+        use_tls = true;
+        if env_port == "" {
+            port = "8443"
+        }
+    }
     if cli_port != 0 {
         port = strconv.Itoa(cli_port)
     }
@@ -89,6 +104,7 @@ func LoadProfile(cli_docroot string, cli_port int, cli_cert string, cli_key stri
 		Hostname: hostname,
 		Port:     port,
         Docroot:  docroot,
+        Use_TLS:  use_tls,
 		Cert: 	  cert,
 		Key:      key}, nil
 }
@@ -100,12 +116,20 @@ func Log(handler http.Handler) http.Handler {
 }
 
 
-func ssl_webserver(profile *Profile) error {
+func webserver(profile *Profile) error {
     // Define a simple static file server
     http.Handle("/", http.FileServer(http.Dir(profile.Docroot)))
+    
+    if (profile.Use_TLS == false) {
+        log.Printf("\n Docroot:   %s\n    Port:   %s\n" +
+                   "  Run as:   %s\n\n",
+                    profile.Docroot, profile.Port,
+                    profile.Username)
+        log.Println("Starting http://" + net.JoinHostPort(profile.Hostname, profile.Port))
 
-	// NOTE: we ONLY supports https protocol to limit leaking data 
-    // over wireless and other exposed networks
+        // Now start up the server and log transactions
+        return http.ListenAndServe(net.JoinHostPort(profile.Hostname, profile.Port), Log(http.DefaultServeMux))
+    }
     log.Printf("\n    Cert:   %s\n     Key:   %s\n" + 
                " Docroot:   %s\n    Port:   %s\n" +
 	           "  Run as:   %s\n\n",
@@ -141,6 +165,7 @@ func init() {
 }
 
 func main() {
+    cli_use_tls := flag.Bool("tls", false, "Turn on TLS (https) support with true, off with false (default is false)")
     cli_docroot := flag.String("docroot", "", "Path to the docment root")
     cli_port := flag.Int("port", 0, "Port number to listen on")
     cli_cert := flag.String("cert", "", "Path to your TLS cert.pem")
@@ -148,8 +173,8 @@ func main() {
 
     flag.Parse()
 
-	ws_user, _ := LoadProfile(*cli_docroot, *cli_port, *cli_cert, *cli_key)
-	err := ssl_webserver(ws_user)
+	ws_user, _ := LoadProfile(*cli_docroot, *cli_port, *cli_use_tls, *cli_cert, *cli_key)
+	err := webserver(ws_user)
 	if err != nil {
 		log.Fatal(err)
 	}
