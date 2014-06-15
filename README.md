@@ -1,12 +1,12 @@
 ws
 ==
 
-A light weight static web server suitable for development settings.
+A light weight SSL webserver suitable for static web development
 
 # USAGE
 
-Make sure _ws_ is your path. Make sure your know where your *cert.pem"
-and *key.pem* files are located. By default _ws_ looks in $HOME/etc.
+Make sure _ws_ is your path. Make sure your know where your *cert.pem*
+and *key.pem* files are located. By default _ws_ looks in *$HOME/etc/ws*.
 Pick an open port you have access to (by default the port is 8443).
 Invoke the command _ws_ in a shell.
 
@@ -19,6 +19,6 @@ on port 8007.
     ws -cert=/etc/my-cert.pem -key=/etc/my-key.pem -docroot=/www -port=8007
 ```
 
-Now point your web browser at [https://localhost:8007](https://localhost:8007). This is a SSL based webserver so you need to use the https protocol in your URL.
+Now point your web browser at [https://localhost:8007](https://localhost:8007). This is a SSL based webserver. You need to use the **https** protocol in your URL.
 
 
