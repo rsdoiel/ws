@@ -120,7 +120,7 @@ func ssl_webserver(profile *Profile) error {
 
 func ConfigPath() (string, error) {
 	home := os.Getenv("HOME")
-	config_path := home + "/etc"
+	config_path := home + "/etc/ws"
 	err := os.MkdirAll(config_path, 0700)
 	if err != nil {
 		return "", err
