@@ -112,7 +112,7 @@ func ssl_webserver(profile *Profile) error {
                 profile.Cert, profile.Key,
                 profile.Docroot, profile.Port,
                 profile.Username)
-	log.Println("Starting " + net.JoinHostPort(profile.Hostname, profile.Port))
+	log.Println("Starting https://" + net.JoinHostPort(profile.Hostname, profile.Port))
 
     // Now start up the server and log transactions
 	return http.ListenAndServeTLS(net.JoinHostPort(profile.Hostname, profile.Port), profile.Cert, profile.Key, Log(http.DefaultServeMux))
