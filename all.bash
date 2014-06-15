@@ -1,5 +1,6 @@
 #!/bin/bash
 CWD=$(pwd)
+mkdir -p $GOPATH/bin
 go build ws.go
 if [ -f ws ]; then
    mv ws $GOPATH/bin/
