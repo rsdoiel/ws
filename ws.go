@@ -1,5 +1,5 @@
 /**
- * ws.go - A simple ad-hoc web server like httpster but providing SSL
+ * ws.go - A simple ad-hoc web server like httpster but providing TLS
  * support by default.
  * @author R. S. Doiel, <rsdoiel@yahoo.com>
  * copyright (c) 2014
@@ -143,8 +143,8 @@ func init() {
 func main() {
     cli_docroot := flag.String("docroot", "", "Path to the docment root")
     cli_port := flag.Int("port", 0, "Port number to listen on")
-    cli_cert := flag.String("cert", "", "Path to your SSL cert.pem")
-    cli_key  := flag.String("key", "", "Path to your SSL key.pem")
+    cli_cert := flag.String("cert", "", "Path to your TLS cert.pem")
+    cli_key  := flag.String("key", "", "Path to your TLS key.pem")
 
     flag.Parse()
 
