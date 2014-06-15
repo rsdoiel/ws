@@ -1,6 +1,6 @@
 #!/bin/bash
 CWD=$(pwd)
-go build
+go build ws.go
 if [ -f ws ]; then
    mv ws $GOPATH/bin/
 else
@@ -8,8 +8,8 @@ else
    exit 1
 fi
 cd extra
-go build
-if [ -f ws-genecert ]; then
+go build ws-gencert.go
+if [ -f ws-gencert ]; then
 mv ws-gencert $GOPATH/bin/
 else
     echo "Something went wrong building ws-gencert."
