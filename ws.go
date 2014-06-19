@@ -20,6 +20,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"regexp"
 )
 
 type Profile struct {
@@ -123,21 +124,21 @@ func webserver(profile *Profile) error {
 	//http.Handle("/", http.FileServer(http.Dir(profile.Docroot)))
 
         // Restricted FileService excluding dot files and directories
-        http.HandleFunc("/", func(w http.ResponseWritter, r *http.Request) {
+        http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		var hasDotPath = regexp.MustCompile(`\/\.`)
 		unclean_path := r.URL.Path
 		if strings.HasPrefix(unclean_path, "/") {
-			unclean_path = '/' + unclean_path
+			unclean_path = "/" + unclean_path
 		}
 		clean_path := path.Clean(unclean_path)
 		r.URL.Path = clean_path
 		resolved_path := path.Clean(path.Join(profile.Docroot, clean_path))
 		if hasDotPath.MatchString(clean_path) {
 			log.Printf("Not Authorized (401) %s\n", clean_path)
-			http.Error("Not Authorized", 401)
+			http.Error(w, "Not Authorized", 401)
 		} else if strings.HasPrefix(resolved_path, profile.Docroot) == false {
 			log.Printf("Not Found (404) %s\n", resolved_path)
-			http.Notfound()
+			http.NotFound(w, r)
 		} else {
 			http.ServeFile(w, r, resolved_path)
 		}
