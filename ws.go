@@ -127,7 +127,7 @@ func webserver(profile *Profile) error {
         http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		var hasDotPath = regexp.MustCompile(`\/\.`)
 		unclean_path := r.URL.Path
-		if strings.HasPrefix(unclean_path, "/") {
+		if !strings.HasPrefix(unclean_path, "/") {
 			unclean_path = "/" + unclean_path
 		}
 		clean_path := path.Clean(unclean_path)
