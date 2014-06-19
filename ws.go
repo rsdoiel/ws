@@ -21,7 +21,16 @@ import (
 	"strings"
 	"time"
 	"regexp"
+	"errors"
+	"fmt"
 )
+
+var ErrHelp = errors.New("flag: Help requested")
+
+var Usage = func() {
+	fmt.Fprintf(os.Stderr, "Usage of %s\n", os.Args[0])
+	flag.PrintDefaults()
+}
 
 type Profile struct {
 	Username string
