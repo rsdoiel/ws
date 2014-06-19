@@ -3,7 +3,7 @@ ws
 
 A light weight webserver suitable for static web content development. 
 
-*ws* supports basic _http_ and _https_ (via TLS) protocols.  It does not support _SPDY_ or _http2_ protocols. It doesn not support PHP, Perl, Python, etc. It is a static content webserver.
+*ws* supports basic _http_ and _https_ (via TLS) protocols.  It does not support _SPDY_ or _http2_ protocols. It does not support PHP, Perl, Python, etc. It is a static content webserver.
 
 # USAGE
 
