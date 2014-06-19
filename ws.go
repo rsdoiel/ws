@@ -9,7 +9,9 @@
 package main
 
 import (
+	"errors"
 	"flag"
+	"fmt"
 	"log"
 	"math/rand"
 	"net"
@@ -17,12 +19,19 @@ import (
 	"os"
 	"os/user"
 	"path"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
-	"regexp"
-	"errors"
-	"fmt"
+)
+
+// command line parameters that override environment variables
+var (
+	cli_use_tls = flag.Bool("tls", false, "Turn on TLS (https) support with true, off with false (default is false)")
+	cli_docroot = flag.String("docroot", "", "Path to the docment root")
+	cli_port = flag.Int("port", 0, "Port number to listen on")
+	cli_cert = flag.String("cert", "", "Path to your TLS cert.pem")
+	cli_key = flag.String("key", "", "Path to your TLS key.pem")
 )
 
 var ErrHelp = errors.New("flag: Help requested")
@@ -32,6 +41,8 @@ var Usage = func() {
 	flag.PrintDefaults()
 }
 
+// Application's profile - who started the process, port assignment
+// configuration settings, etc.
 type Profile struct {
 	Username string
 	Hostname string
@@ -43,13 +54,13 @@ type Profile struct {
 }
 
 func LoadProfile(cli_docroot string, cli_port int, cli_use_tls bool, cli_cert string, cli_key string) (*Profile, error) {
-	ws_user, user_error := user.Current()
-	if user_error != nil {
-		return nil, user_error
+	ws_user, err := user.Current()
+	if err != nil {
+		return nil, err
 	}
-	hostname, hostname_error := os.Hostname()
-	if hostname_error != nil {
-		return nil, hostname_error
+	hostname, err := os.Hostname()
+	if err != nil {
+		return nil, err
 	}
 	port := "8000"
 	use_tls := false
@@ -132,8 +143,8 @@ func webserver(profile *Profile) error {
 	// Define a simple static file server
 	//http.Handle("/", http.FileServer(http.Dir(profile.Docroot)))
 
-        // Restricted FileService excluding dot files and directories
-        http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+	// Restricted FileService excluding dot files and directories
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		var hasDotPath = regexp.MustCompile(`\/\.`)
 		unclean_path := r.URL.Path
 		if !strings.HasPrefix(unclean_path, "/") {
@@ -145,7 +156,7 @@ func webserver(profile *Profile) error {
 		if hasDotPath.MatchString(clean_path) {
 			log.Printf("Not Authorized (401) %s\n", clean_path)
 			http.Error(w, "Not Authorized", 401)
-		} else if strings.HasPrefix(resolved_path, profile.Docroot) == false {
+		} else if !strings.HasPrefix(resolved_path, profile.Docroot) {
 			log.Printf("Not Found (404) %s\n", resolved_path)
 			http.NotFound(w, r)
 		} else {
@@ -198,16 +209,10 @@ func init() {
 }
 
 func main() {
-	cli_use_tls := flag.Bool("tls", false, "Turn on TLS (https) support with true, off with false (default is false)")
-	cli_docroot := flag.String("docroot", "", "Path to the docment root")
-	cli_port := flag.Int("port", 0, "Port number to listen on")
-	cli_cert := flag.String("cert", "", "Path to your TLS cert.pem")
-	cli_key := flag.String("key", "", "Path to your TLS key.pem")
-
 	flag.Parse()
 
-	ws_user, _ := LoadProfile(*cli_docroot, *cli_port, *cli_use_tls, *cli_cert, *cli_key)
-	err := webserver(ws_user)
+	profile, _ := LoadProfile(*cli_docroot, *cli_port, *cli_use_tls, *cli_cert, *cli_key)
+	err := webserver(profile)
 	if err != nil {
 		log.Fatal(err)
 	}
