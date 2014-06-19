@@ -10,23 +10,25 @@ package main
 
 import (
 	"flag"
+	"log"
 	"math/rand"
-	"os"
-	"os/user"
-	"time"
-    "strconv"
 	"net"
 	"net/http"
-	"log"
+	"os"
+	"os/user"
+	"path"
+	"strconv"
+	"strings"
+	"time"
 )
 
 type Profile struct {
 	Username string
 	Hostname string
 	Port     string
-    Use_TLS  bool
-    Docroot  string
-	Cert	 string
+	Use_TLS  bool
+	Docroot  string
+	Cert     string
 	Key      string
 }
 
@@ -40,8 +42,8 @@ func LoadProfile(cli_docroot string, cli_port int, cli_use_tls bool, cli_cert st
 		return nil, hostname_error
 	}
 	port := "8000"
-    use_tls := false
-    
+	use_tls := false
+
 	cert, err := ConfigPathTo("cert.pem")
 	if err != nil {
 		return nil, err
@@ -50,28 +52,28 @@ func LoadProfile(cli_docroot string, cli_port int, cli_use_tls bool, cli_cert st
 	if err != nil {
 		return nil, err
 	}
-    docroot := "./"
+	docroot, _ := os.Getwd()
 
-	// now overwrite with any environment settings found. 
+	// now overwrite with any environment settings found.
 	env_host := os.Getenv("WS_HOST")
 	env_port := os.Getenv("WS_PORT")
-    env_use_tls := os.Getenv("WS_TLS")
+	env_use_tls := os.Getenv("WS_TLS")
 	env_cert := os.Getenv("WS_CERT")
 	env_key := os.Getenv("WS_KEY")
-    env_docroot := os.Getenv("WS_DOCROOT")
+	env_docroot := os.Getenv("WS_DOCROOT")
 	if env_host != "" {
 		hostname = env_host
 	}
-    if env_use_tls == "true" {
-        use_tls = true
-        port = "8443"
-    }
+	if env_use_tls == "true" {
+		use_tls = true
+		port = "8443"
+	}
 	if env_port != "" {
 		port = env_port
 	}
-    if env_docroot != "" {
-        docroot = env_docroot
-    }
+	if env_docroot != "" {
+		docroot = env_docroot
+	}
 	if env_cert != "" {
 		cert = env_cert
 	}
@@ -79,66 +81,87 @@ func LoadProfile(cli_docroot string, cli_port int, cli_use_tls bool, cli_cert st
 		key = env_key
 	}
 
-    // Finally resolve any command line overrides
-    if cli_docroot != "" {
-        docroot = cli_docroot
-    }
-    if cli_use_tls == true {
-        use_tls = true;
-        if env_port == "" {
-            port = "8443"
-        }
-    }
-    if cli_port != 0 {
-        port = strconv.Itoa(cli_port)
-    }
-    if cli_cert != "" {
-        cert = cli_cert
-    }
-    if cli_key != "" {
-        key = cli_key
-    }
+	// Finally resolve any command line overrides
+	if cli_docroot != "" {
+		docroot = cli_docroot
+	}
+	if cli_use_tls == true {
+		use_tls = true
+		if env_port == "" {
+			port = "8443"
+		}
+	}
+	if cli_port != 0 {
+		port = strconv.Itoa(cli_port)
+	}
+	if cli_cert != "" {
+		cert = cli_cert
+	}
+	if cli_key != "" {
+		key = cli_key
+	}
 
 	return &Profile{
 		Username: ws_user.Username,
 		Hostname: hostname,
 		Port:     port,
-        Docroot:  docroot,
-        Use_TLS:  use_tls,
-		Cert: 	  cert,
+		Docroot:  path.Join(docroot),
+		Use_TLS:  use_tls,
+		Cert:     cert,
 		Key:      key}, nil
 }
 
 func Log(handler http.Handler) http.Handler {
-    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-        log.Printf("%s %s %s\n", r.RemoteAddr, r.Method, r.URL)
-        handler.ServeHTTP(w, r)})
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		log.Printf("%s %s %s\n", r.RemoteAddr, r.Method, r.URL)
+		handler.ServeHTTP(w, r)
+	})
 }
 
-
 func webserver(profile *Profile) error {
-    // Define a simple static file server
-    http.Handle("/", http.FileServer(http.Dir(profile.Docroot)))
-    
-    if (profile.Use_TLS == false) {
-        log.Printf("\n Docroot:   %s\n    Port:   %s\n" +
-                   "  Run as:   %s\n\n",
-                    profile.Docroot, profile.Port,
-                    profile.Username)
-        log.Println("Starting http://" + net.JoinHostPort(profile.Hostname, profile.Port))
+	// Define a simple static file server
+	//http.Handle("/", http.FileServer(http.Dir(profile.Docroot)))
 
-        // Now start up the server and log transactions
-        return http.ListenAndServe(net.JoinHostPort(profile.Hostname, profile.Port), Log(http.DefaultServeMux))
-    }
-    log.Printf("\n    Cert:   %s\n     Key:   %s\n" + 
-               " Docroot:   %s\n    Port:   %s\n" +
-	           "  Run as:   %s\n\n",
-                profile.Cert, profile.Key,
-                profile.Docroot, profile.Port,
-                profile.Username)
+        // Restricted FileService excluding dot files and directories
+        http.HandleFunc("/", func(w http.ResponseWritter, r *http.Request) {
+		var hasDotPath = regexp.MustCompile(`\/\.`)
+		unclean_path := r.URL.Path
+		if strings.HasPrefix(unclean_path, "/") {
+			unclean_path = '/' + unclean_path
+		}
+		clean_path := path.Clean(unclean_path)
+		r.URL.Path = clean_path
+		resolved_path := path.Clean(path.Join(profile.Docroot, clean_path))
+		if hasDotPath.MatchString(clean_path) {
+			log.Printf("Not Authorized (401) %s\n", clean_path)
+			http.Error("Not Authorized", 401)
+		} else if strings.HasPrefix(resolved_path, profile.Docroot) == false {
+			log.Printf("Not Found (404) %s\n", resolved_path)
+			http.Notfound()
+		} else {
+			http.ServeFile(w, r, resolved_path)
+		}
+	})
+
+	if profile.Use_TLS == false {
+		log.Printf("\n Docroot:   %s\n    Port:   %s\n"+
+			"  Run as:   %s\n\n",
+			profile.Docroot, profile.Port,
+			profile.Username)
+		log.Println("Starting http://" + net.JoinHostPort(profile.Hostname, profile.Port))
+
+		// Now start up the server and log transactions
+		return http.ListenAndServe(net.JoinHostPort(profile.Hostname, profile.Port), Log(http.DefaultServeMux))
+	}
+	log.Printf("\n    Cert:   %s\n     Key:   %s\n"+
+		" Docroot:   %s\n    Port:   %s\n"+
+		"  Run as:   %s\n\n",
+		profile.Cert, profile.Key,
+		profile.Docroot, profile.Port,
+		profile.Username)
 	log.Println("Starting https://" + net.JoinHostPort(profile.Hostname, profile.Port))
 
-    // Now start up the server and log transactions
+	// Now start up the server and log transactions
 	return http.ListenAndServeTLS(net.JoinHostPort(profile.Hostname, profile.Port), profile.Cert, profile.Key, Log(http.DefaultServeMux))
 }
 
@@ -165,13 +188,13 @@ func init() {
 }
 
 func main() {
-    cli_use_tls := flag.Bool("tls", false, "Turn on TLS (https) support with true, off with false (default is false)")
-    cli_docroot := flag.String("docroot", "", "Path to the docment root")
-    cli_port := flag.Int("port", 0, "Port number to listen on")
-    cli_cert := flag.String("cert", "", "Path to your TLS cert.pem")
-    cli_key  := flag.String("key", "", "Path to your TLS key.pem")
+	cli_use_tls := flag.Bool("tls", false, "Turn on TLS (https) support with true, off with false (default is false)")
+	cli_docroot := flag.String("docroot", "", "Path to the docment root")
+	cli_port := flag.Int("port", 0, "Port number to listen on")
+	cli_cert := flag.String("cert", "", "Path to your TLS cert.pem")
+	cli_key := flag.String("key", "", "Path to your TLS key.pem")
 
-    flag.Parse()
+	flag.Parse()
 
 	ws_user, _ := LoadProfile(*cli_docroot, *cli_port, *cli_use_tls, *cli_cert, *cli_key)
 	err := webserver(ws_user)
