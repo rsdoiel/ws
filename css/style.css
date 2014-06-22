@@ -27,8 +27,17 @@ header {
     margin-left: 0.25em;
     margin-right: 0.25em;
     text-align: center;
-    color: #85CD00;
+    color: #3d5c04;
     background-color: #B6FF00;
+}
+
+header a:link, header a:active, header a:visited {
+    color: #3d5c04;
+}
+
+header a:focus, header a:hover {
+    color: #6ba207;
+    outline:thin dotted;
 }
 
 section {
