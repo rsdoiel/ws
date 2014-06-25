@@ -3,32 +3,43 @@ ws
 
 A light weight webserver suitable for static web content development. 
 
-*ws* supports basic _http_ and _https_ (via TLS) protocols.  It does not support _SPDY_ or _http2_ protocols. It does not support PHP, Perl, Python, etc. It is a static content webserver.
+*ws* supports basic _http_ and _https_ (via TLS) protocols.  It does not 
+support _SPDY_ or _http2_ protocols. It does not support PHP, Perl, Python, 
+etc. It is a static content webserver.
 
 # USAGE
 
 ## http support
 
 Make sure _ws_ is your path. To run for basic _http_ service change to 
-the directory you wish to serve and type _ws_ at the command prompt. 
+the directory you wish to serve and type _ws_ at the command prompt. Example -
 
 ```shell
     cd public_html
     ws
 ```
 
-You see a stream of log information with the webserver starting and about
-any requests received. The default port is 8000.
+When _ws_ starts up you'll some configuration information and the URL that it 
+is listening for. Notice the default port is 8000 so you need to include that 
+part in your URL too. If your machine was named _example.local_ then you the URL 
+might look like "http://example.local:8000". Point your web browser at the URL 
+you see for your system.  When the web browser connections you should see a 
+stream of log information. The stream of text will continue as long as you 
+continue to have requests to the server until you shutdown _ws_. To shutdown
+_ws_ you can press the "ctrl" key and letter "c". This will kill the process
+and shutdown your web server.
 
-You can specity a different document root with the _-docroot_ option. Here
-is an example of telling _ws_ to use the */www* directory for the document
+You don't have to run _ws_ with the defaults.  You can specity a different 
+document root with the _-docroot_ option. Here is an example of telling _ws_ to 
+use the */www* directory for the document
 root.
 
 ```shell
     ws -docroot=/www
 ```
 
-You can also pass these setting via your operating system's environment. Here is an example of configuration the above setting in a Bash script.
+You can also pass these setting via your operating system's environment. Here is 
+an example of configuration the above setting in a Bash script.
 
 
 ```shell
@@ -111,9 +122,12 @@ of information.
 2. It needs to know where to find your  *key.pem*
 3. It needs to know to use TLS support.
 
-By default _ws_ will look for *cert.pem* and *key.pem* in your *$HOME/etc/ws* directory. You can specify alternate locations with the _-cert_ and _-key_ command line options or the _WS\_CERT_ and _WS\_KEY_ environment variables.
+By default _ws_ will look for *cert.pem* and *key.pem* in your *$HOME/etc/ws* 
+directory. You can specify alternate locations with the _-cert_ and _-key_ 
+command line options or the _WS\_CERT_ and _WS\_KEY_ environment variables.
 
-To turn _https_ support on you need the option _-tls=true_ or the environment variable _WS\_TLS_ set to "true".
+To turn _https_ support on you need the option _-tls=true_ or the environment 
+variable _WS\_TLS_ set to "true".
 
 ### Command line example
 
@@ -130,5 +144,7 @@ To turn _https_ support on you need the option _-tls=true_ or the environment va
     export WS_TLS=true
 ```
 
-If this was sourced in your login scripts then by default _ws_ will run as a _https_ server with the document root set to your
-current working directory for your current hostname on port 8443.
+If this was sourced in your login scripts then by default _ws_ will run as a 
+_https_ server with the document root set to your current working directory 
+for your current hostname on port 8443.
+
