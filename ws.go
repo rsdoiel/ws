@@ -19,7 +19,6 @@ import (
 	"fmt"
 	"log"
 	"math/big"
-	mrand "math/rand"
 	"net"
 	"net/http"
 	"os"
@@ -33,23 +32,23 @@ import (
 
 // variables for keygen
 var (
-    cli_keygen = flag.Bool("keygen", false, "Generate TLS ceriticates and keys")
-	cli_ssl_host      = flag.String("ssl-host", "", "Comma-separated hostnames and IPs to generate a certificate for")
-	validFrom = flag.String("start-date", "", "Creation date formatted as Jan 1 15:04:05 2011")
-	validFor  = flag.Duration("duration", 365*24*time.Hour, "Duration that certificate is valid for")
-    organization = flag.String("organization", "Acme Co.", "Origanization to sign certificate with")
-	isCA      = flag.Bool("ca", false, "whether this cert should be its own Certificate Authority")
-	rsaBits   = flag.Int("rsa-bits", 2048, "Size of RSA key to generate")
+	cli_keygen   = flag.Bool("keygen", false, "Generate TLS ceriticates and keys")
+	cli_ssl_host = flag.String("ssl-host", "", "Comma-separated hostnames and IPs to generate a certificate for")
+	validFrom    = flag.String("start-date", "", "Creation date formatted as Jan 1 15:04:05 2011")
+	validFor     = flag.Duration("duration", 365*24*time.Hour, "Duration that certificate is valid for")
+	organization = flag.String("organization", "Acme Co.", "Organization used to sign certificate")
+	isCA         = flag.Bool("ca", false, "whether this cert should be its own Certificate Authority")
+	rsaBits      = flag.Int("rsa-bits", 2048, "Size of RSA key to generate")
 )
 
 // command line parameters that override environment variables
 var (
 	cli_use_tls = flag.Bool("tls", false, "Turn on TLS (https) support with true, off with false (default is false)")
 	cli_docroot = flag.String("docroot", "", "Path to the document root")
-    cli_host    = flag.String("host", "", "Hostname http(s) server to listen for")
+	cli_host    = flag.String("host", "", "Hostname http(s) server to listen for")
 	cli_port    = flag.Int("port", 0, "Port number to listen on")
-	cli_cert    = flag.String("cert", "", "Filename to your TLS cert.pem")
-	cli_key     = flag.String("key", "", "Filename to your TLS key.pem")
+	cli_cert    = flag.String("cert", "", "Filename to your SSL cert.pem")
+	cli_key     = flag.String("key", "", "Filename to your SSL key.pem")
 )
 
 var ErrHelp = errors.New("flag: Help requested")
@@ -83,7 +82,7 @@ func LoadProfile(cli_docroot string, cli_host string, cli_port int, cli_use_tls 
 	port := "8000"
 	use_tls := false
 
-    // FIXME: before we return to fail to load on *.pem, check for alternate locations
+	// FIXME: before we return to fail to load on *.pem, check for alternate locations
 	cert, err := ConfigPathTo("cert.pem")
 	if err != nil {
 		return nil, err
@@ -131,9 +130,9 @@ func LoadProfile(cli_docroot string, cli_host string, cli_port int, cli_use_tls 
 			port = "8443"
 		}
 	}
-    if len(cli_host) != 0 {
-        hostname = cli_host
-    }
+	if len(cli_host) != 0 {
+		hostname = cli_host
+	}
 	if cli_port != 0 {
 		port = strconv.Itoa(cli_port)
 	}
@@ -185,10 +184,10 @@ func webserver(profile *Profile) error {
 
 	if profile.Use_TLS == false {
 		log.Printf("\n\n"+
-                   "  Docroot:   %s\n"+
-                   "     Host:   %s\n"+
-                   "     Port:   %s\n"+
-                   "   Run as:   %s\n\n",
+			"  Docroot:   %s\n"+
+			"     Host:   %s\n"+
+			"     Port:   %s\n"+
+			"   Run as:   %s\n\n",
 			profile.Docroot, profile.Hostname, profile.Port,
 			profile.Username)
 		log.Println("Starting http://" + net.JoinHostPort(profile.Hostname, profile.Port))
@@ -197,17 +196,17 @@ func webserver(profile *Profile) error {
 		return http.ListenAndServe(net.JoinHostPort(profile.Hostname, profile.Port), Log(http.DefaultServeMux))
 	}
 	log.Printf("\n\n"+
-               "    Cert:   %s\n"+
-               "     Key:   %s\n"+
-		       " Docroot:   %s\n"+
-               "    Host: %s\n"+
-               "    Port:   %s\n"+
-               "  Run as:   %s\n\n",
-		profile.Cert, 
-               profile.Key,
-		profile.Docroot, 
-               profile.Hostname,
-               profile.Port,
+		"    Cert:   %s\n"+
+		"     Key:   %s\n"+
+		" Docroot:   %s\n"+
+		"    Host:   %s\n"+
+		"    Port:   %s\n"+
+		"  Run as:   %s\n\n",
+		profile.Cert,
+		profile.Key,
+		profile.Docroot,
+		profile.Hostname,
+		profile.Port,
 		profile.Username)
 	log.Println("Starting https://" + net.JoinHostPort(profile.Hostname, profile.Port))
 
@@ -222,6 +221,7 @@ func ConfigPath() (string, error) {
 	if err != nil {
 		return "", err
 	}
+	log.Printf("Configuration files in %s\n", config_path)
 	return config_path, nil
 }
 
@@ -235,36 +235,36 @@ func ConfigPathTo(filename string) (string, error) {
 
 func keygen(profile *Profile) error {
 	certFilename := profile.Cert
-    if certFilename == "" {
-        log.Fatalln("Missing required -cert option")
-        os.Exit(1)
-    }
+	if certFilename == "" {
+		log.Fatalln("Missing required -cert option")
+		os.Exit(1)
+	}
 	keyFilename := profile.Key
-    if keyFilename == "" {
-        log.Fatalln("Missing required -key option")
-        os.Exit(1)
-    }
-
-    hostnames := profile.Hostname;
-    if *cli_ssl_host !=  "" {
-        hostnames = *cli_ssl_host
-    }
-	if hostnames == "" {
-		log.Fatalf("Missing required -ssl-host parameter")
-        os.Exit(1)
+	if keyFilename == "" {
+		log.Fatalln("Missing required -key option")
+		os.Exit(1)
 	}
 
-    log.Printf("\n\n"+
-               " Cert: %s\n"+
-               "  Key: %s\n"+
-               " Host: %s\n"+
-               " Organization: %v\n"+
-               "\n\n",
-               certFilename,
-               keyFilename,
-               hostnames,
-               *organization)
-    
+	hostnames := profile.Hostname
+	if *cli_ssl_host != "" {
+		hostnames = *cli_ssl_host
+	}
+	if hostnames == "" {
+		log.Fatalf("Missing required -ssl-host parameter")
+		os.Exit(1)
+	}
+
+	log.Printf("\n\n"+
+		" Cert: %s\n"+
+		"  Key: %s\n"+
+		" Host: %s\n"+
+		" Organization: %v\n"+
+		"\n\n",
+		certFilename,
+		keyFilename,
+		hostnames,
+		*organization)
+
 	priv, err := rsa.GenerateKey(rand.Reader, *rsaBits)
 	if err != nil {
 		log.Fatalf("failed to generate private key: %s", err)
@@ -278,7 +278,7 @@ func keygen(profile *Profile) error {
 		notBefore, err = time.Parse("Jan 2 15:04:05 2006", *validFrom)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Failed to parse creation date: %s\n", err)
-            return err
+			return err
 		}
 	}
 
@@ -340,27 +340,23 @@ func keygen(profile *Profile) error {
 	pem.Encode(keyOut, &pem.Block{Type: "RSA PRIVATE KEY", Bytes: x509.MarshalPKCS1PrivateKey(priv)})
 	keyOut.Close()
 	log.Printf("written %s\n", keyFilename)
-    // We got this for so no errors
-    return nil
-}
-
-func init() {
-	mrand.Seed(time.Now().Unix())
+	// We got this for so no errors
+	return nil
 }
 
 func main() {
 	flag.Parse()
 
 	profile, _ := LoadProfile(*cli_docroot, *cli_host, *cli_port, *cli_use_tls, *cli_cert, *cli_key)
-    if *cli_keygen == true {
-        err := keygen(profile)
-        if err != nil {
-            log.Fatalf("%s", err)
-            os.Exit(1)
-        }
-        os.Exit(0)
-    }
-    
+	if *cli_keygen == true {
+		err := keygen(profile)
+		if err != nil {
+			log.Fatalf("%s", err)
+			os.Exit(1)
+		}
+		os.Exit(0)
+	}
+
 	err := webserver(profile)
 	if err != nil {
 		log.Fatal(err)

@@ -1,9 +1,10 @@
 #!/bin/bash
 CWD=$(pwd)
 mkdir -p $GOPATH/bin
-go build ws.go
-if [ -f ws ]; then
-   mv ws $GOPATH/bin/
+GOBIN=$GOPATH/bin
+go install ws.go
+if [ -f $GOBIN/ws ]; then
+   echo "ws installed in $GOBIN"
 else
    echo "Something went wrong building ws."
    exit 1

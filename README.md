@@ -3,7 +3,7 @@ ws
 
 A light weight webserver suitable for static web content development. 
 
-*ws* supports basic _http_ and _https_ (via TLS) protocols.  It does not 
+*ws* supports basic _http_ and _https_ (SSL via TLS) protocols.  It does not 
 support _SPDY_ or _http2_ protocols. It does not support PHP, Perl, Python, 
 etc. It is a static content webserver.
 
@@ -120,7 +120,7 @@ of information.
 
 1. It needs to knows where to find your *cert.pem*
 2. It needs to know where to find your  *key.pem*
-3. It needs to know to use TLS support.
+3. It needs to know to use SSL/TLS support.
 
 By default _ws_ will look for *cert.pem* and *key.pem* in your *$HOME/etc/ws* 
 directory. You can specify alternate locations with the _-cert_ and _-key_ 

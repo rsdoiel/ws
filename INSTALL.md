@@ -7,6 +7,8 @@
 4. go build ws.go
 5. If everything builds OK
     - ./all.bash
+6. Generate your self-signed SSL cert if needed
+    - sudo ws -keygen
 
 Your runable binaries should be in $GOPATH/bin.
 
