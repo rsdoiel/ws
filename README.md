@@ -148,3 +148,14 @@ If this was sourced in your login scripts then by default _ws_ will run as a
 _https_ server with the document root set to your current working directory 
 for your current hostname on port 8443.
 
+### Generating TLS certificates and keys
+
+_ws_ comes with a *-keygen* option for generating self-signed certificates
+and keys.
+
+```SHELL
+    ws -keygen
+```
+
+This was create a *cert.pen* and *key.pem* files in *$HOME/etc/ws* directory.
+
