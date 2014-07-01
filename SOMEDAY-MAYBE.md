@@ -1,6 +1,7 @@
 
 # Someday, maybe
 
++ Add support for on the fly compression (gzip) of text/* content types
 + Is there a core set of APIs that would be easy to support for non-static content?
 	- examples (currently available)
 		+ Fargo integration with Dropbox
