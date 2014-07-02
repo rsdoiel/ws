@@ -70,7 +70,7 @@ type Profile struct {
 	Key      string
 }
 
-func LoadProfile(cli_docroot string, cli_host string, cli_port int, cli_use_tls bool, cli_cert string, cli_key string) (*Profile, error) {
+func loadProfile(cli_docroot string, cli_host string, cli_port int, cli_use_tls bool, cli_cert string, cli_key string) (*Profile, error) {
 	ws_user, err := user.Current()
 	if err != nil {
 		return nil, err
@@ -83,11 +83,11 @@ func LoadProfile(cli_docroot string, cli_host string, cli_port int, cli_use_tls 
 	use_tls := false
 
 	// FIXME: before we return to fail to load on *.pem, check for alternate locations
-	cert, err := ConfigPathTo("cert.pem")
+	cert, err := configPathTo("cert.pem")
 	if err != nil {
 		return nil, err
 	}
-	key, err := ConfigPathTo("key.pem")
+	key, err := configPathTo("key.pem")
 	if err != nil {
 		return nil, err
 	}
@@ -153,7 +153,7 @@ func LoadProfile(cli_docroot string, cli_host string, cli_port int, cli_use_tls 
 		Key:      key}, nil
 }
 
-func Log(handler http.Handler) http.Handler {
+func webserver_log(handler http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		log.Printf("%s %s %s\n", r.RemoteAddr, r.Method, r.URL)
 		handler.ServeHTTP(w, r)
@@ -193,7 +193,7 @@ func webserver(profile *Profile) error {
 		log.Println("Starting http://" + net.JoinHostPort(profile.Hostname, profile.Port))
 
 		// Now start up the server and log transactions
-		return http.ListenAndServe(net.JoinHostPort(profile.Hostname, profile.Port), Log(http.DefaultServeMux))
+		return http.ListenAndServe(net.JoinHostPort(profile.Hostname, profile.Port), webserver_log(http.DefaultServeMux))
 	}
 	log.Printf("\n\n"+
 		"    Cert:   %s\n"+
@@ -211,10 +211,10 @@ func webserver(profile *Profile) error {
 	log.Println("Starting https://" + net.JoinHostPort(profile.Hostname, profile.Port))
 
 	// Now start up the server and log transactions
-	return http.ListenAndServeTLS(net.JoinHostPort(profile.Hostname, profile.Port), profile.Cert, profile.Key, Log(http.DefaultServeMux))
+	return http.ListenAndServeTLS(net.JoinHostPort(profile.Hostname, profile.Port), profile.Cert, profile.Key, webserver_log(http.DefaultServeMux))
 }
 
-func ConfigPath() (string, error) {
+func configPath() (string, error) {
 	home := os.Getenv("HOME")
 	config_path := home + "/etc/ws"
 	err := os.MkdirAll(config_path, 0700)
@@ -225,8 +225,8 @@ func ConfigPath() (string, error) {
 	return config_path, nil
 }
 
-func ConfigPathTo(filename string) (string, error) {
-	ws_path, err := ConfigPath()
+func configPathTo(filename string) (string, error) {
+	ws_path, err := configPath()
 	if err != nil {
 		return "", err
 	}
@@ -347,7 +347,7 @@ func keygen(profile *Profile) error {
 func main() {
 	flag.Parse()
 
-	profile, _ := LoadProfile(*cli_docroot, *cli_host, *cli_port, *cli_use_tls, *cli_cert, *cli_key)
+	profile, _ := loadProfile(*cli_docroot, *cli_host, *cli_port, *cli_use_tls, *cli_cert, *cli_key)
 	if *cli_keygen == true {
 		err := keygen(profile)
 		if err != nil {
