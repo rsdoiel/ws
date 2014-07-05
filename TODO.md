@@ -6,4 +6,5 @@
 + add deb package support
 + add Mac ports package support
 + Make sure docs cover all command line options and environment settings
++ Implement Request and Response objects for ottoengine
 
