@@ -1,16 +1,19 @@
 /**
- * ws.go - A light weight webserver for static content development.
- * Supports both http and https protocols. Dynamic content is supported
- * through routes computed using the Otto JavaScript VM.
+ * ws.go - A light weight webserver for static content
+ * development and prototyping route based web API.
+ *
+ * Supports both http and https protocols. Dynamic route
+ * processing available via Otto JavaScript virtual machines.
  *
  * @author R. S. Doiel, <rsdoiel@yahoo.com>
  * copyright (c) 2014
- * Released under the BSD 2-Clause License
+ * All rights reserved.
+ * @license BSD 2-Clause License
  */
 package main
 
 import (
-	oe "./ottoengine"
+	"./ottoengine"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
@@ -186,17 +189,12 @@ func webserver_log(handler http.Handler) http.Handler {
 func Webserver(profile *Profile) error {
 	// If otto is enabled add routes and handle them.
 	if profile.Otto == true {
-		programs, err := oe.Load(profile.Otto_Path)
+		programs, err := ottoengine.Load(profile.Otto_Path)
 		if err != nil {
 			log.Printf("ERROR: %s\n", err)
 			os.Exit(1)
 		}
-		for route, program := range programs {
-			fmt.Printf("Creating route %s for %s\n", route, program.Path)
-			http.HandleFunc(route, func(w http.ResponseWriter, r *http.Request) {
-				oe.Engine(w, r, program)
-			})
-		}
+		ottoengine.AddRoutes(programs)
 	}
 
 	// Restricted FileService excluding dot files and directories

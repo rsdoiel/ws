@@ -1,13 +1,14 @@
 /**
- * ottoengine.go - this module defines wraps the Otto JS VM and allows support of
- * defining route handles in JavaScript for ws.go
+ * ottoengine.go - ottoengine module provides a way to define route processing using
+ * the Otto JavaScript virutal machine.
+ * Otto is written by Robert Krimen, see https://github.com/robertkrimen/otto
  */
 package ottoengine
 
 import (
 	"fmt"
-    "log"
-    "os"
+	"log"
+	"os"
 	"github.com/robertkrimen/otto"
 	"io/ioutil"
 	"net/http"
@@ -21,6 +22,7 @@ type Program struct {
 	Path   string
 	Source []byte
 	VM     *otto.Otto
+    Script *otto.Otto
 }
 
 func Load(root string) (map[string]Program, error) {
@@ -37,7 +39,18 @@ func Load(root string) (map[string]Program, error) {
 					return err
 				}
 				vm := otto.New()
-				programs[route] = Program{Route: route, Path: p, Source: source, VM: vm}
+                full_path, err := filepath.Abs(p)
+                if err != nil {
+                    fmt.Println(err)
+                    os.Exit(1)
+                }
+
+                script, err := vm.Compiled(full_path, source)
+                if err != nil {
+                    fmt.Println(err)
+                    os.Exit(1)
+                }
+				programs[route] = Program{Route: route, Path: p, Source: source, VM: vm, Script: script}
 			}
 		}
 		return nil
@@ -49,11 +62,23 @@ func Load(root string) (map[string]Program, error) {
 }
 
 func Engine(w http.ResponseWriter, r *http.Request, program Program) {
-	output, err := program.VM.Run(program.Source)
+    //FIXME: Need to handle setting appropriate http headers from Otto VM.
+	output, err := program.VM.Run(program.Script)
 	if err != nil {
-		fmt.Fprintf(w, "file: %s\nerror: %s\n", program.Path, err)
+        log.Printf("file %s: \nerror: %s\n", program.Path, err)
+        http.Error(w, "Internal Server Error", 500)
 		return
 	}
 	// This write the body, should really write headers and render into body, etc.
 	fmt.Fprintf(w, "%s\n", output)
 }
+
+func AddRoutes(programs map[string]Program) {
+	for route, program := range programs {
+		fmt.Printf("Creating route %s from %s\n", route, program.Path)
+		http.HandleFunc(route, func(w http.ResponseWriter, r *http.Request) {
+			Engine(w, r, program)
+		})
+	}
+}
+
