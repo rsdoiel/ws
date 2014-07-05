@@ -19,38 +19,40 @@ import (
 
 type Program struct {
 	Route  string
-	Path   string
+	Filename   string
 	Source []byte
 	VM     *otto.Otto
-    Script *otto.Otto
+    Script *otto.Script
 }
 
-func Load(root string) (map[string]Program, error) {
-	programs := make(map[string]Program)
-	err := filepath.Walk(root, func(p string, file_info os.FileInfo, err error) error {
+func Load(root string) ([]Program, error) {
+	var programs []Program
+
+	err := filepath.Walk(root, func(filename string, file_info os.FileInfo, err error) error {
 		// Trim the leading path from the path string Trim ext from path string, save this as route.
-		ext := path.Ext(p)
+		ext := path.Ext(filename)
 		if file_info.IsDir() != true && ext == ".js" {
 			if ext == ".js" {
-				route := strings.TrimSuffix(strings.TrimPrefix(p, root), ".js")
-				source, err := ioutil.ReadFile(p)
+				route := strings.TrimSuffix(strings.TrimPrefix(filename, root), ".js")
+				source, err := ioutil.ReadFile(filename)
 				if err != nil {
 					log.Println(err)
 					return err
 				}
 				vm := otto.New()
-                full_path, err := filepath.Abs(p)
+                full_path, err := filepath.Abs(filename)
                 if err != nil {
                     fmt.Println(err)
                     os.Exit(1)
                 }
 
-                script, err := vm.Compiled(full_path, source)
+                // Attempt to compile source and abort is there is a problem
+                script, err := vm.Compile(full_path, source)
                 if err != nil {
-                    fmt.Println(err)
+                    fmt.Printf("File: %s, %s\n", full_path, err)
                     os.Exit(1)
                 }
-				programs[route] = Program{Route: route, Path: p, Source: source, VM: vm, Script: script}
+                programs = append(programs, Program{Route: route, Filename: filename, Source: source, VM: vm, Script: script})
 			}
 		}
 		return nil
@@ -61,24 +63,23 @@ func Load(root string) (map[string]Program, error) {
 	return programs, nil
 }
 
-func Engine(w http.ResponseWriter, r *http.Request, program Program) {
-    //FIXME: Need to handle setting appropriate http headers from Otto VM.
-	output, err := program.VM.Run(program.Script)
-	if err != nil {
-        log.Printf("file %s: \nerror: %s\n", program.Path, err)
-        http.Error(w, "Internal Server Error", 500)
-		return
-	}
-	// This write the body, should really write headers and render into body, etc.
-	fmt.Fprintf(w, "%s\n", output)
+func Engine(program Program) {
+	http.HandleFunc(program.Route, func(w http.ResponseWriter, r *http.Request) {
+	    output, err := program.VM.Run(program.Script)
+	    if err != nil {
+            log.Printf("file %s: \nerror: %s\n", program.Filename, err)
+            http.Error(w, "Internal Server Error", 500)
+		    return
+	    }
+	    // This write the body, should really write headers and render into body, etc.
+	    fmt.Fprintf(w, "%s\n", output)
+	})
 }
 
-func AddRoutes(programs map[string]Program) {
-	for route, program := range programs {
-		fmt.Printf("Creating route %s from %s\n", route, program.Path)
-		http.HandleFunc(route, func(w http.ResponseWriter, r *http.Request) {
-			Engine(w, r, program)
-		})
+func AddRoutes(programs []Program) {
+	for i := range programs {
+		fmt.Printf("Adding route %d %s from %s\n", i, programs[i].Route, programs[i].Filename)
+		Engine(programs[i])
 	}
 }
 
