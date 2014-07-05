@@ -17,6 +17,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"math/big"
 	"net"
@@ -24,10 +25,12 @@ import (
 	"os"
 	"os/user"
 	"path"
+	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
 	"time"
+	"github.com/robertkrimen/otto"
 )
 
 // variables for keygen
@@ -43,12 +46,15 @@ var (
 
 // command line parameters that override environment variables
 var (
-	cli_use_tls = flag.Bool("tls", false, "Turn on TLS (https) support with true, off with false (default is false)")
-	cli_docroot = flag.String("docroot", "", "Path to the document root")
-	cli_host    = flag.String("host", "", "Hostname http(s) server to listen for")
-	cli_port    = flag.Int("port", 0, "Port number to listen on")
-	cli_cert    = flag.String("cert", "", "Filename to your SSL cert.pem")
-	cli_key     = flag.String("key", "", "Filename to your SSL key.pem")
+	cli_use_tls    = flag.Bool("tls", false, "Turn on TLS (https) support with true, off with false (default is false)")
+	cli_docroot    = flag.String("docroot", "", "Path to the document root")
+	cli_host       = flag.String("host", "", "Hostname http(s) server to listen for")
+	cli_port       = flag.Int("port", 0, "Port number to listen on")
+	cli_cert       = flag.String("cert", "", "Filename to your SSL cert.pem")
+	cli_key        = flag.String("key", "", "Filename to your SSL key.pem")
+	cli_otto       = flag.Bool("otto", false, "Enable experimental Otto JS VM support")
+	cli_otto_path  = flag.String("otto-path", "otto", "The search path for runable Otto JS Programs.")
+	cli_otto_route = flag.String("otto-route", "/o", "The URL path to send to send to the otto JS vm.")
 )
 
 var ErrHelp = errors.New("flag: Help requested")
@@ -61,16 +67,63 @@ var Usage = func() {
 // Application's profile - who started the process, port assignment
 // configuration settings, etc.
 type Profile struct {
-	Username string
-	Hostname string
-	Port     string
-	Use_TLS  bool
-	Docroot  string
-	Cert     string
-	Key      string
+	Username   string
+	Hostname   string
+	Port       string
+	Use_TLS    bool
+	Docroot    string
+	Cert       string
+	Key        string
+	Otto       bool
+	Otto_Path  string
+	Otto_Route string
 }
 
-func loadProfile(cli_docroot string, cli_host string, cli_port int, cli_use_tls bool, cli_cert string, cli_key string) (*Profile, error) {
+type Program struct {
+	Route  string
+	Path   string
+	Source []byte
+	VM *otto.Otto
+}
+
+func loadPrograms(root, route_prefix string) (map[string]Program, error) {
+	programs := make(map[string]Program)
+	err := filepath.Walk(root, func(p string, file_info os.FileInfo, err error) error {
+		// Trim the leading path from the path string Trim ext from path string, save this as route.
+		ext := path.Ext(p)
+		if file_info.IsDir() != true && ext == ".js" {
+			if ext == ".js" {
+				route := strings.TrimSuffix(strings.TrimPrefix(p, root), ".js")
+				source, err := ioutil.ReadFile(p)
+				if err != nil {
+					log.Println(err)
+					return err
+				}
+                vm := otto.New()
+				programs[path.Join(route_prefix, route)] = Program{Route: route, Path: p, Source: source, VM: vm}
+			}
+		}
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	return programs, nil
+}
+
+
+func OttoEngine(w http.ResponseWriter, r *http.Request, program Program) {
+    output, err := program.VM.Run(program.Source)
+    if err != nil {
+        fmt.Fprintf(w, "file: %s\nerror: %s\n", program.Path, err)
+        return
+    }
+    // This write the body, should really write headers and render into body, etc.
+	fmt.Fprintf(w,"%s\n", output)
+}
+
+
+func loadProfile(cli_docroot string, cli_host string, cli_port int, cli_use_tls bool, cli_cert string, cli_key string, cli_otto bool, cli_otto_path string, cli_otto_route string) (*Profile, error) {
 	ws_user, err := user.Current()
 	if err != nil {
 		return nil, err
@@ -81,6 +134,9 @@ func loadProfile(cli_docroot string, cli_host string, cli_port int, cli_use_tls 
 	}
 	port := "8000"
 	use_tls := false
+	otto := false
+	otto_path := ""
+	otto_route := "/o/helloworld"
 
 	// FIXME: before we return to fail to load on *.pem, check for alternate locations
 	cert, err := configPathTo("cert.pem")
@@ -100,6 +156,9 @@ func loadProfile(cli_docroot string, cli_host string, cli_port int, cli_use_tls 
 	env_cert := os.Getenv("WS_CERT")
 	env_key := os.Getenv("WS_KEY")
 	env_docroot := os.Getenv("WS_DOCROOT")
+	env_otto := os.Getenv("WS_OTTO")
+	env_otto_path := os.Getenv("WS_OTTO_PATH")
+	env_otto_route := os.Getenv("WS_OTTO_ROUTE")
 	if env_host != "" {
 		hostname = env_host
 	}
@@ -118,6 +177,15 @@ func loadProfile(cli_docroot string, cli_host string, cli_port int, cli_use_tls 
 	}
 	if env_key != "" {
 		key = env_key
+	}
+	if env_otto == "true" {
+		otto = true
+	}
+	if otto_path != "" {
+		otto_path = env_otto_path
+	}
+	if env_otto_route != "" {
+		otto_route = env_otto_route
 	}
 
 	// Finally resolve any command line overrides
@@ -142,15 +210,26 @@ func loadProfile(cli_docroot string, cli_host string, cli_port int, cli_use_tls 
 	if cli_key != "" {
 		key = cli_key
 	}
-
+	if cli_otto == true {
+		otto = true
+	}
+	if cli_otto_path != "" {
+		otto_path = cli_otto_path
+	}
+	if cli_otto_route != "" {
+		otto_route = cli_otto_route
+	}
 	return &Profile{
-		Username: ws_user.Username,
-		Hostname: hostname,
-		Port:     port,
-		Docroot:  path.Join(docroot),
-		Use_TLS:  use_tls,
-		Cert:     cert,
-		Key:      key}, nil
+		Username:   ws_user.Username,
+		Hostname:   hostname,
+		Port:       port,
+		Docroot:    path.Join(docroot),
+		Use_TLS:    use_tls,
+		Cert:       cert,
+		Key:        key,
+		Otto:       otto,
+		Otto_Path:  otto_path,
+		Otto_Route: otto_route}, nil
 }
 
 func webserver_log(handler http.Handler) http.Handler {
@@ -160,7 +239,7 @@ func webserver_log(handler http.Handler) http.Handler {
 	})
 }
 
-func webserver(profile *Profile) error {
+func Webserver(profile *Profile) error {
 	// Restricted FileService excluding dot files and directories
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		var hasDotPath = regexp.MustCompile(`\/\.`)
@@ -182,14 +261,36 @@ func webserver(profile *Profile) error {
 		}
 	})
 
+	// If otto is enabled add routes and handle them.
+	if profile.Otto == true {
+		programs, err := loadPrograms(profile.Otto_Path, profile.Otto_Route)
+		if err != nil {
+			log.Printf("ERROR: %s\n", err)
+			os.Exit(1)
+		}
+		for route, program := range programs {
+			fmt.Printf("Creating route %s for %s\n", route, program.Path)
+			http.HandleFunc(route, func(w http.ResponseWriter, r *http.Request) {
+				OttoEngine(w, r, program)
+			})
+		}
+	}
+
 	if profile.Use_TLS == false {
 		log.Printf("\n\n"+
 			"  Docroot:   %s\n"+
 			"     Host:   %s\n"+
 			"     Port:   %s\n"+
-			"   Run as:   %s\n\n",
+			"   Run as:   %s\n\n"+
+			" Otto enabled: %v\n"+
+			"         Path: %s\n"+
+			"        Route: %s\n"+
+			"\n\n",
 			profile.Docroot, profile.Hostname, profile.Port,
-			profile.Username)
+			profile.Username,
+			profile.Otto,
+			profile.Otto_Path,
+			profile.Otto_Route)
 		log.Println("Starting http://" + net.JoinHostPort(profile.Hostname, profile.Port))
 
 		// Now start up the server and log transactions
@@ -202,12 +303,20 @@ func webserver(profile *Profile) error {
 		"    Host:   %s\n"+
 		"    Port:   %s\n"+
 		"  Run as:   %s\n\n",
+		" Otto enabled: %v\n"+
+			"         Path: %s\n"+
+			"        Route: %s\n"+
+			"\n\n",
+		profile.Docroot, profile.Hostname, profile.Port,
 		profile.Cert,
 		profile.Key,
 		profile.Docroot,
 		profile.Hostname,
 		profile.Port,
-		profile.Username)
+		profile.Username,
+		profile.Otto,
+		profile.Otto_Path,
+		profile.Otto_Route)
 	log.Println("Starting https://" + net.JoinHostPort(profile.Hostname, profile.Port))
 
 	// Now start up the server and log transactions
@@ -347,7 +456,7 @@ func keygen(profile *Profile) error {
 func main() {
 	flag.Parse()
 
-	profile, _ := loadProfile(*cli_docroot, *cli_host, *cli_port, *cli_use_tls, *cli_cert, *cli_key)
+	profile, _ := loadProfile(*cli_docroot, *cli_host, *cli_port, *cli_use_tls, *cli_cert, *cli_key, *cli_otto, *cli_otto_path, *cli_otto_route)
 	if *cli_keygen == true {
 		err := keygen(profile)
 		if err != nil {
@@ -357,8 +466,10 @@ func main() {
 		os.Exit(0)
 	}
 
-	err := webserver(profile)
+	err := Webserver(profile)
 	if err != nil {
 		log.Fatal(err)
+		os.Exit(1)
 	}
+	os.Exit(0)
 }
