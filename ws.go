@@ -220,10 +220,10 @@ func Webserver(profile *Profile) error {
 
 	if profile.Use_TLS == false {
 		log.Printf("\n\n"+
-			"  Docroot:   %s\n"+
-			"     Host:   %s\n"+
-			"     Port:   %s\n"+
-			"   Run as:   %s\n\n"+
+			"      Docroot: %s\n"+
+			"         Host: %s\n"+
+			"         Port: %s\n"+
+			"       Run as: %s\n\n"+
 			" Otto enabled: %v\n"+
 			"         Path: %s\n"+
 			"\n\n",
@@ -237,14 +237,14 @@ func Webserver(profile *Profile) error {
 		return http.ListenAndServe(net.JoinHostPort(profile.Hostname, profile.Port), webserver_log(http.DefaultServeMux))
 	}
 	log.Printf("\n\n"+
-		"    Cert:   %s\n"+
-		"     Key:   %s\n"+
-		" Docroot:   %s\n"+
-		"    Host:   %s\n"+
-		"    Port:   %s\n"+
-		"  Run as:   %s\n\n",
+		"         Cert: %s\n"+
+		"          Key: %s\n"+
+		"      Docroot: %s\n"+
+		"         Host: %s\n"+
+		"         Port: %s\n"+
+		"       Run as: %s\n\n",
 		" Otto enabled: %v\n"+
-			"         Path: %s\n"+
+		"         Path: %s\n"+
 			"\n\n",
 		profile.Docroot, profile.Hostname, profile.Port,
 		profile.Cert,
