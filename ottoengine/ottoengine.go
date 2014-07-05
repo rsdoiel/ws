@@ -65,13 +65,18 @@ func Load(root string) ([]Program, error) {
 
 func Engine(program Program) {
 	http.HandleFunc(program.Route, func(w http.ResponseWriter, r *http.Request) {
+        // FIXME:
+        // 1. Create fresh Response and Request objects.
+        // 2. Run the VM passing in Response, Request objects via this.Response and this.Request.
 	    output, err := program.VM.Run(program.Script)
 	    if err != nil {
             log.Printf("file %s: \nerror: %s\n", program.Filename, err)
             http.Error(w, "Internal Server Error", 500)
 		    return
 	    }
-	    // This write the body, should really write headers and render into body, etc.
+        // 3. based on state of Response object 
+        //    a. update headers in ResponseWriter
+        //    b. take care of any encoding issues and send back the contents of output
 	    fmt.Fprintf(w, "%s\n", output)
 	})
 }
