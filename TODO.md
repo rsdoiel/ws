@@ -1,18 +1,20 @@
 
 # Todo items
 
-+ Finish ottoengine for prototyping web APIs
-    - Add support for passing Response and Request to Otto VM
-    - Add support for acting on Response object after program runs
-        + Update the headers before sending stream to ResponseWriter
-    - Add support for connecting to a DB Engine (e.g. MongoDB)
-+ make sure it is easily installable as other Golang projects
-+ add deb package support
-+ add Mac ports package support
+## v0.0.1 pre-release
+
++ Finish ottoengine prototype
+    - Figure out how to pass in a DB connector object for persistence
+    - Figure out how to support extended path E.g.
+        + if /test is handled by test.js, it should also handle /test/something/else
+    - Write tests to confirm everything works from a web browser perspective
++ Add deb package support
++ Add Mac ports package support
 + Make sure docs cover all 
     - command line options
     - environment settings
     - static content 
     - dynamic routes defined in JavaScript via Otto Engine
-+ Prep to tag as version 0.0.1
+    - have some tutorial examples of building a small interactive fiction game.
++ When ready tag as v0.0.1
 
