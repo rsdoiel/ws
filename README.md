@@ -1,15 +1,14 @@
 ws
 ==
 
-A light weight webserver suitable for static web content development. 
+A light weight webserver suitable for static web content development and API prototyping. 
 
 *ws* supports basic _http_ and _https_ (SSL via TLS) protocols.  It does not 
 support _SPDY_ or _http2_ protocols. It does not support PHP, Perl, Python, 
 etc. It is a static content webserver.
 
 It has experimental support for dynamic content via route handlers written in JavaScript
-and execute by the [otto](https://github.com/robertkermin/otto) JavaScript
-virtual machine.
+and execute by the [otto](https://github.com/robertkermin/otto) JavaScript virtual machine.
 
 
 # USAGE
@@ -171,10 +170,11 @@ The _ottoengine_ is an experimental route handler that uses _otto_ to render rou
 The goal of _ottoengine_ is to provide a platform for prototyping content APIs consumed browser side
 by the static pages served by _ws_.
 
-Enabled the _ottoengine_ involes setting to command line options or settin the equivalant environment
-variables
+Two command line options or environment variables turn _ottoengine_ on.
 
-+ -otto, WS_OTTO - values true/false, defaults to false.
-+ -otto-path, WS_OTTO_PATH - sets the path to the scripts used to defined the routes being handled.
++ -otto, WS_OTTO - values true/false, defaults to false. True turns on _ottoengine_
++ -otto-path, WS_OTTO_PATH - sets the path to the scripts used to defined the routes being handled. Each file found in the path becomes a route.
+
+
 
 

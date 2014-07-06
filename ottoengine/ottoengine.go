@@ -6,11 +6,11 @@
 package ottoengine
 
 import (
+    "../logger"
 	"fmt"
 	"github.com/robertkrimen/otto"
 	"io/ioutil"
 	"log"
-    "net/url"
 	"net/http"
 	"os"
 	"path"
@@ -63,7 +63,7 @@ func Load(root string) ([]Program, error) {
 	return programs, nil
 }
 
-func createRequestSource(r *http.Request) (string, error) {
+func createRequestObject(r *http.Request) (string, error) {
     buf, err := json.Marshal(r.Header)
     src := fmt.Sprintf(`Request = {
             Headers: %s,
@@ -78,43 +78,52 @@ func createRequestSource(r *http.Request) (string, error) {
     return src, err
 }
 
-func log_response(code int, msg string, filename_or_src string, method string, url *url.URL, proto string, referrer string, user_agent string) {
-	log.Printf("{\"response\": %d, \"status\": %q, \"filename\": %q, %q: %q, \"protocol\": %q, \"referrer\": %q, \"user-agent\": %q}\n",
-        code,
-        msg,
-        filename_or_src, 
-        method,
-        url,
-        proto,
-        referrer,
-        user_agent)
+func isJSON (value otto.Value) bool {
+    blob, _ := value.ToString()
+    if (strings.HasPrefix(blob, "[\"") == true &&
+            strings.HasSuffix(blob, "\"]") == true) || 
+            (strings.HasPrefix(blob, "{\"") == true && strings.HasSuffix(blob, "\"}") == true) {
+        return true
+    }
+    return false
+}
+
+func isHTML (value otto.Value) bool {
+    blob, _ := value.ToString()
+    return strings.HasPrefix(blob, "<!DOCTYPE html>")
 }
 
 func Engine(program Program) {
 	http.HandleFunc(program.Route, func(w http.ResponseWriter, r *http.Request) {
 		// 1. Create fresh Request object.
-        request, err := createRequestSource(r)
+        requestObject, err := createRequestObject(r)
         if err != nil {
             msg := fmt.Sprintf("%s", err)
-            log_response(500, msg, request, r.Method, r.URL, r.Proto, r.Referer(), r.UserAgent())
+            logger.LogResponse(500, "Internal Server Error", r.Method, r.URL, r.RemoteAddr, program.Filename, msg)
+            http.Error(w, "Internal Server Error", 500)
+            return;
         }
         
-		// 2. Run the VM passing with Request created into the Script
-        combined_src := fmt.Sprintf("%s\n%s\n", request, program.Source)
-        //FIXME: should really figure out how to merge this with the compiled JS
+		// 2. Run the VM passing Request along with Script
+        combined_src := fmt.Sprintf("%s\n%s\n", requestObject, program.Script)
 		output, err := program.VM.Run(combined_src)
 		if err != nil {
             msg := fmt.Sprintf("%s", err)
-            log_response(500, msg, program.Filename, r.Method, r.URL, r.Proto, r.Referer(), r.UserAgent())
+            logger.LogResponse(500, "Internal Server Error", r.Method, r.URL, r.RemoteAddr, program.Filename, msg)
 			http.Error(w, "Internal Server Error", 500)
 			return
 		}
-		// 3. based on state of Response object
+		// 3. based on returned output
 		//    a. update headers in ResponseWriter
-		//    b. take care of any encoding issues 
-        //    c. send back the contents of output
-        log_response(200, "OK", program.Filename, r.Method, r.URL, r.Proto, r.Referer(), r.UserAgent())
+        //    b. send output
+        if isJSON(output) {
+            w.Header().Set("Content-Type", "application/json")
+        } else if isHTML(output) {
+            w.Header().Set("Content-Type", "text/html")
+        }
+         
 		fmt.Fprintf(w, "%s\n", output)
+        logger.LogResponse(200, "OK", r.Method, r.URL, r.RemoteAddr, program.Filename, "")
 	})
 }
 
