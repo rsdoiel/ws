@@ -5,17 +5,17 @@ If you already have your golang workspace setup you can skip steps 1.
 I have assumed your running some type of *NIX with Bash or Sh.
 
 1. Setup our Go Workspace
-    a. Create your work space directory, PROJECT_NAME_HERE would be the name of your project. E.g.
+    + Create your work space directory, PROJECT_NAME_HERE would be the name of your project. E.g.
         - mkdir -p $HOME/gocode/src
-    b. Set GOPATH environment variable. E.g.
+    + Set GOPATH environment variable. E.g.
         - export GOPATH=$HOME/gocode
-    c. Set GOBIN environment variable. E.g.
+    + Set GOBIN environment variable. E.g.
         - export GOBIN=$GOPATH
-    d. Make sure Otto is available
+    + Make sure Otto is available
 2. Checkout _ws_ from github
-    a. Change to $GOPATH/src
+    + Change to $GOPATH/src
         - cd $GOPATH/src
-    b. Clone repository
+    + Clone repository
         - git clone git@github.com:rsdoiel/ws.git
 2. Change your to _ws_ directory. E.g.
     - cd $GOPATH/src/ws
@@ -30,9 +30,9 @@ I have assumed your running some type of *NIX with Bash or Sh.
     - export WS_OTTO=true
     - export WS_OTTO_PATH=$(pwd)/demo
 6. Test
-    a. Start the _ws_ webserver
+    + Start the _ws_ webserver
         - ./ws
-    b. Try the following URLs in your favorite web browser
+    + Try the following URLs in your favorite web browser
         - http://localhost:8000
         - http://localhost:8000/helloworld
         - http://localhost:8000/test
