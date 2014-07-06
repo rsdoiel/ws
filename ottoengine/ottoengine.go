@@ -78,14 +78,6 @@ func createRequestSource(r *http.Request) (string, error) {
     return src, err
 }
 
-func createResponseSource() (string, error) {
-    src := `Response = {
-        ContentType: "",
-        Location: ""
-    };`
-    return src, nil
-}
-
 func log_response(code int, msg string, filename_or_src string, method string, url *url.URL, proto string, referrer string, user_agent string) {
 	log.Printf("{\"response\": %d, \"status\": %q, \"filename\": %q, %q: %q, \"protocol\": %q, \"referrer\": %q, \"user-agent\": %q}\n",
         code,
@@ -100,22 +92,16 @@ func log_response(code int, msg string, filename_or_src string, method string, u
 
 func Engine(program Program) {
 	http.HandleFunc(program.Route, func(w http.ResponseWriter, r *http.Request) {
-		// FIXME:
-		// 1. Create fresh Response and Request objects.
+		// 1. Create fresh Request object.
         request, err := createRequestSource(r)
         if err != nil {
             msg := fmt.Sprintf("%s", err)
             log_response(500, msg, request, r.Method, r.URL, r.Proto, r.Referer(), r.UserAgent())
         }
         
-        response, err := createResponseSource()
-        if err != nil {
-            msg := fmt.Sprintf("%s", err)
-            log_response(500, msg, response, r.Method, r.URL, r.Proto, r.Referer(), r.UserAgent())
-        }
-
-		// 2. Run the VM passing with Request, Response objects already created
-        combined_src := fmt.Sprintf("%s\n%s\n\n%s\n", request, response, program.Source)
+		// 2. Run the VM passing with Request created into the Script
+        combined_src := fmt.Sprintf("%s\n%s\n", request, program.Source)
+        //FIXME: should really figure out how to merge this with the compiled JS
 		output, err := program.VM.Run(combined_src)
 		if err != nil {
             msg := fmt.Sprintf("%s", err)
@@ -127,10 +113,6 @@ func Engine(program Program) {
 		//    a. update headers in ResponseWriter
 		//    b. take care of any encoding issues 
         //    c. send back the contents of output
-        //value, _ := program.VM.Get("Response.ContentType");
-        //src, _ := value.ToString()
-        //fmt.Printf("DEBUG, content types? %v %s\n", value, src);
-
         log_response(200, "OK", program.Filename, r.Method, r.URL, r.Proto, r.Referer(), r.UserAgent())
 		fmt.Fprintf(w, "%s\n", output)
 	})
