@@ -55,7 +55,7 @@ var (
 	cli_port      = flag.String("port", "", "Port number to listen on")
 	cli_cert      = flag.String("cert", "", "Filename to your SSL cert.pem")
 	cli_key       = flag.String("key", "", "Filename to your SSL key.pem")
-	cli_otto      = flag.Bool("otto", false, "Enable experimental Otto JS VM support")
+	cli_otto      = flag.Bool("otto", false, "Enable if true, disabled by default. Otto JS VM route handler support")
 	cli_otto_path = flag.String("otto-path", "", "The search path for runable Otto JS Programs.")
 )
 

@@ -10,11 +10,13 @@ import (
 	"github.com/robertkrimen/otto"
 	"io/ioutil"
 	"log"
+    "net/url"
 	"net/http"
 	"os"
 	"path"
 	"path/filepath"
 	"strings"
+    "encoding/json"
 )
 
 type Program struct {
@@ -61,33 +63,75 @@ func Load(root string) ([]Program, error) {
 	return programs, nil
 }
 
+func createRequestSource(r *http.Request) (string, error) {
+    buf, err := json.Marshal(r.Header)
+    src := fmt.Sprintf(`Request = {
+            Headers: %s,
+            Method: %q,
+            URL: %q,
+            Proto: %q,
+            Referrer: %q,
+            UserAgent: %q
+    };`, string(buf), r.Method, r.URL, r.Proto, r.Referer(), r.UserAgent())
+
+    //FIXME: need to handle GET, POST, PUT, DELETE methods
+    return src, err
+}
+
+func createResponseSource() (string, error) {
+    src := `Response = {
+        ContentType: "",
+        Location: ""
+    };`
+    return src, nil
+}
+
+func log_response(code int, msg string, filename_or_src string, method string, url *url.URL, proto string, referrer string, user_agent string) {
+	log.Printf("{\"response\": %d, \"status\": %q, \"filename\": %q, %q: %q, \"protocol\": %q, \"referrer\": %q, \"user-agent\": %q}\n",
+        code,
+        msg,
+        filename_or_src, 
+        method,
+        url,
+        proto,
+        referrer,
+        user_agent)
+}
+
 func Engine(program Program) {
 	http.HandleFunc(program.Route, func(w http.ResponseWriter, r *http.Request) {
 		// FIXME:
 		// 1. Create fresh Response and Request objects.
-		// 2. Run the VM passing in Response, Request objects via this.Response and this.Request.
-		output, err := program.VM.Run(program.Script)
+        request, err := createRequestSource(r)
+        if err != nil {
+            msg := fmt.Sprintf("%s", err)
+            log_response(500, msg, request, r.Method, r.URL, r.Proto, r.Referer(), r.UserAgent())
+        }
+        
+        response, err := createResponseSource()
+        if err != nil {
+            msg := fmt.Sprintf("%s", err)
+            log_response(500, msg, response, r.Method, r.URL, r.Proto, r.Referer(), r.UserAgent())
+        }
+
+		// 2. Run the VM passing with Request, Response objects already created
+        combined_src := fmt.Sprintf("%s\n%s\n\n%s\n", request, response, program.Source)
+		output, err := program.VM.Run(combined_src)
 		if err != nil {
-            log.Printf("{\"status\": 500, \"filename\": %q, \"error\": %q, %q: %q, \"protocol\": %q, \"referrer\": %q, \"user-agent\": %q}\n",
-                program.Filename,
-                err,
-                r.Method,
-                r.URL,
-                r.Proto,
-                r.Referer(),
-                r.UserAgent())
+            msg := fmt.Sprintf("%s", err)
+            log_response(500, msg, program.Filename, r.Method, r.URL, r.Proto, r.Referer(), r.UserAgent())
 			http.Error(w, "Internal Server Error", 500)
 			return
 		}
 		// 3. based on state of Response object
 		//    a. update headers in ResponseWriter
-		//    b. take care of any encoding issues and send back the contents of output
-        log.Printf("{\"status\": 200, %q: %q, \"protocol\": %q, \"referrer\": %q, \"user-agent\": %q}\n",
-            r.Method,
-            r.URL,
-            r.Proto,
-            r.Referer(),
-            r.UserAgent())
+		//    b. take care of any encoding issues 
+        //    c. send back the contents of output
+        //value, _ := program.VM.Get("Response.ContentType");
+        //src, _ := value.ToString()
+        //fmt.Printf("DEBUG, content types? %v %s\n", value, src);
+
+        log_response(200, "OK", program.Filename, r.Method, r.URL, r.Proto, r.Referer(), r.UserAgent())
 		fmt.Fprintf(w, "%s\n", output)
 	})
 }
