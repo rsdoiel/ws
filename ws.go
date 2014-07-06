@@ -25,6 +25,7 @@ import (
 	"log"
 	"math/big"
 	"net"
+	"net/url"
 	"net/http"
 	"os"
 	"os/user"
@@ -198,15 +199,30 @@ func LoadProfile(cli_docroot string, cli_host string, cli_port string, cli_use_t
 		Otto_Path: otto_path}, nil
 }
 
+func log_response(status int, err string, method string, url *url.URL, proto, referrer, user_agent string) {
+	log.Printf("{\"response\": %d, \"status\": %q, %q: %q, \"protocol\": %q, \"referrer\": %q, \"user-agent\": %q}\n",
+        status,
+        err,
+        method,
+        url,
+        proto,
+        referrer,
+        user_agent)
+}
+
+func log_request(method string, url *url.URL, proto, referrer, user_agent string) {
+	log.Printf("{\"request\": true, %q: %q, \"protocol\": %q, \"referrer\": %q, \"user-agent\": %q}\n",
+        method,
+        url.String(),
+        proto,
+        referrer,
+        user_agent)
+}
+
 func request_log(handler http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log.Printf("{%q: %q, \"protocol\": %q, \"referrer\": %q, \"user-agent\": %q}\n",
-            r.Method,
-            r.URL,
-            r.Proto,
-            r.Referer(),
-            r.UserAgent())
-		handler.ServeHTTP(w, r)
+		log_request(r.Method, r.URL, r.Proto, r.Referer(), r.UserAgent())
+        handler.ServeHTTP(w, r)
 	})
 }
 
@@ -234,15 +250,23 @@ func Webserver(profile *Profile) error {
 		clean_path := path.Clean(unclean_path)
 		r.URL.Path = clean_path
 		resolved_path := path.Clean(path.Join(profile.Docroot, clean_path))
-		if hasDotPath.MatchString(clean_path) {
-			log.Printf("Not Authorized (401) %s\n", clean_path)
+        _, err := os.Stat(resolved_path)
+        if hasDotPath.MatchString(clean_path) == true || 
+                strings.HasPrefix(resolved_path, profile.Docroot) == false ||
+                os.IsPermission(err) == true {
+			log_response(401, "Not Authorized", r.Method, r.URL, r.Proto, r.Referer(), r.UserAgent())
 			http.Error(w, "Not Authorized", 401)
-		} else if !strings.HasPrefix(resolved_path, profile.Docroot) {
-			log.Printf("Not Found (404) %s\n", resolved_path)
+		} else if os.IsNotExist(err) == true {
+			log_response(404, "Not Found", r.Method, r.URL, r.Proto, r.Referer(), r.UserAgent())
 			http.NotFound(w, r)
-		} else {
+		} else if err == nil {
+			log_response(200, "OK", r.Method, r.URL, r.Proto, r.Referer(), r.UserAgent())
 			http.ServeFile(w, r, resolved_path)
-		}
+        } else {
+            // Easter egg
+			log_response(418, "I'm a teapot", r.Method, r.URL, r.Proto, r.Referer(), r.UserAgent())
+			http.Error(w, "I'm a teapot", 418)
+        }
 	})
 
 	// Now start up the server and log transactions
