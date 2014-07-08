@@ -63,8 +63,13 @@ func Load(root string) ([]Program, error) {
 	return programs, nil
 }
 
-func createRequestObject(r *http.Request) (string, error) {
+func createRequestObject(vm *otto.Otto, r *http.Request) (*otto.Object, error) {
     buf, err := json.Marshal(r.Header)
+    if err != nil {
+        return nil, err
+    }
+
+    //FIXME: need to handle GET, POST, PUT, DELETE methods
     src := fmt.Sprintf(`Request = {
             Headers: %s,
             Method: %q,
@@ -74,8 +79,11 @@ func createRequestObject(r *http.Request) (string, error) {
             UserAgent: %q
     };`, string(buf), r.Method, r.URL, r.Proto, r.Referer(), r.UserAgent())
 
-    //FIXME: need to handle GET, POST, PUT, DELETE methods
-    return src, err
+    obj, err := vm.Object(src)
+    if err != nil  {
+        return nil, err
+    }
+    return obj, nil
 }
 
 func isJSON (value otto.Value) bool {
@@ -96,7 +104,7 @@ func isHTML (value otto.Value) bool {
 func Engine(program Program) {
 	http.HandleFunc(program.Route, func(w http.ResponseWriter, r *http.Request) {
 		// 1. Create fresh Request object.
-        requestObject, err := createRequestObject(r)
+        requestObject, err := createRequestObject(program.VM, r)
         if err != nil {
             msg := fmt.Sprintf("%s", err)
             logger.LogResponse(500, "Internal Server Error", r.Method, r.URL, r.RemoteAddr, program.Filename, msg)
