@@ -88,21 +88,18 @@ func createRequestObject(vm *otto.Otto, r *http.Request) (*otto.Object, error) {
 
 func createResponseObject(vm *otto.Otto) (*otto.Object, error) {
     src := `Response = {
-        headers: [],
-        setHeader: function (key, value, replace) {
-            var i = 0;
-            if (replace === undefined) {
-                replace = true;
+        code: 200,
+        status: "OK",
+        headers: {},
+        getHeader: function (key) {
+            if (this.headers[key.toLowerCase()] !== undefined) {
+                return this.headers[key.toLowerCase()];
             }
-            if (replace === true) {
-                for (i = 0; i < this.headers.length; i += 1) {
-                    if (this.headers[i].key === key) {
-                        this.headers[i].value = value;
-                        return (this.headers[i].key === key && this.headers[i].value === value);
-                    }
-                }
-            }
-            return this.headers.push({key: key, value: value});
+            return false;
+        },
+        setHeader: function (key, value) {
+            this.headers[key.toLowerCase()] = value;
+            return (this.headers[key.toLowerCase()] === value);
         }
     }`
 
@@ -113,17 +110,18 @@ func createResponseObject(vm *otto.Otto) (*otto.Object, error) {
     return obj, nil
 }
 
-func isJSON (value otto.Value) bool {
+func IsJSON (value otto.Value) bool {
     blob, _ := value.ToString()
     if (strings.HasPrefix(blob, "[\"") == true &&
             strings.HasSuffix(blob, "\"]") == true) || 
-            (strings.HasPrefix(blob, "{\"") == true && strings.HasSuffix(blob, "\"}") == true) {
+            (strings.HasPrefix(blob, "{\"") == true && 
+                 strings.HasSuffix(blob, "\"}") == true) {
         return true
     }
     return false
 }
 
-func isHTML (value otto.Value) bool {
+func IsHTML (value otto.Value) bool {
     blob, _ := value.ToString()
     return strings.HasPrefix(blob, "<!DOCTYPE html>")
 }
@@ -134,23 +132,9 @@ func Engine(program Program) {
         vm := otto.New()
 
 		// 2. Create fresh Request object.
-        requestObject, err := createRequestObject(vm, r)
-        if err != nil {
-            msg := fmt.Sprintf("Request Object: %s", err)
-            logger.LogResponse(500, "Internal Server Error", r.Method, r.URL, r.RemoteAddr, program.Filename, msg)
-            http.Error(w, "Internal Server Error", 500)
-            return;
-        }
-        
+        createRequestObject(vm, r)
         // 3. Create a fresh Response object.
-        responseObject, err := createResponseObject(vm)
-        if err != nil {
-            msg := fmt.Sprintf("Response Object: %s", err)
-            logger.LogResponse(500, "Internal Server Error", r.Method, r.URL, r.RemoteAddr, program.Filename, msg)
-            http.Error(w, "Internal Server Error", 500)
-            return;
-        }
-
+        createResponseObject(vm)
 		// 4. Run the VM passing Request along with Script
 		output, err := vm.Run(program.Script)
 		if err != nil {
@@ -161,35 +145,31 @@ func Engine(program Program) {
 		}
 		// 3. based on returned output
 		//    a. update headers from responseObject
-        value, err := responseObject.Get("headers.length")
-        if err != nil {
-            msg := fmt.Sprintf("Headers length: %s", err)
-            logger.LogResponse(500, "Internal Server Error", r.Method, r.URL, r.RemoteAddr, program.Filename, msg)
-			http.Error(w, "Internal Server Error", 500)
-			return
-        }
-
-        header_length, err := value.ToInteger()
-        if err != nil {
-            header_length = 0
-        }
-
-        for i := 0; i < header_length; i++ {
-            key_value, _ := responseObject.Get(fmt.Sprintf("header[%d].key", i))
-            value_value, _ := responseObject.Get(fmt.Sprintf("header[%d].value", i))
-            key, _ := key_value.ToString()
+        //    b. send output
+        vm.Run(`Response.CollectHeaderKeys()`)
+        key_value, _ := vm.Run(`Response.PopHeaderKey();`);
+        key, _ := key_value.ToString();
+        for key != "" {
+            value_value, _ := vm.Run("Reponse.getKey(%q);",  key);
             value, _ := value_value.ToString()
-            w.Header().Set(key, value)
+            if value != "" {
+                w.Header().Set(key, value)
+            }
+            key_value, _ := vm.Run(`Response.PopHeaderKey();`);
+            key, _ := key_value.ToString();
         }
 
         /*
-        //    b. send output
-        if isJSON(output) {
+        value, _ := vm.Run("Response.headers['content-type'];");
+        content_type, _ := value.ToString()
+        if content_type != "" {
+            w.Header().Set("Content-Type", content_type)
+        } else if IsJSON(output) {
             w.Header().Set("Content-Type", "application/json")
-        } else if isHTML(output) {
+        } else if IsHTML(output) {
             w.Header().Set("Content-Type", "text/html")
         }*/
-         
+
 		fmt.Fprintf(w, "%s\n", output)
         logger.LogResponse(200, "OK", r.Method, r.URL, r.RemoteAddr, program.Filename, "")
 	})

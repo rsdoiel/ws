@@ -9,7 +9,13 @@
  * of the http/https response Golang uses.
  */
 (function (Request, Response) {
-    console.log("Hello from inside of the OttoEngine.");
-    return 'OttoEngine says Hello World!';
+    var content = "\n\n# Hello\n\nfrom inside of the *OttoEngine*.\n";
+
+    console.log(content)
+
+    console.log("DEBUG (JS) setting header");
+    Response.setHeader('Content-Type', 'text/x-markdown');
+    console.log("DEBUG (JS) headers", JSON.stringify(Response.headers))
+    return content;
 }(Request, Response));
 
