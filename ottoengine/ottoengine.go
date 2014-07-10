@@ -86,6 +86,33 @@ func createRequestObject(vm *otto.Otto, r *http.Request) (*otto.Object, error) {
     return obj, nil
 }
 
+func createResponseObject(vm *otto.Otto) (*otto.Object, error) {
+    src := `Response = {
+        headers: [],
+        setHeader: function (key, value, replace) {
+            var i = 0;
+            if (replace === undefined) {
+                replace = true;
+            }
+            if (replace === true) {
+                for (i = 0; i < this.headers.length; i += 1) {
+                    if (this.headers[i].key === key) {
+                        this.headers[i].value = value;
+                        return (this.headers[i].key === key && this.headers[i].value === value);
+                    }
+                }
+            }
+            return this.headers.push({key: key, value: value});
+        }
+    }`
+
+    obj, err := vm.Object(src)
+    if err != nil  {
+        return nil, err
+    }
+    return obj, nil
+}
+
 func isJSON (value otto.Value) bool {
     blob, _ := value.ToString()
     if (strings.HasPrefix(blob, "[\"") == true &&
@@ -103,32 +130,65 @@ func isHTML (value otto.Value) bool {
 
 func Engine(program Program) {
 	http.HandleFunc(program.Route, func(w http.ResponseWriter, r *http.Request) {
-		// 1. Create fresh Request object.
-        requestObject, err := createRequestObject(program.VM, r)
+        // 1. Create a fresh VM
+        vm := otto.New()
+
+		// 2. Create fresh Request object.
+        requestObject, err := createRequestObject(vm, r)
         if err != nil {
-            msg := fmt.Sprintf("%s", err)
+            msg := fmt.Sprintf("Request Object: %s", err)
             logger.LogResponse(500, "Internal Server Error", r.Method, r.URL, r.RemoteAddr, program.Filename, msg)
             http.Error(w, "Internal Server Error", 500)
             return;
         }
         
-		// 2. Run the VM passing Request along with Script
-        combined_src := fmt.Sprintf("%s\n%s\n", requestObject, program.Script)
-		output, err := program.VM.Run(combined_src)
+        // 3. Create a fresh Response object.
+        responseObject, err := createResponseObject(vm)
+        if err != nil {
+            msg := fmt.Sprintf("Response Object: %s", err)
+            logger.LogResponse(500, "Internal Server Error", r.Method, r.URL, r.RemoteAddr, program.Filename, msg)
+            http.Error(w, "Internal Server Error", 500)
+            return;
+        }
+
+		// 4. Run the VM passing Request along with Script
+		output, err := vm.Run(program.Script)
 		if err != nil {
-            msg := fmt.Sprintf("%s", err)
+            msg := fmt.Sprintf("Script: %s", err)
             logger.LogResponse(500, "Internal Server Error", r.Method, r.URL, r.RemoteAddr, program.Filename, msg)
 			http.Error(w, "Internal Server Error", 500)
 			return
 		}
 		// 3. based on returned output
-		//    a. update headers in ResponseWriter
+		//    a. update headers from responseObject
+        value, err := responseObject.Get("headers.length")
+        if err != nil {
+            msg := fmt.Sprintf("Headers length: %s", err)
+            logger.LogResponse(500, "Internal Server Error", r.Method, r.URL, r.RemoteAddr, program.Filename, msg)
+			http.Error(w, "Internal Server Error", 500)
+			return
+        }
+
+        header_length, err := value.ToInteger()
+        if err != nil {
+            header_length = 0
+        }
+
+        for i := 0; i < header_length; i++ {
+            key_value, _ := responseObject.Get(fmt.Sprintf("header[%d].key", i))
+            value_value, _ := responseObject.Get(fmt.Sprintf("header[%d].value", i))
+            key, _ := key_value.ToString()
+            value, _ := value_value.ToString()
+            w.Header().Set(key, value)
+        }
+
+        /*
         //    b. send output
         if isJSON(output) {
             w.Header().Set("Content-Type", "application/json")
         } else if isHTML(output) {
             w.Header().Set("Content-Type", "text/html")
-        }
+        }*/
          
 		fmt.Fprintf(w, "%s\n", output)
         logger.LogResponse(200, "OK", r.Method, r.URL, r.RemoteAddr, program.Filename, "")

@@ -2,8 +2,9 @@
  * html.js - Output a simple HTML page.
  */
 /*jslint browser: false, indent: 4 */
-(function () {
+(function (Request, Response) {
     "use strict";
+    Response.setHeader('Content-Type', 'text/html');
     return [
         "<!DOCTYPE html>",
         "<html>",
@@ -19,4 +20,4 @@
         "\t</body>",
         "</html>"
     ].join("\n");
-}());
+}(Request, Response));

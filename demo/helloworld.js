@@ -8,8 +8,8 @@
  * @return the route handle should return a string or nil. This will become of body
  * of the http/https response Golang uses.
  */
-(function (global) {
+(function (Request, Response) {
     console.log("Hello from inside of the OttoEngine.");
     return 'OttoEngine says Hello World!';
-}(this));
+}(Request, Response));
 

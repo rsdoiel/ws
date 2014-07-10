@@ -1,5 +1,6 @@
 // Demo the availability of Request and Response objects.
-(function () {
+(function (Request, Response) {
+    Response.setHeader('Content-Type', 'text/html');
     return ["<!DOCTYPE html>",
         "<html>",
         "<body>",
@@ -10,4 +11,4 @@
         "</pre>",
         "</body>",
         "</html>"].join("\n");
-}());
+}(Request, Response));
