@@ -135,15 +135,17 @@ func IsHTML(value otto.Value) bool {
 
 func Engine(program Program) {
 	http.HandleFunc(program.Route, func(w http.ResponseWriter, r *http.Request) {
-		// 1. Create a fresh VM
-		vm := otto.New()
+		// 1. Get get our VM for the Route
+		vm := program.VM
+        script := program.Script
 
 		// 2. Create fresh Request object.
 		createRequestObject(vm, r)
 		// 3. Create a fresh Response object.
 		createResponseObject(vm)
 		// 4. Run the VM passing Request along with Script
-		output, err := vm.Run(program.Script)
+        fmt.Printf("DEBUG scrit looks like? %v\n", script)
+		output, err := vm.Run(script)
 		if err != nil {
 			msg := fmt.Sprintf("Script: %s", err)
 			wslog.LogResponse(500, "Internal Server Error", r.Method, r.URL, r.RemoteAddr, program.Filename, msg)
