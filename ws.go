@@ -13,8 +13,8 @@
 package main
 
 import (
+        "./wslog"
 	"./ottoengine"
-    "./logger"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
@@ -65,6 +65,7 @@ var Usage = func() {
 	fmt.Fprintf(os.Stderr, "Usage of %s\n", os.Args[0])
 	flag.PrintDefaults()
 }
+
 
 // Application's profile - who started the process, port assignment
 // configuration settings, etc.
@@ -201,8 +202,8 @@ func LoadProfile(cli_docroot string, cli_host string, cli_port string, cli_use_t
 
 func request_log(handler http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		logger.LogRequest(r.Method, r.URL, r.RemoteAddr, r.Proto, r.Referer(), r.UserAgent())
-        handler.ServeHTTP(w, r)
+		wslog.LogRequest(r.Method, r.URL, r.RemoteAddr, r.Proto, r.Referer(), r.UserAgent())
+		handler.ServeHTTP(w, r)
 	})
 }
 
@@ -230,23 +231,23 @@ func Webserver(profile *Profile) error {
 		clean_path := path.Clean(unclean_path)
 		r.URL.Path = clean_path
 		resolved_path := path.Clean(path.Join(profile.Docroot, clean_path))
-        _, err := os.Stat(resolved_path)
-        if hasDotPath.MatchString(clean_path) == true || 
-                strings.HasPrefix(resolved_path, profile.Docroot) == false ||
-                os.IsPermission(err) == true {
-			logger.LogResponse(401, "Not Authorized", r.Method, r.URL, r.RemoteAddr, resolved_path, "")
+		_, err := os.Stat(resolved_path)
+		if hasDotPath.MatchString(clean_path) == true ||
+			strings.HasPrefix(resolved_path, profile.Docroot) == false ||
+			os.IsPermission(err) == true {
+			wslog.LogResponse(401, "Not Authorized", r.Method, r.URL, r.RemoteAddr, resolved_path, "")
 			http.Error(w, "Not Authorized", 401)
 		} else if os.IsNotExist(err) == true {
-			logger.LogResponse(404, "Not Found", r.Method, r.URL, r.RemoteAddr, resolved_path, "")
+			wslog.LogResponse(404, "Not Found", r.Method, r.URL, r.RemoteAddr, resolved_path, "")
 			http.NotFound(w, r)
 		} else if err == nil {
-			logger.LogResponse(200, "OK", r.Method, r.URL, r.RemoteAddr, resolved_path, "")
+			wslog.LogResponse(200, "OK", r.Method, r.URL, r.RemoteAddr, resolved_path, "")
 			http.ServeFile(w, r, resolved_path)
-        } else {
-            // Easter egg
-			logger.LogResponse(418, "I'm a teapot", r.Method, r.URL, r.RemoteAddr, resolved_path, "")
+		} else {
+			// Easter egg
+			wslog.LogResponse(418, "I'm a teapot", r.Method, r.URL, r.RemoteAddr, resolved_path, "")
 			http.Error(w, "I'm a teapot", 418)
-        }
+		}
 	})
 
 	// Now start up the server and log transactions

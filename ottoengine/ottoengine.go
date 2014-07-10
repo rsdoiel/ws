@@ -6,18 +6,20 @@
 package ottoengine
 
 import (
-    "../logger"
+	"../wslog"
+	"encoding/json"
 	"fmt"
 	"github.com/robertkrimen/otto"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"path"
 	"path/filepath"
 	"strings"
-    "encoding/json"
 )
+
 
 type Program struct {
 	Route    string
@@ -64,13 +66,13 @@ func Load(root string) ([]Program, error) {
 }
 
 func createRequestObject(vm *otto.Otto, r *http.Request) (*otto.Object, error) {
-    buf, err := json.Marshal(r.Header)
-    if err != nil {
-        return nil, err
-    }
+	buf, err := json.Marshal(r.Header)
+	if err != nil {
+		return nil, err
+	}
 
-    //FIXME: need to handle GET, POST, PUT, DELETE methods
-    src := fmt.Sprintf(`Request = {
+	//FIXME: need to handle GET, POST, PUT, DELETE methods
+	src := fmt.Sprintf(`Request = {
             Headers: %s,
             Method: %q,
             URL: %q,
@@ -79,15 +81,15 @@ func createRequestObject(vm *otto.Otto, r *http.Request) (*otto.Object, error) {
             UserAgent: %q
     };`, string(buf), r.Method, r.URL, r.Proto, r.Referer(), r.UserAgent())
 
-    obj, err := vm.Object(src)
-    if err != nil  {
-        return nil, err
-    }
-    return obj, nil
+	obj, err := vm.Object(src)
+	if err != nil {
+		return nil, err
+	}
+	return obj, nil
 }
 
 func createResponseObject(vm *otto.Otto) (*otto.Object, error) {
-    src := `Response = {
+	src := `Response = {
         code: 200,
         status: "OK",
         headers: {},
@@ -103,75 +105,75 @@ func createResponseObject(vm *otto.Otto) (*otto.Object, error) {
         }
     }`
 
-    obj, err := vm.Object(src)
-    if err != nil  {
-        return nil, err
-    }
-    return obj, nil
+	obj, err := vm.Object(src)
+	if err != nil {
+		return nil, err
+	}
+	return obj, nil
 }
 
-func IsJSON (value otto.Value) bool {
-    blob, _ := value.ToString()
-    if (strings.HasPrefix(blob, "[\"") == true &&
-            strings.HasSuffix(blob, "\"]") == true) || 
-            (strings.HasPrefix(blob, "{\"") == true && 
-                 strings.HasSuffix(blob, "\"}") == true) {
-        return true
-    }
-    return false
+func IsJSON(value otto.Value) bool {
+	blob, _ := value.ToString()
+	if (strings.HasPrefix(blob, "[\"") == true &&
+		strings.HasSuffix(blob, "\"]") == true) ||
+		(strings.HasPrefix(blob, "{\"") == true &&
+			strings.HasSuffix(blob, "\"}") == true) {
+		return true
+	}
+	return false
 }
 
-func IsHTML (value otto.Value) bool {
-    blob, _ := value.ToString()
-    return strings.HasPrefix(blob, "<!DOCTYPE html>")
+func IsHTML(value otto.Value) bool {
+	blob, _ := value.ToString()
+	return strings.HasPrefix(blob, "<!DOCTYPE html>")
 }
 
 func Engine(program Program) {
 	http.HandleFunc(program.Route, func(w http.ResponseWriter, r *http.Request) {
-        // 1. Create a fresh VM
-        vm := otto.New()
+		// 1. Create a fresh VM
+		vm := otto.New()
 
 		// 2. Create fresh Request object.
-        createRequestObject(vm, r)
-        // 3. Create a fresh Response object.
-        createResponseObject(vm)
+		createRequestObject(vm, r)
+		// 3. Create a fresh Response object.
+		createResponseObject(vm)
 		// 4. Run the VM passing Request along with Script
 		output, err := vm.Run(program.Script)
 		if err != nil {
-            msg := fmt.Sprintf("Script: %s", err)
-            logger.LogResponse(500, "Internal Server Error", r.Method, r.URL, r.RemoteAddr, program.Filename, msg)
+			msg := fmt.Sprintf("Script: %s", err)
+			wslog.LogResponse(500, "Internal Server Error", r.Method, r.URL, r.RemoteAddr, program.Filename, msg)
 			http.Error(w, "Internal Server Error", 500)
 			return
 		}
 		// 3. based on returned output
 		//    a. update headers from responseObject
-        //    b. send output
-        vm.Run(`Response.CollectHeaderKeys()`)
-        key_value, _ := vm.Run(`Response.PopHeaderKey();`);
-        key, _ := key_value.ToString();
-        for key != "" {
-            value_value, _ := vm.Run("Reponse.getKey(%q);",  key);
-            value, _ := value_value.ToString()
-            if value != "" {
-                w.Header().Set(key, value)
-            }
-            key_value, _ := vm.Run(`Response.PopHeaderKey();`);
-            key, _ := key_value.ToString();
-        }
+		//    b. send output
+		vm.Run(`Response.CollectHeaderKeys()`)
+		key_value, _ := vm.Run(`Response.PopHeaderKey();`)
+		key, _ := key_value.ToString()
+		for key != "" {
+			value_value, _ := vm.Run(fmt.Sprintf("Reponse.getKey(%q);", key))
+			value, _ := value_value.ToString()
+			if value != "" {
+				w.Header().Set(key, value)
+			}
+			key_value, _ = vm.Run(`Response.PopHeaderKey();`)
+			key, _ = key_value.ToString()
+		}
 
-        /*
-        value, _ := vm.Run("Response.headers['content-type'];");
-        content_type, _ := value.ToString()
-        if content_type != "" {
-            w.Header().Set("Content-Type", content_type)
-        } else if IsJSON(output) {
-            w.Header().Set("Content-Type", "application/json")
-        } else if IsHTML(output) {
-            w.Header().Set("Content-Type", "text/html")
-        }*/
+		/*
+		   value, _ := vm.Run("Response.headers['content-type'];");
+		   content_type, _ := value.ToString()
+		   if content_type != "" {
+		       w.Header().Set("Content-Type", content_type)
+		   } else if IsJSON(output) {
+		       w.Header().Set("Content-Type", "application/json")
+		   } else if IsHTML(output) {
+		       w.Header().Set("Content-Type", "text/html")
+		   }*/
 
 		fmt.Fprintf(w, "%s\n", output)
-        logger.LogResponse(200, "OK", r.Method, r.URL, r.RemoteAddr, program.Filename, "")
+		wslog.LogResponse(200, "OK", r.Method, r.URL, r.RemoteAddr, program.Filename, "")
 	})
 }
 
