@@ -13,8 +13,8 @@
 package main
 
 import (
-        "./wslog"
 	"./ottoengine"
+	"./wslog"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
@@ -65,7 +65,6 @@ var Usage = func() {
 	fmt.Fprintf(os.Stderr, "Usage of %s\n", os.Args[0])
 	flag.PrintDefaults()
 }
-
 
 // Application's profile - who started the process, port assignment
 // configuration settings, etc.

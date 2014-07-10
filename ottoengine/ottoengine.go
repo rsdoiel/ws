@@ -19,7 +19,6 @@ import (
 	"strings"
 )
 
-
 type Program struct {
 	Route    string
 	Filename string
@@ -92,6 +91,7 @@ func createResponseObject(vm *otto.Otto) (*otto.Object, error) {
         code: 200,
         status: "OK",
         headers: {},
+        header_keys: [],
         getHeader: function (key) {
             if (this.headers[key.toLowerCase()] !== undefined) {
                 return this.headers[key.toLowerCase()];
@@ -101,7 +101,13 @@ func createResponseObject(vm *otto.Otto) (*otto.Object, error) {
         setHeader: function (key, value) {
             this.headers[key.toLowerCase()] = value;
             return (this.headers[key.toLowerCase()] === value);
-        }
+        },
+        collectHeaderKeys: function () {
+            return this.header_keys = Object.keys(this.headers);
+	},
+	popHeaderKey: function () {
+	    return this.header_keys.pop();
+	}
     }`
 
 	obj, err := vm.Object(src)
@@ -144,32 +150,32 @@ func Engine(program Program) {
 			http.Error(w, "Internal Server Error", 500)
 			return
 		}
-		// 3. based on returned output
-		//    a. update headers from responseObject
-		//    b. send output
-		vm.Run(`Response.CollectHeaderKeys()`)
-		key_value, _ := vm.Run(`Response.PopHeaderKey();`)
-		key, _ := key_value.ToString()
-		for key != "" {
-			value_value, _ := vm.Run(fmt.Sprintf("Reponse.getKey(%q);", key))
-			value, _ := value_value.ToString()
-			if value != "" {
-				w.Header().Set(key, value)
+		// 3. update headers from responseObject
+		content_type := ""
+		vm.Run(`Response.collectHeaderKeys()`)
+		key_cnt_value, _ := vm.Run("Response.header_keys.length")
+		key_cnt, _ := key_cnt_value.ToInteger()
+		for i := int64(0); i < key_cnt; i++ {
+			key_value, _ := vm.Run(`Response.popHeaderKey();`)
+			key, _ := key_value.ToString()
+			if key != "" {
+				value_value, _ := vm.Run(fmt.Sprintf("Response.getHeader(%q);", key))
+				value, _ := value_value.ToString()
+				if value != "" {
+					if key == "content-type" {
+						content_type = value
+					}
+					w.Header().Set(key, value)
+				}
 			}
-			key_value, _ = vm.Run(`Response.PopHeaderKey();`)
-			key, _ = key_value.ToString()
 		}
-
-		/*
-		   value, _ := vm.Run("Response.headers['content-type'];");
-		   content_type, _ := value.ToString()
-		   if content_type != "" {
-		       w.Header().Set("Content-Type", content_type)
-		   } else if IsJSON(output) {
-		       w.Header().Set("Content-Type", "application/json")
-		   } else if IsHTML(output) {
-		       w.Header().Set("Content-Type", "text/html")
-		   }*/
+		// 4. Calc fallback content types if needed.
+		if content_type == "" && IsJSON(output) {
+			w.Header().Set("Content-Type", "application/json")
+		} else if content_type == "" && IsHTML(output) {
+			w.Header().Set("Content-Type", "text/html")
+		}
+		// 5. send the output to the browser.
 
 		fmt.Fprintf(w, "%s\n", output)
 		wslog.LogResponse(200, "OK", r.Method, r.URL, r.RemoteAddr, program.Filename, "")
