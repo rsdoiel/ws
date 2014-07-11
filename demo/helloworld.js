@@ -11,7 +11,8 @@
 (function (Request, Response) {
     var content = "\n\n# Hello\n\nfrom inside of the *OttoEngine*.\n";
 
-    Response.setHeader('Content-Type', 'text/plain');
-    return content;
-}(Request, Response));
+Response.setHeader('Content-Type', 'text/plain');
+Response.setContent(content);
 
+return Response;
+}(Request, Response));

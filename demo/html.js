@@ -2,7 +2,7 @@
  * html.js - Output a simple HTML page.
  */
 /*jslint browser: false, indent: 4 */
-(function (Request, Response) {
+(function (Request, Response){
     "use strict";
     Response.setHeader('Content-Type', 'text/html');
     return [

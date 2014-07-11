@@ -63,31 +63,33 @@ func Load(root string) ([]Program, error) {
 	return programs, nil
 }
 
-func createRequestObject(vm *otto.Otto, r *http.Request) (*otto.Object, error) {
+func createRequestLiteral(r *http.Request) (string) {
+    var (
+        headers string
+        src string
+    )
+
 	buf, err := json.Marshal(r.Header)
 	if err != nil {
-		return nil, err
-	}
+		headers = "[]"
+	} else {
+        headers = string(buf)
+    }
 
 	//FIXME: need to handle GET, POST, PUT, DELETE methods
-	src := fmt.Sprintf(`Request = {
+	src = fmt.Sprintf(`{
             Headers: %s,
             Method: %q,
             URL: %q,
             Proto: %q,
             Referrer: %q,
             UserAgent: %q
-    };`, string(buf), r.Method, r.URL, r.Proto, r.Referer(), r.UserAgent())
-
-	obj, err := vm.Object(src)
-	if err != nil {
-		return nil, err
-	}
-	return obj, nil
+    }`, headers, r.Method, r.URL, r.Proto, r.Referer(), r.UserAgent())
+	return src
 }
 
-func createResponseObject(vm *otto.Otto) (*otto.Object, error) {
-	src := `Response = {
+func createResponseLiteral() (string) {
+	src := `{
         code: 200,
         status: "OK",
         headers: {},
@@ -104,17 +106,12 @@ func createResponseObject(vm *otto.Otto) (*otto.Object, error) {
         },
         collectHeaderKeys: function () {
             return this.header_keys = Object.keys(this.headers);
-	},
-	popHeaderKey: function () {
-	    return this.header_keys.pop();
-	}
+	    },
+	    popHeaderKey: function () {
+	        return this.header_keys.pop();
+	    }
     }`
-
-	obj, err := vm.Object(src)
-	if err != nil {
-		return nil, err
-	}
-	return obj, nil
+	return src
 }
 
 func IsJSON(value otto.Value) bool {
@@ -135,24 +132,39 @@ func IsHTML(value otto.Value) bool {
 
 func Engine(program Program) {
 	http.HandleFunc(program.Route, func(w http.ResponseWriter, r *http.Request) {
-		// 1. Get get our VM for the Route
-		vm := program.VM
-        script := program.Script
+        var (
+            vm *otto.Otto
+            script string
+            closing_script string
+            request_literal string
+            response_literal string
+        )
 
-		// 2. Create fresh Request object.
-		createRequestObject(vm, r)
-		// 3. Create a fresh Response object.
-		createResponseObject(vm)
-		// 4. Run the VM passing Request along with Script
-        fmt.Printf("DEBUG scrit looks like? %v\n", script)
-		output, err := vm.Run(script)
+
+		// 1. Create fresh Request object literal.
+		request_literal = createRequestLiteral(r)
+
+		// 2. Create a fresh Response object literal.
+		response_literal = createResponseLiteral()
+
+		// 3. Setup the VM for the Route with closure
+		//vm = program.VM
+        script = string(program.Source)
+        closing_script = fmt.Sprintf(`(function () { Request = %s; Response = %s; return %s;}())`, request_literal, response_literal, script)
+        fmt.Printf("DEBUG closing_script: %s\n", closing_script)
+
+		// 4. Run the VM wrapped with a closure containing`Request, Response
+		output, err := vm.Run(closing_script)
 		if err != nil {
 			msg := fmt.Sprintf("Script: %s", err)
-			wslog.LogResponse(500, "Internal Server Error", r.Method, r.URL, r.RemoteAddr, program.Filename, msg)
+			wslog.LogResponse(500, "Internal Server Error", 
+                r.Method, r.URL, r.RemoteAddr, program.Filename, msg)
 			http.Error(w, "Internal Server Error", 500)
 			return
 		}
-		// 3. update headers from responseObject
+
+		// 5. update headers from responseObject
+        /*
 		content_type := ""
 		vm.Run(`Response.collectHeaderKeys()`)
 		key_cnt_value, _ := vm.Run("Response.header_keys.length")
@@ -171,12 +183,13 @@ func Engine(program Program) {
 				}
 			}
 		}
-		// 4. Calc fallback content types if needed.
+		// 6. Calc fallback content types if needed.
 		if content_type == "" && IsJSON(output) {
 			w.Header().Set("Content-Type", "application/json")
 		} else if content_type == "" && IsHTML(output) {
 			w.Header().Set("Content-Type", "text/html")
 		}
+        */
 		// 5. send the output to the browser.
 
 		fmt.Fprintf(w, "%s\n", output)
