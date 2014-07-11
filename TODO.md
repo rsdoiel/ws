@@ -17,6 +17,7 @@
 
 # Someday, maybe
 
++ Some sort of ephmeral shared data (e.g. a map of maps, where the outer map is a collections of collection, and the inner maps are the individual collections shared between routes)
 + Built in page speed support (e.g. automatic cache control headers, expire and etag; gzip content)
 + Support a shared in-memory map between route requests (memcache light) to reduce remote content calls
 + Figure out how to pass in a DB connector object for persistence

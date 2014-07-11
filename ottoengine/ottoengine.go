@@ -19,6 +19,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+    "bytes"
 	"strings"
 	"errors"
 )
@@ -87,6 +88,28 @@ func Load(root string) ([]Program, error) {
 	return programs, nil
 }
 
+func jsInjectGET() string {
+    return `, "GET": function () {
+        var raw_params = [],
+            getargs = {};
+        if (this.Method === "GET") {
+            raw_params = this.URL.RawQuery.split("&");
+            if (raw_params.length > 0) {
+                raw_params.forEach(function (item) {
+                    var parts = item.split("=",2);
+                
+                    if (parts.length === 2) {
+                        key = decodeURIComponent(parts[0]);
+                        value = decodeURIComponent(parts[1]);
+                        getargs[key] = value;
+                    }
+                });
+            }
+        }
+        return getargs;
+    }`
+}
+
 func createRequestLiteral(r *http.Request) string {
 	var src string
 
@@ -94,9 +117,14 @@ func createRequestLiteral(r *http.Request) string {
 	if err != nil {
 		src = "{}"
 	} else {
-		src = string(buf)
-	}
-
+        end := bytes.LastIndex(buf, []byte("}"))
+        if end > -1 {
+            // Insert our literal function def for GET
+            src = fmt.Sprintf("%s%s%s", string(buf[0:end]), jsInjectGET(), string(buf[end]))
+        } else {
+	        src = string(buf)
+        }
+    }
 	return src
 }
 
@@ -162,7 +190,7 @@ func Engine(program Program) {
 			go_response      Response
 		)
 
-		// 1. Create fresh Request object literal.
+		// 1 Create fresh Request object literal.
 		request_literal = createRequestLiteral(r)
 
 		// 2. Create a fresh Response object literal.
