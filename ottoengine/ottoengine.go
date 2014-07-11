@@ -224,28 +224,30 @@ func Engine(program Program) {
 		json_err := json.Unmarshal([]byte(json_src), &go_response)
 		if json_err != nil {
             // We're rendering from a text string, try to calc the content type.
-			content_type := "text/plain"
 			// 5. Calc headers
+			content_type := "text/plain; charset=utf-8"
 			if IsJSON(output) {
-				content_type = "application/json"
+				content_type = "application/json; charset=utf-8"
 			} else if IsHTML(output) {
-				content_type = "text/html"
+				content_type = "text/html; charset=utf-8"
 			}
-			w.Header().Set("Content-Type", "text/html")
+			w.Header().Set("Content-Type", content_type)
+
 			// 6. send the output to the browser.
 			fmt.Fprintf(w, "%s", output)
 			wslog.LogResponse(200, "OK", r.Method, r.URL, r.RemoteAddr, program.Filename, content_type)
 			return
-
 		}
 
         // We're rendering completely from the response object.
 		// 5. update headers from responseObject
-		content_type := "text/plain"
+		content_type := "text/plain; charset=utf-8"
 		for key, value := range go_response.Headers {
+            if key == "content-type" {
+                content_type = value
+            }
 			w.Header().Set(key, value)
 		}
-
 		fmt.Fprintf(w, "%s", go_response.Content)
 		wslog.LogResponse(go_response.Code, go_response.Status, r.Method, r.URL, r.RemoteAddr, program.Filename, content_type)
 	})
