@@ -1,7 +1,7 @@
 ws
 ==
 
-A light weight webserver suitable for static web content development and API prototyping. 
+    A nimble weight webserver suitable for static web content development and API prototyping. 
 
 *ws* supports basic _http_ and _https_ (SSL via TLS) protocols.  It does not 
 support _SPDY_ or _http2_ protocols. It does not support PHP, Perl, Python, 
@@ -166,9 +166,24 @@ This was create a *cert.pen* and *key.pem* files in *$HOME/etc/ws* directory.
 ## Otto
 
 [otto](https://github.com/robertkrimen/otto) is a JavaScript virtual machine written by Robert Krimen.
-The _ottoengine_ is an experimental route handler that uses _otto_ to render route content dynamically.
-The goal of _ottoengine_ is to provide a platform for prototyping content APIs consumed browser side
-by the static pages served by _ws_.
+The _ottoengine_ is allow easy route oriented API prototyping.  Each JavaScript file rendered in the 
+Otto virtual machine becomes a route.  E.g. *example-1.js* becomes the route */example-1*. *example-1* should 
+contain a closure which can recieve a "Request" and "Response" object as parameters. The "Response"
+object is used to tell the web server what to send back to the browser requesting the route.
+
+```JavaScript
+    /* example-1.js - a simple example of Request and Response objects */
+    (function (req, res) {
+        var headers = req.Headers;
+
+        res.setHeader("content-type", "text/html");
+        res.setContent("<p>Here are the headers received by this request</p>" +
+            "<pre>" + JSON.stringify(headers) + "</pre>");
+    }(Request, Response));
+```
+
+Assuming _ottoengine_ is turned on then the page rendered should have a content type of "text/html"
+with the body shoulding the paragraph about exposing the request headers as a JSON blob.
 
 Two command line options or environment variables turn _ottoengine_ on.
 
