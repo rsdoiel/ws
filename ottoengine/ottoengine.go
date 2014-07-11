@@ -78,34 +78,35 @@ func createRequestLiteral(r *http.Request) string {
 	return src
 }
 
+type Response struct {
+	Code    int
+	Status  string
+	Headers map[string]string //interface{}
+	Content string
+}
+
 func createResponseLiteral() string {
 	src := `{
-		code: 200,
-		status: "OK",
-		headers: {"content-type": "text/plain"},
-		content: null,
+		Code: 200,
+		Status: "OK",
+		Headers: {"content-type": "text/plain"},
+		Content: "",
+		setHeader: function (key, value) {
+			this.Headers[key.toLowerCase()] = value;
+			return (this.Headers[key.toLowerCase()] === value);
+		},
 		getHeader: function (key) {
-			if (this.headers[key.toLowerCase()] !== undefined) {
-				return this.headers[key.toLowerCase()];
+			if (this.Headers[key.toLowerCase()] !== undefined) {
+				return this.Headers[key.toLowerCase()];
 			}
 			return false;
 		},
-		setHeader: function (key, value) {
-			this.headers[key.toLowerCase()] = value;
-			return (this.headers[key.toLowerCase()] === value);
-		},
-		collectHeaderKeys: function () {
-			return this.header_keys = Object.keys(this.headers);
-		},
-		popHeaderKey: function () {
-			return this.header_keys.pop();
-		},
 		setContent: function (content) {
-			this.content = content;
-			return (this.content === content);
+			this.Content = content;
+			return (this.Content === content);
 		},
 		getContent: function () {
-			return this.content;
+			return this.Content;
 		}
 	}`
 	return src
@@ -127,23 +128,16 @@ func IsHTML(value otto.Value) bool {
 	return strings.HasPrefix(blob, "<!DOCTYPE html>")
 }
 
-type Response struct {
-	code int
-	status string
-	headers map[string]string
-	content []bytes
-}
-
-
 func Engine(program Program) {
 	http.HandleFunc(program.Route, func(w http.ResponseWriter, r *http.Request) {
 		var (
 			vm               *otto.Otto
 			script           string
-                        closure_script   string
-                        run_script       string
+			closure_script   string
+			run_script       string
 			request_literal  string
 			response_literal string
+			go_response      Response
 		)
 
 		// 1. Create fresh Request object literal.
@@ -163,11 +157,10 @@ func Engine(program Program) {
 		if err != nil {
 			msg := fmt.Sprintf("Script: %s", err)
 			wslog.LogResponse(500, "Internal Server Error",
-					   r.Method, r.URL, r.RemoteAddr, program.Filename, msg)
+				r.Method, r.URL, r.RemoteAddr, program.Filename, msg)
 			http.Error(w, "Internal Server Error", 500)
 			return
 		}
-fmt.Println(output)// DEBUG
 		json_src, err := output.ToString()
 		if err != nil {
 			msg := fmt.Sprintf("Conversion to JSON: %s", err)
@@ -176,38 +169,33 @@ fmt.Println(output)// DEBUG
 			http.Error(w, "Internal Server Error", 500)
 			return
 		}
-		
+		json_err := json.Unmarshal([]byte(json_src), &go_response)
+		if json_err != nil {
+			content_type := "text/plain"
+			// 5. Calc headers
+			if IsJSON(output) {
+				content_type = "application/json"
+			} else if IsHTML(output) {
+				content_type = "text/html"
+			}
+			w.Header().Set("Content-Type", "text/html")
+			// 6. send the output to the browser.
+			fmt.Fprintf(w, "%s", output)
+			wslog.LogResponse(200, "OK", r.Method, r.URL, r.RemoteAddr, program.Filename, content_type)
+			return
 
-			   // 5. update headers from responseObject
-			   /*
-				   content_type := ""
-				   vm.Run(`Response.collectHeaderKeys()`)
-				   key_cnt, _ := key_cnt_value.ToInteger()
-				   for i := int64(0); i < key_cnt; i++ {
-					   key_value, _ := vm.Run(`Response.popHeaderKey();`)
-					   key, _ := key_value.ToString()
-					   if key != "" {
-						   value_value, _ := vm.Run(fmt.Sprintf("Response.getHeader(%q);", key))
-						   value, _ := value_value.ToString()
-						   if value != "" {
-							   if key == "content-type" {
-								   content_type = value
-							   }
-							   w.Header().Set(key, value)
-						   }
-					   }
-				   }
-				   // 6. Calc fallback content types if needed.
-				   if content_type == "" && IsJSON(output) {
-					   w.Header().Set("Content-Type", "application/json")
-				   } else if content_type == "" && IsHTML(output) {
-					   w.Header().Set("Content-Type", "text/html")
-				   }
-		*/
-		// 5. send the output to the browser.
+		}
+		fmt.Printf("DEBUG go_response: code: %d, status: %s, content: %s, headers: %v\n",
+			go_response.Code, go_response.Status, go_response.Content, go_response.Headers)
 
-		fmt.Fprintf(w, "%s\n", output)
-		wslog.LogResponse(200, "OK", r.Method, r.URL, r.RemoteAddr, program.Filename, "")
+		// 5. update headers from responseObject
+		content_type := "text/plain"
+		for key, value := range go_response.Headers {
+			w.Header().Set(key, value)
+		}
+
+		fmt.Fprintf(w, "%s", go_response.Content)
+		wslog.LogResponse(go_response.Code, go_response.Status, r.Method, r.URL, r.RemoteAddr, program.Filename, content_type)
 	})
 }
 

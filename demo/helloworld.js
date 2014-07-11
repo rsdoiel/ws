@@ -8,11 +8,9 @@
  * @return the route handle should return a string or nil. This will become of body
  * of the http/https response Golang uses.
  */
-(function (Request, Response) {
-    var content = "\n\n# Hello\n\nfrom inside of the *OttoEngine*.\n";
+(function (req, res) {
+    	var content = "\n\n# Hello\n\nfrom inside of the *OttoEngine*.\n";
 
-Response.setHeader('Content-Type', 'text/plain');
-Response.setContent(content);
-
-return Response;
+	res.setHeader('Content-Type', 'text/plain');
+	res.setContent(content);
 }(Request, Response));
