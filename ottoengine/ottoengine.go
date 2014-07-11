@@ -9,6 +9,7 @@ package ottoengine
 
 import (
 	"../wslog"
+	//"./reload"
 	"encoding/json"
 	"fmt"
 	"github.com/robertkrimen/otto"
@@ -19,6 +20,7 @@ import (
 	"path"
 	"path/filepath"
 	"strings"
+	"errors"
 )
 
 type Program struct {
@@ -29,34 +31,54 @@ type Program struct {
 	Script   *otto.Script
 }
 
+func LoadFile(root string, filename string, file_info os.FileInfo, err error) (*Program, error) {
+	var (
+		ext string
+		full_path string
+		route string
+		source []byte
+		vm *otto.Otto
+		script *otto.Script
+	)
+
+	// Trim the leading path from the path string Trim ext from path string, save this as route.
+	ext = path.Ext(filename)
+	if file_info != nil && file_info.IsDir() != true && ext == ".js" {
+		if ext == ".js" {
+			route = strings.TrimSuffix(strings.TrimPrefix(filename, root), ".js")
+			log.Printf("Reading %s\n", filename)
+			source, err = ioutil.ReadFile(filename)
+			if err != nil {
+				return nil, err
+			}
+			vm = otto.New()
+			full_path, err = filepath.Abs(filename)
+			if err != nil {
+				return nil, err
+			}
+
+			// Attempt to compile source and abort is there is a problem
+			script, err = vm.Compile(full_path, source)
+			if err != nil {
+				return nil, errors.New(fmt.Sprintf("File: %s, %s\n", full_path, err))
+			}
+		}
+	}
+	return &Program{Route: route, Filename: filename, Source: source, VM: vm, Script: script}, nil
+}
+
 func Load(root string) ([]Program, error) {
 	var programs []Program
 
 	err := filepath.Walk(root, func(filename string, file_info os.FileInfo, err error) error {
-		// Trim the leading path from the path string Trim ext from path string, save this as route.
-		ext := path.Ext(filename)
-		if file_info != nil && file_info.IsDir() != true && ext == ".js" {
-			if ext == ".js" {
-				route := strings.TrimSuffix(strings.TrimPrefix(filename, root), ".js")
-				log.Printf("Reading %s\n", filename)
-				source, err := ioutil.ReadFile(filename)
-				if err != nil {
-					log.Fatal(err)
-				}
-				vm := otto.New()
-				full_path, err := filepath.Abs(filename)
-				if err != nil {
-					log.Fatal(err)
-				}
-
-				// Attempt to compile source and abort is there is a problem
-				script, err := vm.Compile(full_path, source)
-				if err != nil {
-					log.Fatalf("File: %s, %s\n", full_path, err)
-				}
-				programs = append(programs, Program{Route: route, Filename: filename, Source: source, VM: vm, Script: script})
-			}
-		}
+	    ext := path.Ext(filename)
+	    if file_info != nil && file_info.IsDir() != true && ext == ".js" {
+		    p, err := LoadFile(root, filename, file_info, err)
+		    if err != nil {
+			    return err
+		    }
+            programs = append(programs, Program{Route: p.Route, Filename: p.Filename, Source: p.Source, VM: p.VM, Script: p.Script})
+        }
 		return nil
 	})
 	if err != nil {
@@ -169,8 +191,11 @@ func Engine(program Program) {
 			http.Error(w, "Internal Server Error", 500)
 			return
 		}
+        // See if we're rendering from a returned text string or JSON
+        // via the Response object.
 		json_err := json.Unmarshal([]byte(json_src), &go_response)
 		if json_err != nil {
+            // We're rendering from a text string, try to calc the content type.
 			content_type := "text/plain"
 			// 5. Calc headers
 			if IsJSON(output) {
@@ -185,9 +210,8 @@ func Engine(program Program) {
 			return
 
 		}
-		fmt.Printf("DEBUG go_response: code: %d, status: %s, content: %s, headers: %v\n",
-			go_response.Code, go_response.Status, go_response.Content, go_response.Headers)
 
+        // We're rendering completely from the response object.
 		// 5. update headers from responseObject
 		content_type := "text/plain"
 		for key, value := range go_response.Headers {

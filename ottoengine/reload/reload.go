@@ -1,9 +1,9 @@
 /**
- * WatchFfile.go - a simplistic file watcher to hold the fort until Go 1.4 when
+ * reload.go - a simplistic file watcher to hold the fort until Go 1.4 when
  * fsnotify is expected to become core.
  */
 
-package wsnotify
+package reload
 
 func WatchFile(filePath string, checks_every_n_seconds int) error {
 	// Record the initial stat of the file.
