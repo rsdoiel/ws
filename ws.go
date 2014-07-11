@@ -36,33 +36,37 @@ import (
 	"time"
 )
 
+var REVISION = "v0.0.0"
+
 // variables for keygen
 var (
 	cli_keygen   = flag.Bool("keygen", false, "Generate TLS ceriticates and keys")
-	cli_ssl_host = flag.String("ssl-host", "", "Comma-separated hostnames and IPs to generate a certificate for")
-	validFrom    = flag.String("start-date", "", "Creation date formatted as Jan 1 15:04:05 2011")
-	validFor     = flag.Duration("duration", 365*24*time.Hour, "Duration that certificate is valid for")
-	organization = flag.String("organization", "Acme Co.", "Organization used to sign certificate")
-	isCA         = flag.Bool("ca", false, "whether this cert should be its own Certificate Authority")
-	rsaBits      = flag.Int("rsa-bits", 2048, "Size of RSA key to generate")
+	cli_ssl_host = flag.String("keygen-ssl-host", "", "Comma-separated hostnames and IPs to generate a certificate for")
+	validFrom    = flag.String("keygen-start-date", "", "Creation date formatted as Jan 1 15:04:05 2011")
+	validFor     = flag.Duration("keygen-duration", 365*24*time.Hour, "Duration that certificate is valid for")
+	organization = flag.String("keygen-organization", "Acme Co.", "Organization used to sign certificate")
+	isCA         = flag.Bool("keygen-ca", false, "whether this cert should be its own Certificate Authority")
+	rsaBits      = flag.Int("keygen-rsa-bits", 2048, "Size of RSA key to generate")
 )
 
 // command line parameters that override environment variables
 var (
-	cli_use_tls   = flag.Bool("tls", false, "Turn on TLS (https) support with true, off with false (default is false)")
-	cli_docroot   = flag.String("docroot", "", "Path to the document root")
-	cli_host      = flag.String("host", "", "Hostname http(s) server to listen for")
-	cli_port      = flag.String("port", "", "Port number to listen on")
-	cli_cert      = flag.String("cert", "", "Filename to your SSL cert.pem")
-	cli_key       = flag.String("key", "", "Filename to your SSL key.pem")
-	cli_otto      = flag.Bool("otto", false, "Enable if true, disabled by default. Otto JS VM route handler support")
-	cli_otto_path = flag.String("otto-path", "", "The search path for runable Otto JS Programs.")
+	cli_use_tls   *bool
+	cli_docroot   *string
+	cli_host      *string
+	cli_port      *string
+	cli_cert      *string
+	cli_key       *string
+	cli_otto      *bool
+	cli_otto_path *string
+	cli_version   *bool
 )
 
 var ErrHelp = errors.New("flag: Help requested")
 
 var Usage = func() {
-	fmt.Fprintf(os.Stderr, "Usage of %s\n", os.Args[0])
+	//fmt.Printf("Revision %s\n", REVISION)
+	//fmt.Printf("Usage of %s\n", os.Args[0])
 	flag.PrintDefaults()
 }
 
@@ -368,8 +372,48 @@ func keygen(profile *Profile) error {
 	return nil
 }
 
+func init() {
+	// command line parameters that override environment variables, many have short forms too.
+	shortform := " (short form)"
+
+	// No short form
+	cli_use_tls = flag.Bool("tls", false, "Turn on TLS (https) support with true, off with false (default is false)")
+	cli_key = flag.String("key", "", "path to your SSL key pem file.")
+	cli_cert = flag.String("cert", "", "path to your SSL cert pem file.")
+
+	// These have short forms too
+	msg := "document root"
+	cli_docroot = flag.String("docroot", "", msg)
+	flag.StringVar(cli_docroot, "D", "", msg+shortform)
+
+	msg = "hostname for webserver"
+	cli_host = flag.String("host", "", msg)
+	flag.StringVar(cli_host, "H", "", msg+shortform)
+
+	msg = "Port number to listen on"
+	cli_port = flag.String("port", "", msg)
+	flag.StringVar(cli_port, "P", "", msg+shortform)
+
+	msg = "turn on ottoengine, defaults to false"
+	cli_otto = flag.Bool("otto", false, msg)
+	flag.BoolVar(cli_otto, "o", false, msg+shortform)
+
+	msg = "directory containingo your ottoengine JavaScript files"
+	cli_otto_path = flag.String("otto-path", "", msg)
+	flag.StringVar(cli_otto_path, "O", "", msg+shortform)
+
+	msg = "Display the version number"
+	cli_version = flag.Bool("version", false, msg)
+	flag.BoolVar(cli_version, "v", false, msg+shortform)
+}
+
 func main() {
 	flag.Parse()
+
+	if *cli_version == true {
+		fmt.Println(REVISION)
+		os.Exit(0)
+	}
 
 	profile, _ := LoadProfile(*cli_docroot, *cli_host, *cli_port, *cli_use_tls, *cli_cert, *cli_key, *cli_otto, *cli_otto_path)
 	if *cli_keygen == true {
