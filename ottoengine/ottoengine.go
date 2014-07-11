@@ -1,7 +1,9 @@
 /**
- * ottoengine.go - ottoengine module provides a way to define route processing using
- * the Otto JavaScript virutal machine.
+ * ottoengine.go - ottoengine module provides a way to define route processing
+ * using the Otto JavaScript virutal machine.
+ *
  * Otto is written by Robert Krimen, see https://github.com/robertkrimen/otto
+ * Otto Engine is written by Robert Doiel, see https://github.com/rsdoiel/ws
  */
 package ottoengine
 
@@ -63,18 +65,18 @@ func Load(root string) ([]Program, error) {
 	return programs, nil
 }
 
-func createRequestLiteral(r *http.Request) (string) {
-    var (
-        headers string
-        src string
-    )
+func createRequestLiteral(r *http.Request) string {
+	var (
+		headers string
+		src     string
+	)
 
 	buf, err := json.Marshal(r.Header)
 	if err != nil {
 		headers = "[]"
 	} else {
-        headers = string(buf)
-    }
+		headers = string(buf)
+	}
 
 	//FIXME: need to handle GET, POST, PUT, DELETE methods
 	src = fmt.Sprintf(`{
@@ -88,7 +90,7 @@ func createRequestLiteral(r *http.Request) (string) {
 	return src
 }
 
-func createResponseLiteral() (string) {
+func createResponseLiteral() string {
 	src := `{
         code: 200,
         status: "OK",
@@ -132,14 +134,13 @@ func IsHTML(value otto.Value) bool {
 
 func Engine(program Program) {
 	http.HandleFunc(program.Route, func(w http.ResponseWriter, r *http.Request) {
-        var (
-            vm *otto.Otto
-            script string
-            closing_script string
-            request_literal string
-            response_literal string
-        )
-
+		var (
+			vm               *otto.Otto
+			script           string
+			closing_script   string
+			request_literal  string
+			response_literal string
+		)
 
 		// 1. Create fresh Request object literal.
 		request_literal = createRequestLiteral(r)
@@ -149,47 +150,47 @@ func Engine(program Program) {
 
 		// 3. Setup the VM for the Route with closure
 		//vm = program.VM
-        script = string(program.Source)
-        closing_script = fmt.Sprintf(`(function () { Request = %s; Response = %s; return %s;}())`, request_literal, response_literal, script)
-        fmt.Printf("DEBUG closing_script: %s\n", closing_script)
+		script = string(program.Source)
+		closing_script = fmt.Sprintf(`(function () { Request = %s; Response = %s; return %s;}())`, request_literal, response_literal, script)
+		fmt.Printf("DEBUG closing_script: %s\n", closing_script)
 
 		// 4. Run the VM wrapped with a closure containing`Request, Response
 		output, err := vm.Run(closing_script)
 		if err != nil {
 			msg := fmt.Sprintf("Script: %s", err)
-			wslog.LogResponse(500, "Internal Server Error", 
-                r.Method, r.URL, r.RemoteAddr, program.Filename, msg)
+			wslog.LogResponse(500, "Internal Server Error",
+				r.Method, r.URL, r.RemoteAddr, program.Filename, msg)
 			http.Error(w, "Internal Server Error", 500)
 			return
 		}
 
 		// 5. update headers from responseObject
-        /*
-		content_type := ""
-		vm.Run(`Response.collectHeaderKeys()`)
-		key_cnt_value, _ := vm.Run("Response.header_keys.length")
-		key_cnt, _ := key_cnt_value.ToInteger()
-		for i := int64(0); i < key_cnt; i++ {
-			key_value, _ := vm.Run(`Response.popHeaderKey();`)
-			key, _ := key_value.ToString()
-			if key != "" {
-				value_value, _ := vm.Run(fmt.Sprintf("Response.getHeader(%q);", key))
-				value, _ := value_value.ToString()
-				if value != "" {
-					if key == "content-type" {
-						content_type = value
+		/*
+			content_type := ""
+			vm.Run(`Response.collectHeaderKeys()`)
+			key_cnt_value, _ := vm.Run("Response.header_keys.length")
+			key_cnt, _ := key_cnt_value.ToInteger()
+			for i := int64(0); i < key_cnt; i++ {
+				key_value, _ := vm.Run(`Response.popHeaderKey();`)
+				key, _ := key_value.ToString()
+				if key != "" {
+					value_value, _ := vm.Run(fmt.Sprintf("Response.getHeader(%q);", key))
+					value, _ := value_value.ToString()
+					if value != "" {
+						if key == "content-type" {
+							content_type = value
+						}
+						w.Header().Set(key, value)
 					}
-					w.Header().Set(key, value)
 				}
 			}
-		}
-		// 6. Calc fallback content types if needed.
-		if content_type == "" && IsJSON(output) {
-			w.Header().Set("Content-Type", "application/json")
-		} else if content_type == "" && IsHTML(output) {
-			w.Header().Set("Content-Type", "text/html")
-		}
-        */
+			// 6. Calc fallback content types if needed.
+			if content_type == "" && IsJSON(output) {
+				w.Header().Set("Content-Type", "application/json")
+			} else if content_type == "" && IsHTML(output) {
+				w.Header().Set("Content-Type", "text/html")
+			}
+		*/
 		// 5. send the output to the browser.
 
 		fmt.Fprintf(w, "%s\n", output)
