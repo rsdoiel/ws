@@ -88,8 +88,8 @@ func Load(root string) ([]Program, error) {
 	return programs, nil
 }
 
-func jsInjectGET() string {
-    return `, "GET": function () {
+func jsGET() string {
+    return `function () {
         var raw_params = [],
             getargs = {},
             space_re = /\+/g;
@@ -111,6 +111,43 @@ func jsInjectGET() string {
     }`
 }
 
+func jsPOST(post string) string {
+    src := `function () {
+        var post_string = %q,
+            raw_params = [],
+            postargs = {},
+            space_re = /\+/g;
+
+        if (this.Method === "POST") {
+            raw_params = post_string.split("&");
+            if (raw_params.length > 0) {
+                raw_params.forEach(function (item) {
+                    var parts = item.split("=",2);
+                
+                    if (parts.length === 2) {
+                        key = decodeURIComponent(parts[0].replace(space_re, ' '));
+                        value = decodeURIComponent(parts[1].replace(space_re, ' '));
+                        postargs[key] = value;
+                    }
+                });
+            }
+        }
+        return postargs;
+    }`
+    return fmt.Sprintf(src, post)
+}
+
+func jsInjectMethod(name string, src string, buf []byte) string {
+    end := bytes.LastIndex(buf, []byte("}"))
+    if end > -1 {
+        // Insert our literal function def for GET
+        src = fmt.Sprintf("%s,%s:%s%s", string(buf[0:end]), name, src, string(buf[end]))
+    } else {
+	    src = string(buf)
+    }
+    return src
+}
+
 func createRequestLiteral(r *http.Request) string {
 	var src string
 
@@ -118,12 +155,18 @@ func createRequestLiteral(r *http.Request) string {
 	if err != nil {
 		src = "{}"
 	} else {
-        end := bytes.LastIndex(buf, []byte("}"))
-        if end > -1 {
-            // Insert our literal function def for GET
-            src = fmt.Sprintf("%s%s%s", string(buf[0:end]), jsInjectGET(), string(buf[end]))
-        } else {
-	        src = string(buf)
+        switch r.Method {
+            case "GET":
+                return jsInjectMethod("GET", jsGET(), buf) 
+            case "POST":
+                body, err := ioutil.ReadAll(r.Body)
+                if err != nil {
+                    log.Printf("POST read eror: %s", err)
+                    return string(buf)
+                }
+                return jsInjectMethod("POST", jsPOST(string(body)), buf)
+            default:
+                src = string(buf)
         }
     }
 	return src
