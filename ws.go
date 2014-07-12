@@ -20,7 +20,7 @@ import (
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/pem"
-	"errors"
+	//"errors"
 	"flag"
 	"fmt"
 	"log"
@@ -36,7 +36,7 @@ import (
 	"time"
 )
 
-var REVISION = "v0.0.0"
+var REVISION = "v0.0.0-alpha"
 
 // variables for keygen
 var (
@@ -62,11 +62,7 @@ var (
 	cli_version   *bool
 )
 
-var ErrHelp = errors.New("flag: Help requested")
-
 var Usage = func() {
-	//fmt.Printf("Revision %s\n", REVISION)
-	//fmt.Printf("Usage of %s\n", os.Args[0])
 	flag.PrintDefaults()
 }
 
