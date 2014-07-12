@@ -15,10 +15,10 @@
     }
     // 3. If GET.name then display greeting
     if (GET.name) {
-        output = "<h1>Hello " + GET.name + "</h1>";
+        output = "<h1>Hello " + GET.name + "</h1><p>A few moments latter &hellip;</p>";
     }    
     // 4. Otherwise display webform
-    output += '<p><form method="get" action="/helloworld-3">Excuse me, what is your name? <input type="text" name="name"> <button type="submit">Answer</button></form>';
+    output += '<p><form method="get" action="/helloworld-3">Forgetful Harry asks, &ldquo;Excuse me, what is your name?&rdquo; <input type="text" name="name"> <button type="submit">Answer</button></form>';
 
     res.setContent(output);
 }(Request, Response));

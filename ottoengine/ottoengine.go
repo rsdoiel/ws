@@ -91,7 +91,8 @@ func Load(root string) ([]Program, error) {
 func jsInjectGET() string {
     return `, "GET": function () {
         var raw_params = [],
-            getargs = {};
+            getargs = {},
+            space_re = /\+/g;
         if (this.Method === "GET") {
             raw_params = this.URL.RawQuery.split("&");
             if (raw_params.length > 0) {
@@ -99,8 +100,8 @@ func jsInjectGET() string {
                     var parts = item.split("=",2);
                 
                     if (parts.length === 2) {
-                        key = decodeURIComponent(parts[0]);
-                        value = decodeURIComponent(parts[1]);
+                        key = decodeURIComponent(parts[0].replace(space_re, ' '));
+                        value = decodeURIComponent(parts[1].replace(space_re, ' '));
                         getargs[key] = value;
                     }
                 });
