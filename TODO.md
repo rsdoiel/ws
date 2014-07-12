@@ -4,6 +4,8 @@
 ## v0.0.1 pre-release
 
 + Finish ottoengine prototype
+    - Add multi-part POST support (e.g. file uploads)
+    - Add PUT and DELETE support
     - Figure out how to support extended path E.g.
         + if /test is handled by test.js, it should also handle /test/something/else
 + Make sure docs cover all 
@@ -26,5 +28,5 @@
 + Implement a file watcher to reload scripts on change rather then only at server startup.
 + Add deb package support
 + Add Mac ports package support
-+ Add support for Lisp
++ Add support for a Lisp dialect
 
