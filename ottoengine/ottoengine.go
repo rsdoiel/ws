@@ -89,10 +89,14 @@ func Load(root string) ([]Program, error) {
 }
 
 func jsGET() string {
-    return `function () {
+    return `function (debug) {
         var raw_params = [],
             getargs = {},
             space_re = /\+/g;
+
+        if (debug === undefined) {
+            debug = false;
+        }
         if (this.Method === "GET") {
             raw_params = this.URL.RawQuery.split("&");
             if (raw_params.length > 0) {
@@ -107,19 +111,33 @@ func jsGET() string {
                 });
             }
         }
+        if (debug === true) {
+            console.log("GET REQUEST: ", JSON.stringify(getargs));
+        }
         return getargs;
     }`
 }
 
 func jsPOST(post string) string {
-    src := `function () {
-        var post_string = %q,
+    src := `function (debug) {
+        var post_string = %q.trim(),
             raw_params = [],
             postargs = {},
             space_re = /\+/g;
+        if (debug === undefined) {
+            debug = false;
+        }
 
         if (this.Method === "POST") {
-            raw_params = post_string.split("&");
+            // Is it a JSON post?
+            
+            if ((post_string.substr(0,1) === "{" && post_string.substr(-1, 1) === "}") ||
+                    (post_string.substr(0,1) === "[" && post_string.substr(-1, 1) === "]")) {
+                raw_params = JSON.parse(post_string) 
+            } else {
+                // It's a normal URL encoded post
+                raw_params = post_string.split("&");
+            }
             if (raw_params.length > 0) {
                 raw_params.forEach(function (item) {
                     var parts = item.split("=",2);
@@ -131,6 +149,9 @@ func jsPOST(post string) string {
                     }
                 });
             }
+        }
+        if (debug === true) {
+            console.log("POST REQUEST: ", JSON.stringify(postargs));
         }
         return postargs;
     }`
@@ -159,6 +180,7 @@ func createRequestLiteral(r *http.Request) string {
             case "GET":
                 return jsInjectMethod("GET", jsGET(), buf) 
             case "POST":
+                //FIXME: need to handle multi-part POST requests (E.g. uploading a file)
                 body, err := ioutil.ReadAll(r.Body)
                 if err != nil {
                     log.Printf("POST read eror: %s", err)
