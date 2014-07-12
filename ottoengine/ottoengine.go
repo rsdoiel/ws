@@ -88,74 +88,44 @@ func Load(root string) ([]Program, error) {
 	return programs, nil
 }
 
-func jsGET() string {
-    return `function (debug) {
-        var raw_params = [],
-            getargs = {},
+func jsMethodHandler(method string, data string) string {
+    return fmt.Sprintf(`function (debug) {
+        var data_as_string = %q.trim(),
+            key_value_as_string = [],
+            data = {},
             space_re = /\+/g;
 
         if (debug === undefined) {
             debug = false;
         }
-        if (this.Method === "GET") {
-            raw_params = this.URL.RawQuery.split("&");
-            if (raw_params.length > 0) {
-                raw_params.forEach(function (item) {
-                    var parts = item.split("=",2);
-                
-                    if (parts.length === 2) {
-                        key = decodeURIComponent(parts[0].replace(space_re, ' '));
-                        value = decodeURIComponent(parts[1].replace(space_re, ' '));
-                        getargs[key] = value;
-                    }
-                });
-            }
-        }
-        if (debug === true) {
-            console.log("GET REQUEST: ", JSON.stringify(getargs));
-        }
-        return getargs;
-    }`
-}
-
-func jsPOST(post string) string {
-    src := `function (debug) {
-        var post_string = %q.trim(),
-            raw_params = [],
-            postargs = {},
-            space_re = /\+/g;
-        if (debug === undefined) {
-            debug = false;
-        }
-
-        if (this.Method === "POST") {
-            // Is it a JSON post?
-            
-            if ((post_string.substr(0,1) === "{" && post_string.substr(-1, 1) === "}") ||
-                    (post_string.substr(0,1) === "[" && post_string.substr(-1, 1) === "]")) {
-                raw_params = JSON.parse(post_string) 
+        if (this.Method === "%s") {
+            // Is it a JSON post?  
+            if ((data_as_string.substr(0,1) === "{" && 
+                    data_as_string.substr(-1, 1) === "}") ||
+                    (data_as_string.substr(0,1) === "[" && 
+                    data_as_string.substr(-1, 1) === "]")) {
+                 data = JSON.parse(data_as_string) 
             } else {
                 // It's a normal URL encoded post
-                raw_params = post_string.split("&");
-            }
-            if (raw_params.length > 0) {
-                raw_params.forEach(function (item) {
-                    var parts = item.split("=",2);
+                key_value_as_string = data_as_string.split("&");
+                if (key_value_as_string.length > 0) {
+                    key_value_as_string.forEach(function (item) {
+                        var parts = item.split("=",2);
                 
-                    if (parts.length === 2) {
-                        key = decodeURIComponent(parts[0].replace(space_re, ' '));
-                        value = decodeURIComponent(parts[1].replace(space_re, ' '));
-                        postargs[key] = value;
-                    }
-                });
+                        if (parts.length === 2) {
+                            key = decodeURIComponent(parts[0].replace(space_re, ' '));
+                            value = decodeURIComponent(parts[1].replace(space_re, ' '));
+                            data[key] = value;
+                        }
+                    });
+                }
             }
         }
         if (debug === true) {
-            console.log("POST REQUEST: ", JSON.stringify(postargs));
+            console.log("%s REQUEST: ", JSON.stringify(data));
         }
-        return postargs;
-    }`
-    return fmt.Sprintf(src, post)
+        return data;
+    }`, data, method, method)
 }
 
 func jsInjectMethod(name string, src string, buf []byte) string {
@@ -170,28 +140,21 @@ func jsInjectMethod(name string, src string, buf []byte) string {
 }
 
 func createRequestLiteral(r *http.Request) string {
-	var src string
-
 	buf, err := json.Marshal(r)
 	if err != nil {
-		src = "{}"
-	} else {
-        switch r.Method {
-            case "GET":
-                return jsInjectMethod("GET", jsGET(), buf) 
-            case "POST":
-                //FIXME: need to handle multi-part POST requests (E.g. uploading a file)
-                body, err := ioutil.ReadAll(r.Body)
-                if err != nil {
-                    log.Printf("POST read eror: %s", err)
-                    return string(buf)
-                }
-                return jsInjectMethod("POST", jsPOST(string(body)), buf)
-            default:
-                src = string(buf)
-        }
+		return "{}"
+	}
+    switch r.Method {
+        case "POST":
+            //FIXME: need to handle multi-part requests (E.g. uploading a file)
+            body, err := ioutil.ReadAll(r.Body)
+            if err != nil {
+                  log.Printf("POST read eror: %s", err)
+                  return string(buf)
+            }
+            return jsInjectMethod("POST", jsMethodHandler(r.Method, string(body)), buf)
     }
-	return src
+    return jsInjectMethod(r.Method, jsMethodHandler(r.Method, r.URL.RawQuery), buf) 
 }
 
 type Response struct {

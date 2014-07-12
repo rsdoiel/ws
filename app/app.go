@@ -33,6 +33,7 @@ func LoadProfile(cli_docroot string, cli_host string, cli_port string, cli_use_t
 	if err != nil {
 		return nil, err
 	}
+    //Q: Should I really default to localhost? instead of Hostname?
 	hostname, err := os.Hostname()
 	if err != nil {
 		return nil, err
@@ -58,6 +59,8 @@ func LoadProfile(cli_docroot string, cli_host string, cli_port string, cli_use_t
 	env_docroot := os.Getenv("WS_DOCROOT")
 	env_otto := os.Getenv("WS_OTTO")
 	env_otto_path := os.Getenv("WS_OTTO_PATH")
+
+    // merge the environment settings
 	if env_host != "" {
 		hostname = env_host
 	}
@@ -113,6 +116,7 @@ func LoadProfile(cli_docroot string, cli_host string, cli_port string, cli_use_t
 		otto = true
 	}
 	if cli_otto_path != "" {
+        otto = true
 		otto_path = cli_otto_path
 	}
 

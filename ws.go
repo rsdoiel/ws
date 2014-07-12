@@ -216,32 +216,32 @@ func init() {
 	shortform := " (short form)"
 
 	// No short form
-	cli_use_tls = flag.Bool("tls", false, "Turn on TLS (https) support with true, off with false (default is false)")
+	cli_use_tls = flag.Bool("tls", false, "When true this turns on TLS (https) support.")
 	cli_key = flag.String("key", "", "path to your SSL key pem file.")
 	cli_cert = flag.String("cert", "", "path to your SSL cert pem file.")
 
 	// These have short forms too
-	msg := "document root"
+	msg := "This is your document root for static files."
 	cli_docroot = flag.String("docroot", "", msg)
 	flag.StringVar(cli_docroot, "D", "", msg+shortform)
 
-	msg = "hostname for webserver"
+	msg = "Set this hostname for webserver."
 	cli_host = flag.String("host", "", msg)
 	flag.StringVar(cli_host, "H", "", msg+shortform)
 
-	msg = "Port number to listen on"
+	msg = "Set the port number to listen on."
 	cli_port = flag.String("port", "", msg)
 	flag.StringVar(cli_port, "P", "", msg+shortform)
 
-	msg = "turn on ottoengine, defaults to false"
+	msg = "When true this option turns on ottoengine. Uses the path defined by WS_OTTO_PATH environment variable or one provided by -O option."
 	cli_otto = flag.Bool("otto", false, msg)
 	flag.BoolVar(cli_otto, "o", false, msg+shortform)
 
-	msg = "directory containingo your ottoengine JavaScript files"
+	msg = "Turns on otto engine using the path for route JavaScript route handlers"
 	cli_otto_path = flag.String("otto-path", "", msg)
-	flag.StringVar(cli_otto_path, "op", "", msg+shortform)
+	flag.StringVar(cli_otto_path, "O", "", msg+shortform)
 
-	msg = "Display the version number"
+	msg = "Display the version number of ws command."
 	cli_version = flag.Bool("version", false, msg)
 	flag.BoolVar(cli_version, "v", false, msg+shortform)
 }
