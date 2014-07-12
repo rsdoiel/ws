@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Hello World using PUT</title>
+    </head>
+    <body>
+        <h1>Hello World using PUT</h1>
+        <form method="PUT" action="/helloworld-5">
+            Excuse me, what is your Name? <input type="text" name="name">
+            <button>Answer</button>
+        </form>
+        <div id="response"></div>
+        <script>
+        // Now send our PUT via xhr.
+        var answer = document.querySelector("button"),
+            name = document.querySelector("input[name=name]"),
+            response document.getElementById("response");
+
+        answer.addEventListener("click", function (ev) {
+            var xhr = new XMLHTTPRequest();
+            xhr.addEventListener("load", function (ev) {
+                alert("Message completed");
+                response.innerHTML = ev.responseText;
+            });
+            xhr.open("PUT", "/helloworld-5?name=" + encodeURI(name.value, true);
+            xhr.send();
+            ev.preventDefault();
+        }, true);
+        </scipt>
+    </body>
+</html>
