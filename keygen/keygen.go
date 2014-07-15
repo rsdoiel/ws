@@ -2,115 +2,100 @@
  * keygen.go - based on the keygen code in the TLS package adapted
  * to fit the demands of this ws.go project.
  */
-package main
+package keygen
 
 import (
     "../app"
     "os"
+    "path"
     "crypto/rand"
     "crypto/rsa"
     "crypto/x509"
     "crypto/x509/pkix"
     "encoding/pem"
     "math/big"
-    "path"
-    "strings"
     "bufio"
     "fmt"
+    "log"
+    "time"
+    "net"
+    "strings"
 )
 
 func Keygen(profile *app.Profile) error {
+    var (
+        organization string
+        rsaBits int
+        line string
+    )
+
     reader := bufio.NewReader(os.Stdin)
 
-	home := path.Join(os.Getenv("HOME"), "etc/ws")
-    fmt.Printf("Write cert/key to %s? (enter accepts the default) ", home)
-    line, _ := reader.ReadString('\n')
+	basedir :=  "./etc"
+    fmt.Printf("Write cert and key to directory %s? (enter accepts the default) ", basedir)
+    line, _ = reader.ReadString('\n')
+    line = strings.TrimSpace(line)
     if line != "" {
-        home = line
-        //FIXME: need to do a mkdir -p to ensure the path exists
+        basedir = line
     }
-    certFilename := path.Join(home, "cert.pem")
-    fmt.Printf("Certificate filename is %s? (enter accepts default)", certFilename)
-    line, _ := reader.ReadString('\n')
-    if line != "" {
-        certFilename = path.Join(home, line)
+    err := os.MkdirAll(basedir, 0770)
+    if err != nil {
+        log.Fatalf("%s\n", err)
     }
 
-	keyFilename := profile.Key
+    certFilename := path.Join(basedir, "cert.pem")
+    fmt.Printf("Certificate filename is %s? (enter accepts default)", certFilename)
+    line, _ = reader.ReadString('\n')
+    line = strings.TrimSpace(line)
+    if line != "" {
+        certFilename = line
+    }
+
+	keyFilename := path.Join(basedir, "key.pem")
     fmt.Printf("Key filename is %s? (enter accepts default)", keyFilename)
-    line, _ := reader.ReadString('\n')
+    line, _ = reader.ReadString('\n')
+    line = strings.TrimSpace(line)
 	if line != "" {
-		keyFilename = path.Join(home, line)
+		keyFilename = line
 	}
 
-	hostnames := "localhost;" + os.Getenv("Hostname")
-    fmt.Printf("Hostnames for SSL certs %s? (enter accepts default)", hostnames)
-    line, _ := reader.ReadString('\n')
+	hostnames := os.Getenv("HOSTNAME")
+    if hostnames == "" {
+        hostnames = "localhost"
+    }
+    fmt.Printf("SSL certs for %s? (enter accepts default, use comma to separate hostnames)", hostnames)
+    line, _ = reader.ReadString('\n')
+    line = strings.TrimSpace(line)
 	if line != "" {
         hostnames = line
 	}
 
-    organization := "Acme Co."
-    fmt.Printf("Organization %s? (enter accepts default)?", organization)
-    line, _ := reader.ReadString('\n')
-    if line != "" {
-        organiation = line
-    }
-
-    rsaBits := "2048"
-
-	log.Printf("\n\n"+
+	fmt.Printf("\n\n"+
 		" Cert: %s\n"+
 		"  Key: %s\n"+
 		" Host: %s\n"+
-		" Organization: %s\n"+
-        // default to 2048, otherwise numeric
-        " RSA Bits: %s\n"+
-        // Parsable dates
-        " Valid from: %s\n"+
-        // isCA true/false
-        " isCA: %s\n"+
 		"\n\n",
 		certFilename,
 		keyFilename,
-		hostnames,
-		organization,
-        rsaBits,
-        validFrom,
-        isCA)
+		hostnames)
 
-	priv, err := rsa.GenerateKey(rand.Reader, *rsaBits)
+
+    organization = "Acme Co."
+    rsaBits = 2048
+	priv, err := rsa.GenerateKey(rand.Reader, rsaBits)
 	if err != nil {
 		log.Fatalf("failed to generate private key: %s", err)
 	}
-
-	var notBefore time.Time
-	if len(*validFrom) == 0 {
-		notBefore = time.Now()
-	} else {
-		notBefore, err = time.Parse("Jan 2 15:04:05 2006", *validFrom)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "Failed to parse creation date: %s\n", err)
-			return err
-		}
-	}
-
-	notAfter := notBefore.Add(*validFor)
-
-	// end of ASN.1 time
-	endOfTime := time.Date(2049, 12, 31, 2, 59, 59, 0, time.UTC)
-	if notAfter.After(endOfTime) {
-		notAfter = endOfTime
-	}
+	notBefore := time.Now()
+	notAfter := time.Date(2049, 12, 31, 2, 59, 59, 0, time.UTC)
 
 	template := x509.Certificate{
 		SerialNumber: new(big.Int).SetInt64(0),
 		Subject: pkix.Name{
-			Organization: []string{*organization},
+			Organization: []string{organization},
 		},
 		NotBefore: notBefore,
 		NotAfter:  notAfter,
-
 		KeyUsage:              x509.KeyUsageKeyEncipherment | x509.KeyUsageDigitalSignature,
 		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
 		BasicConstraintsValid: true,
@@ -125,10 +110,8 @@ func Keygen(profile *app.Profile) error {
 		}
 	}
 
-	if *isCA {
-		template.IsCA = true
-		template.KeyUsage |= x509.KeyUsageCertSign
-	}
+	template.IsCA = true
+	template.KeyUsage |= x509.KeyUsageCertSign
 
 	derBytes, err := x509.CreateCertificate(rand.Reader, &template, &template, &priv.PublicKey, priv)
 	if err != nil {

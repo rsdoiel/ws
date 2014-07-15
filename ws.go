@@ -21,12 +21,10 @@ import (
 	"flag"
 	"fmt"
 	"log"
-	"math/big"
 	"net"
 	"net/http"
 	"os"
 	"path/filepath"
-	"time"
 )
 
 var REVISION = "v0.0.0-alpha"
@@ -148,7 +146,7 @@ func main() {
         if err != nil {
             log.Fatalf("%s\n", err)
         }
-        os.exit(0)
+        os.Exit(0)
     }
 
 	log.Printf("\n\n"+

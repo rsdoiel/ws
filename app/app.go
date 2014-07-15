@@ -10,6 +10,7 @@ import (
     "path"
     "path/filepath"
     "log"
+    "errors"
 )
 
 // Application's profile - who started the process, port assignment
@@ -147,7 +148,6 @@ func LoadProfile(cli_docroot string, cli_host string, cli_port string, cli_use_t
     } else if otto == false {
         otto_path = ""
     }
-    log.Printf("DEBUG otto_path: %s\n", otto_path)
 	return &Profile{
 		Username:  ws_user.Username,
 		Hostname:  hostname,
@@ -162,7 +162,7 @@ func LoadProfile(cli_docroot string, cli_host string, cli_port string, cli_use_t
 
 // Init - initializes a basic _ws_ project structure (e.g. creates
 // ws-config.sh; mkdir -p etc static dynamic).
-func Init() {
-    log.Fatalln("app.Init() not implemented.")
+func Init() error {
+    return errors.New("app.Init() not implemented.")
 }
 
