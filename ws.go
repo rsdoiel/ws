@@ -40,8 +40,8 @@ var (
 	cli_otto      *bool
 	cli_otto_path *string
 	cli_version   *bool
-	cli_keygen   = flag.Bool("keygen", false, "Interactive tool to generate TLS ceriticates and keys")
-    cli_init     = flag.Bool("init", false, "Create a basic project structure")
+	cli_keygen   = flag.Bool("keygen", false, "Interactive tool to generate TLS certificates and keys")
+    cli_init     = flag.Bool("init", false, "Creates a basic project structure in the current working directory")
 )
 
 var Usage = func() {
