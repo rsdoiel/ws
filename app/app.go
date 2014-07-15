@@ -4,16 +4,16 @@
 package app
 
 import (
+    "../prompt"
+    "../keygen"
     "fmt"
-    "io"
-    "bufio"
     "os"
     "os/user"
     "strings"
     "path"
     "path/filepath"
     "log"
-    "errors"
+    "io/ioutil"
 )
 
 // Application's profile - who started the process, port assignment
@@ -29,6 +29,7 @@ type Profile struct {
 	Otto      bool
 	Otto_Path string
 }
+
 
 // LoadProfile - load an application profile from both the environment
 // and cli options.
@@ -164,87 +165,114 @@ func LoadProfile(cli_docroot string, cli_host string, cli_port string, cli_use_t
 }
 
 // Init - initializes a basic project structure (e.g. creates static, dynamic, README.md, etc/config.sh)
-func Init() {
-    var line string
+func Init() error {
+    var (
+        project_name string
+        author_name string
+        description string
+        docroot string
+        use_tls bool
+        cert_filename string
+        key_filename string
+        otto bool
+        otto_path string
+        config string
+        OK  bool
+        err error
+    )
 
-    // Get the name of the project
-    project_name := "Big Reptiles"
-    author_name := "Mr. Lizard"
-    description := "A demo project"
-    config := "etc"
-    use_tls := false
-    docroot := "static"
-    otto := false
-    otto_path := "dynamic"
+    OK = false
+    use_tls = false
+    docroot = "static"
+    otto = false
+    otto_path = "dynamic"
+    for OK == false {
+        project_name = prompt.PromptString("Name of Project: (e.g. Big Reptiles)", "Big Reptiles")
+        author_name = prompt.PromptString("Name of Author(s): (e.g. Mr. Lizard)", "Mr. Lizard")
+        description = prompt.PromptString("Description (e.g A demo project)", "A Demo Project")
+        docroot = prompt.PromptString("Document root for static files (e.g. ./static)", docroot)
+        config = prompt.PromptString("Directory to use for configuration files (e.g. ./etc)", "etc")
+        otto = prompt.YesNo("Turn on Otto Engine?")
+        if otto == true {
+            otto_path = prompt.PromptString("Path to Otto Engine routes (e.g. ./dyanmic)", otto_path)
+        }
+        fmt.Printf("Configuration choosen\nProject: %s\nAuthor(s): %s\nDescription: %s\nDocroot: %s\n",
+            project_name,
+            author_name,
+            description,
+            docroot)
+        fmt.Printf("Turn on Otto Engine: %v %s\n", otto, otto_path)
 
-    fmt.Printf("Name of project: %s", project_name)
-    line, _ = bufio.ReadString('\n')
-    line = strings.TrimSpace(line)
-    if line != "" {
-        project_name = line
+        // Display current settings
+        OK = prompt.YesNo("Is this OK?")
     }
 
-    fmt.Printf("Author(s): %s", author_name)
-    line, _ = bufio.ReadString('\n')
-    line = strings.TrimSpace(line)
-    if line != "" {
-        author_name = line
-    }
-
-    fmt.Printf("Description: %s", description)
-    line, _ = bufio.ReadString('\n')
-    line = strings.TrimSpace(line)
-    if line != "" {
-        description = line
-    }
-
-    fmt.Printf("Config directory: %s", config)
-    line, _ = bufio.ReadString('\n')
-    line = strings.TrimSpace(line)
-    if line != "" {
-        config = line
-    }
-
-    fmt.Print("Run with SSL support? (y/n)")
-    line, _ =  bufio.ReadString('\n')
-    line = strings.ToLowerCase(strings.Trim(line))
-    if line == "y" {
-        use_tls = true
-    }
-
-    fmt.Printf("Docroot: %s", docroot)
-    line, _ := bufio.ReadString('\n')
-    line = strings.TrimSpace(line)
-    if line != "" {
-        docroot = line
-    }
-
-    fmt.Print("Turn Otto Engine on? (y/n)")
-    line, _ := bufio.ReadString('\n')
-    line = strins.ToLowerCase(strings.TrimSpace(line))
-    if line == "y" {
-        otto = true
-        fmt.Printf("Otto path: %s", otto_path)
-        line, _ := bufio.ReadString('\n')
-        line = strings.TrimSpace(line)
-        if line != "" {
-            otto_path = line
+    use_tls = prompt.YesNo("Configure for SSL support?")
+    if use_tls == true {
+        // Defer handling of SSL questions to keygen.Keygen()
+        cert_filename, key_filename, err = keygen.Keygen(path.Join(config, "ssl"), "cert.pem", "key.pem")
+        if err != nil {
+            return err
         }
     }
 
-    os.MkdirAll(config, 0770)
-    os.MkdirAll(docroot, 0775)
-    os.MkdirAll(otto_path, 0775)
+    fmt.Printf("Creating %s\n", config)
+    err = os.MkdirAll(config, 0770)
+    if err != nil {
+        return err
+    }
 
-    readme := fmt.Sprintf("\n# %s\n\n By %s\n\n %s\n\n", project_name, author_name, description)
-    ioutil.WriteFile("README.md", []byte(readme), 0664)
+    fmt.Printf("Creating %s\n", docroot)
+    err = os.MkdirAll(docroot, 0775)
+    if err != nil {
+        return err
+    }
 
+    if otto == true {
+        fmt.Printf("Creating %s\n", otto_path)
+        err = os.MkdirAll(otto_path, 0775)
+        if err != nil {
+            return err
+        }
+    }
+
+    fmt.Println("Creating README.md")
+    readme := fmt.Sprintf("\n# %s\n\nBy %s\n\n## Overview\n%s\n\n", project_name, author_name, description)
+    err = ioutil.WriteFile("README.md", []byte(readme), 0664)
+    if err != nil {
+        return err
+    }
+
+    fmt.Printf("Creating %s\n", path.Join(config, "config.sh"))
     config_environment := fmt.Sprintf("#!/bin/bash\n# %s configuration\n# Source this file before running ws\n\nexport WS_DOCROOT=%q\nexport WS_OTTO=%s\nexport WS_OTTO_PATH=%q\n")
 
     if use_tls == true {
-        config_environment += fmt.Sprintf("\nexport TLS=true\nexport WS_CERT=%s/cert.pem\nexport WS_KEY=%s/key.pem\n\n", config)
-        fmt.Println("Run ws -keygen and set the directory to match %s with cert filename of cert.pem and key filename of key.pem")
+        config_environment += fmt.Sprintf("\nexport TLS=true\nexport WS_CERT=%s\nexport WS_KEY=%s\n\n", cert_filename, key_filename)
     } 
-    ioutil.WriteFile(path.Join(config, "config.sh"), config_environment, 0770)
+    err = ioutil.WriteFile(path.Join(config, "config.sh"), []byte(config_environment), 0770)
+    if err != nil {
+        return err
+    }
+
+    index := fmt.Sprintf(`<!DOCTYPE html>
+<html>
+    <head>
+        <title>%s</title>
+    </head>
+    <body>
+        <h1>%s</h1>
+        <p>by %s</p>
+        <div>%s</div>
+    </body>
+</html>
+`, project_name, author_name, description)
+    err = ioutil.WriteFile(path.Join(docroot, "index.html"), []byte(index), 0664)
+    if err != nil {
+        return err
+    }
+
+    //FIXME: add dynamic/test.js example.
+    fmt.Println("Setup completed.")
+    return nil
 }
 

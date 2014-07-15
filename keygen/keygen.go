@@ -5,7 +5,7 @@
 package keygen
 
 import (
-    "../app"
+    "../prompt"
     "os"
     "path"
     "crypto/rand"
@@ -14,81 +14,65 @@ import (
     "crypto/x509/pkix"
     "encoding/pem"
     "math/big"
-    "bufio"
-    "fmt"
-    "log"
     "time"
     "net"
     "strings"
+    "fmt"
 )
 
-func Keygen(profile *app.Profile) error {
+func Keygen(basedir string, cert_pem string, key_pem string) (string, string, error) {
     var (
+        cert_filename = cert_pem
+        key_filename = key_pem
+        hostnames string
+        ssl_path string
         organization string
         rsaBits int
-        line string
+        OK = false
     )
 
-    reader := bufio.NewReader(os.Stdin)
-
-	basedir :=  "./etc"
-    fmt.Printf("Write cert and key to directory %s? (enter accepts the default) ", basedir)
-    line, _ = reader.ReadString('\n')
-    line = strings.TrimSpace(line)
-    if line != "" {
-        basedir = line
+	hostnames = os.Getenv("HOSTNAME")
+    ssl_path = path.Join(basedir)
+    for OK == false {
+        ssl_path = prompt.PromptString(fmt.Sprintf("Use %s for cert and key? (enter accepts the default) ", 
+            ssl_path), ssl_path)
+        cert_filename = prompt.PromptString("Use cert.pem for certificate file?", "cert.pem")
+        key_filename = prompt.PromptString("Use key.pem for key file?", "key.pem")
+        hostnames = prompt.PromptString(fmt.Sprintf("SSL certs for %s? (enter accepts default, use comma to separate hostnames)", hostnames), hostnames)
+        if hostnames == "" {
+            hostnames = "localhost"
+        }
+	    fmt.Printf("\n\n"+
+		    " Cert: %s\n"+
+		    "  Key: %s\n"+
+		    " Host: %s\n"+
+		    "\n\n",
+            path.Join(ssl_path, cert_filename),
+		    path.Join(ssl_path, key_filename),
+		    hostnames)
+        OK = prompt.YesNo("Is this correct?")
     }
-    err := os.MkdirAll(basedir, 0770)
-    if err != nil {
-        log.Fatalf("%s\n", err)
+
+    // FIXME see if directory exists first
+    if ssl_path != "" {
+        fmt.Printf("Creating %s\n", ssl_path)
+        err := os.MkdirAll(ssl_path, 0770)
+        if err != nil {
+            return "", "", err 
+        }
     }
-
-    certFilename := path.Join(basedir, "cert.pem")
-    fmt.Printf("Certificate filename is %s? (enter accepts default)", certFilename)
-    line, _ = reader.ReadString('\n')
-    line = strings.TrimSpace(line)
-    if line != "" {
-        certFilename = line
-    }
-
-	keyFilename := path.Join(basedir, "key.pem")
-    fmt.Printf("Key filename is %s? (enter accepts default)", keyFilename)
-    line, _ = reader.ReadString('\n')
-    line = strings.TrimSpace(line)
-	if line != "" {
-		keyFilename = line
-	}
-
-	hostnames := os.Getenv("HOSTNAME")
-    if hostnames == "" {
-        hostnames = "localhost"
-    }
-    fmt.Printf("SSL certs for %s? (enter accepts default, use comma to separate hostnames)", hostnames)
-    line, _ = reader.ReadString('\n')
-    line = strings.TrimSpace(line)
-	if line != "" {
-        hostnames = line
-	}
-
-	fmt.Printf("\n\n"+
-		" Cert: %s\n"+
-		"  Key: %s\n"+
-		" Host: %s\n"+
-		"\n\n",
-		certFilename,
-		keyFilename,
-		hostnames)
-
 
     organization = "Acme Co."
     rsaBits = 2048
+    fmt.Println("Generating 2048 bit key")
 	priv, err := rsa.GenerateKey(rand.Reader, rsaBits)
 	if err != nil {
-		log.Fatalf("failed to generate private key: %s", err)
+        return "", "", err
 	}
 	notBefore := time.Now()
 	notAfter := time.Date(2049, 12, 31, 2, 59, 59, 0, time.UTC)
 
+    fmt.Println("Setting up cerificates")
 	template := x509.Certificate{
 		SerialNumber: new(big.Int).SetInt64(0),
 		Subject: pkix.Name{
@@ -101,6 +85,7 @@ func Keygen(profile *app.Profile) error {
 		BasicConstraintsValid: true,
 	}
 
+    fmt.Println("Checking IP addresses")
 	hosts := strings.Split(hostnames, ",")
 	for _, h := range hosts {
 		if ip := net.ParseIP(h); ip != nil {
@@ -113,28 +98,33 @@ func Keygen(profile *app.Profile) error {
 	template.IsCA = true
 	template.KeyUsage |= x509.KeyUsageCertSign
 
+    fmt.Println("Generating x509 certs from template")
 	derBytes, err := x509.CreateCertificate(rand.Reader, &template, &template, &priv.PublicKey, priv)
 	if err != nil {
-		log.Fatalf("Failed to create certificate: %s", err)
+        return "", "", err
 	}
 
+    certFilename := path.Join(ssl_path, cert_filename)
+    keyFilename := path.Join(ssl_path, key_filename)
+    fmt.Printf("Creating %s", certFilename)
 	certOut, err := os.Create(certFilename)
 	if err != nil {
-		log.Fatalf("failed to open cert.pem for writing: %s", err)
+        return "", "", err
 	}
+    fmt.Println("Encode as pem")
 	pem.Encode(certOut, &pem.Block{Type: "CERTIFICATE", Bytes: derBytes})
 	certOut.Close()
-	log.Printf("written %s\n", certFilename)
+	fmt.Printf("Wrote %s\n", certFilename)
 
+    fmt.Printf("Creating %s", keyFilename)
 	keyOut, err := os.OpenFile(keyFilename, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
 	if err != nil {
-		log.Print("failed to open key.pem for writing:", err)
-		return err
+		return "", "", err
 	}
 	pem.Encode(keyOut, &pem.Block{Type: "RSA PRIVATE KEY", Bytes: x509.MarshalPKCS1PrivateKey(priv)})
 	keyOut.Close()
-	log.Printf("written %s\n", keyFilename)
+	fmt.Printf("Wrote %s\n", keyFilename)
 	// We got this for so no errors
-	return nil
+	return certFilename, keyFilename, nil
 }
 

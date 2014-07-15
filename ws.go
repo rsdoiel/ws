@@ -134,10 +134,11 @@ func main() {
 
 	profile, _ := app.LoadProfile(*cli_docroot, *cli_host, *cli_port, *cli_use_tls, *cli_cert, *cli_key, *cli_otto, *cli_otto_path)
 	if *cli_keygen == true {
-		err := keygen.Keygen(profile)
+		certFilename, keyFilename, err := keygen.Keygen("etc/ssl", "cert.pem", "key.pem")
 		if err != nil {
 			log.Fatalf("%s\n", err)
 		}
+        fmt.Printf("Wrote %s and %s\n", certFilename, keyFilename)
 		os.Exit(0)
 	}
 
