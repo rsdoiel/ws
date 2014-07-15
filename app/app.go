@@ -34,10 +34,13 @@ func LoadProfile(cli_docroot string, cli_host string, cli_port string, cli_use_t
 		return nil, err
 	}
     //Q: Should I really default to localhost? instead of Hostname?
+    /*
 	hostname, err := os.Hostname()
 	if err != nil {
 		return nil, err
 	}
+    */
+    hostname := "localhost"
 	port := "8000"
 	use_tls := false
 	otto := false
@@ -156,3 +159,10 @@ func LoadProfile(cli_docroot string, cli_host string, cli_port string, cli_use_t
 		Otto:      otto,
 		Otto_Path: otto_path}, nil
 }
+
+// Init - initializes a basic _ws_ project structure (e.g. creates
+// ws-config.sh; mkdir -p etc static dynamic).
+func Init() {
+    log.Fatalln("app.Init() not implemented.")
+}
+
