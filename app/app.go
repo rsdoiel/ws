@@ -244,7 +244,7 @@ func Init() error {
     }
 
     fmt.Printf("Creating %s\n", path.Join(config, "config.sh"))
-    config_environment := fmt.Sprintf("#!/bin/bash\n# %s configuration\n# Source this file before running ws\n\nexport WS_DOCROOT=%q\nexport WS_OTTO=%s\nexport WS_OTTO_PATH=%q\n")
+    config_environment := fmt.Sprintf("#!/bin/bash\n# %s configuration\n# Source this file before running ws\n\nexport WS_DOCROOT=%q\nexport WS_OTTO=%v\nexport WS_OTTO_PATH=%q\n", project_name, docroot, otto, otto_path)
 
     if use_tls == true {
         config_environment += fmt.Sprintf("\nexport TLS=true\nexport WS_CERT=%s\nexport WS_KEY=%s\n\n", cert_filename, key_filename)
@@ -254,6 +254,7 @@ func Init() error {
         return err
     }
 
+    fmt.Printf("Creating %s/index.html", docroot)
     index := fmt.Sprintf(`<!DOCTYPE html>
 <html>
     <head>
@@ -265,11 +266,27 @@ func Init() error {
         <div>%s</div>
     </body>
 </html>
-`, project_name, author_name, description)
+`, project_name, project_name, author_name, description)
     err = ioutil.WriteFile(path.Join(docroot, "index.html"), []byte(index), 0664)
     if err != nil {
         return err
     }
+
+    test_js := `
+//
+// test.js - an example Otto Engine route handler
+//
+(function (req, res) {
+    res.setHeader("Content-Type", "text/plain")
+    res.setContent("Hello World!")
+}(Request, Response)
+`
+    fmt.Printf("Creating %s/test.js", otto_path)
+    err = ioutil.WriteFile(path.Join(otto_path, "test.js"), []byte(test_js), 0664)
+    if err != nil {
+        return err
+    }
+
 
     //FIXME: add dynamic/test.js example.
     fmt.Println("Setup completed.")
