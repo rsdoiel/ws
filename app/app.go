@@ -38,13 +38,6 @@ func LoadProfile(cli_docroot string, cli_host string, cli_port string, cli_use_t
 	if err != nil {
 		return nil, err
 	}
-    //Q: Should I really default to localhost? instead of Hostname?
-    /*
-	hostname, err := os.Hostname()
-	if err != nil {
-		return nil, err
-	}
-    */
     hostname := "localhost"
 	port := "8000"
 	use_tls := false
@@ -167,6 +160,8 @@ func LoadProfile(cli_docroot string, cli_host string, cli_port string, cli_use_t
 // Init - initializes a basic project structure (e.g. creates static, dynamic, README.md, etc/config.sh)
 func Init() error {
     var (
+        host string
+        port string
         project_name string
         author_name string
         description string
@@ -190,6 +185,8 @@ func Init() error {
         project_name = prompt.PromptString("Name of Project: (e.g. Big Reptiles)", "Big Reptiles")
         author_name = prompt.PromptString("Name of Author(s): (e.g. Mr. Lizard)", "Mr. Lizard")
         description = prompt.PromptString("Description (e.g A demo project)", "A Demo Project")
+        host = prompt.PromptString("Hostname (e.g. localhost)", "localhost")
+        port = prompt.PromptString("Post (e.g. 8000)", "8000")
         docroot = prompt.PromptString("Document root for static files (e.g. ./static)", docroot)
         config = prompt.PromptString("Directory to use for configuration files (e.g. ./etc)", "etc")
         otto = prompt.YesNo("Turn on Otto Engine?")
@@ -244,17 +241,17 @@ func Init() error {
     }
 
     fmt.Printf("Creating %s\n", path.Join(config, "config.sh"))
-    config_environment := fmt.Sprintf("#!/bin/bash\n# %s configuration\n# Source this file before running ws\n\nexport WS_DOCROOT=%q\nexport WS_OTTO=%v\nexport WS_OTTO_PATH=%q\n", project_name, docroot, otto, otto_path)
+    config_environment := fmt.Sprintf("#!/bin/bash\n# %s configuration\n# Source this file before running ws\n#\n\nexport WS_HOST=%q\nexport WS_POST=%q\nexport WS_DOCROOT=%q\nexport WS_OTTO=%v\nexport WS_OTTO_PATH=%q\n", project_name, host, port, docroot, otto, otto_path)
 
     if use_tls == true {
-        config_environment += fmt.Sprintf("\nexport TLS=true\nexport WS_CERT=%s\nexport WS_KEY=%s\n\n", cert_filename, key_filename)
+        config_environment += fmt.Sprintf("\nexport TLS=true\nexport WS_CERT=%s\nexport WS_KEY=%s\n\n", port, cert_filename, key_filename)
     } 
     err = ioutil.WriteFile(path.Join(config, "config.sh"), []byte(config_environment), 0770)
     if err != nil {
         return err
     }
 
-    fmt.Printf("Creating %s/index.html", docroot)
+    fmt.Printf("Creating %s/index.html\n", docroot)
     index := fmt.Sprintf(`<!DOCTYPE html>
 <html>
     <head>
@@ -272,23 +269,24 @@ func Init() error {
         return err
     }
 
-    test_js := `
-//
-// test.js - an example Otto Engine route handler
-//
+    if otto == true {
+        test_js := `/**
+ * test.js - an example Otto Engine route handler
+ */
+/*jslint browser: false, indent: 4 */
+/*global Request, Response */
 (function (req, res) {
     res.setHeader("Content-Type", "text/plain")
     res.setContent("Hello World!")
-}(Request, Response)
+}(Request, Response))
 `
-    fmt.Printf("Creating %s/test.js", otto_path)
-    err = ioutil.WriteFile(path.Join(otto_path, "test.js"), []byte(test_js), 0664)
-    if err != nil {
-        return err
+        fmt.Printf("Creating %s/test.js\n", otto_path)
+        err = ioutil.WriteFile(path.Join(otto_path, "test.js"), []byte(test_js), 0664)
+        if err != nil {
+            return err
+        }
     }
 
-
-    //FIXME: add dynamic/test.js example.
     fmt.Println("Setup completed.")
     return nil
 }

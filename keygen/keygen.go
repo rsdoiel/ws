@@ -32,20 +32,25 @@ func Keygen(basedir string, cert_pem string, key_pem string) (string, string, er
     )
 
 	hostnames = os.Getenv("HOSTNAME")
+    if hostnames == "" {
+        hostnames = "localhost"
+    }
+    cert_filename = "cert.pem"
+    key_filename = "key.pem"
     ssl_path = path.Join(basedir)
     for OK == false {
         ssl_path = prompt.PromptString(fmt.Sprintf("Use %s for cert and key? (enter accepts the default) ", 
             ssl_path), ssl_path)
-        cert_filename = prompt.PromptString("Use cert.pem for certificate file?", "cert.pem")
-        key_filename = prompt.PromptString("Use key.pem for key file?", "key.pem")
+        cert_filename = prompt.PromptString("Certificate filename (default is cert.pem)?", "cert.pem")
+        key_filename = prompt.PromptString("Key filename (default key.pem)?", "key.pem")
         hostnames = prompt.PromptString(fmt.Sprintf("SSL certs for %s? (enter accepts default, use comma to separate hostnames)", hostnames), hostnames)
         if hostnames == "" {
             hostnames = "localhost"
         }
 	    fmt.Printf("\n\n"+
-		    " Cert: %s\n"+
-		    "  Key: %s\n"+
-		    " Host: %s\n"+
+		    "    Cert: %s\n"+
+		    "     Key: %s\n"+
+		    " Host(s): %s\n"+
 		    "\n\n",
             path.Join(ssl_path, cert_filename),
 		    path.Join(ssl_path, key_filename),
@@ -117,7 +122,7 @@ func Keygen(basedir string, cert_pem string, key_pem string) (string, string, er
 	fmt.Printf("Wrote %s\n", certFilename)
 
     fmt.Printf("Creating %s", keyFilename)
-	keyOut, err := os.OpenFile(keyFilename, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
+	keyOut, err := os.OpenFile(keyFilename, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0660)
 	if err != nil {
 		return "", "", err
 	}
