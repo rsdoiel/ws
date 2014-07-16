@@ -150,7 +150,7 @@ func main() {
         os.Exit(0)
     }
 
-	log.Printf("\n\n"+
+	fmt.Printf("\n\n"+
 		"          TLS: %t\n"+
 		"         Cert: %s\n"+
 		"          Key: %s\n"+
