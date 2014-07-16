@@ -6,18 +6,18 @@ package keygen
 
 import (
     "../prompt"
-    "os"
     "path"
-    "crypto/rand"
-    "crypto/rsa"
-    "crypto/x509"
-    "crypto/x509/pkix"
-    "encoding/pem"
-    "math/big"
-    "time"
-    "net"
-    "strings"
-    "fmt"
+	"crypto/rand"
+	"crypto/rsa"
+	"crypto/x509"
+	"crypto/x509/pkix"
+	"encoding/pem"
+	"fmt"
+	"math/big"
+	"net"
+	"os"
+	"strings"
+	"time"
 )
 
 func Keygen(basedir string, cert_pem string, key_pem string) (string, string, error) {
@@ -26,7 +26,6 @@ func Keygen(basedir string, cert_pem string, key_pem string) (string, string, er
         key_filename = key_pem
         hostnames string
         ssl_path string
-        organization string
         rsaBits int
         OK = false
     )
@@ -67,7 +66,6 @@ func Keygen(basedir string, cert_pem string, key_pem string) (string, string, er
         }
     }
 
-    organization = "Acme Co."
     rsaBits = 2048
     fmt.Println("Generating 2048 bit key")
 	priv, err := rsa.GenerateKey(rand.Reader, rsaBits)
@@ -81,7 +79,7 @@ func Keygen(basedir string, cert_pem string, key_pem string) (string, string, er
 	template := x509.Certificate{
 		SerialNumber: new(big.Int).SetInt64(0),
 		Subject: pkix.Name{
-			Organization: []string{organization},
+			Organization: []string{"Acme Co"},
 		},
 		NotBefore: notBefore,
 		NotAfter:  notAfter,
@@ -89,6 +87,7 @@ func Keygen(basedir string, cert_pem string, key_pem string) (string, string, er
 		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
 		BasicConstraintsValid: true,
 	}
+
 
     fmt.Println("Checking IP addresses")
 	hosts := strings.Split(hostnames, ",")
@@ -100,9 +99,8 @@ func Keygen(basedir string, cert_pem string, key_pem string) (string, string, er
 		}
 	}
 
-	template.IsCA = true
-	template.KeyUsage |= x509.KeyUsageCertSign
 
+	template.IsCA = false
     fmt.Println("Generating x509 certs from template")
 	derBytes, err := x509.CreateCertificate(rand.Reader, &template, &template, &priv.PublicKey, priv)
 	if err != nil {
@@ -111,7 +109,8 @@ func Keygen(basedir string, cert_pem string, key_pem string) (string, string, er
 
     certFilename := path.Join(ssl_path, cert_filename)
     keyFilename := path.Join(ssl_path, key_filename)
-    fmt.Printf("Creating %s", certFilename)
+    fmt.Printf("Creating %s\n", certFilename)
+
 	certOut, err := os.Create(certFilename)
 	if err != nil {
         return "", "", err
@@ -121,8 +120,8 @@ func Keygen(basedir string, cert_pem string, key_pem string) (string, string, er
 	certOut.Close()
 	fmt.Printf("Wrote %s\n", certFilename)
 
-    fmt.Printf("Creating %s", keyFilename)
-	keyOut, err := os.OpenFile(keyFilename, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0660)
+    fmt.Printf("Creating %s\n", keyFilename)
+	keyOut, err := os.OpenFile(keyFilename, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
 	if err != nil {
 		return "", "", err
 	}

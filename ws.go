@@ -80,7 +80,6 @@ func Webserver(profile *app.Profile) error {
 		if profile.Cert == "" || profile.Key == "" {
 			log.Fatalf("TLS set true but missing key or certificate")
 		}
-        log.Printf("Cert: %s\nKey: %s\n", profile.Cert, profile.Key)
 		log.Println("Starting https://" + net.JoinHostPort(profile.Hostname, profile.Port))
 		return http.ListenAndServeTLS(net.JoinHostPort(profile.Hostname, profile.Port), profile.Cert, profile.Key, request_log(http.DefaultServeMux))
 	}

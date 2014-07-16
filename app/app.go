@@ -244,7 +244,7 @@ func Init() error {
     config_environment := fmt.Sprintf("#!/bin/bash\n# %s configuration\n# Source this file before running ws\n#\n\nexport WS_HOST=%q\nexport WS_POST=%q\nexport WS_DOCROOT=%q\nexport WS_OTTO=%v\nexport WS_OTTO_PATH=%q\n", project_name, host, port, docroot, otto, otto_path)
 
     if use_tls == true {
-        config_environment += fmt.Sprintf("\nexport TLS=true\nexport WS_CERT=%s\nexport WS_KEY=%s\n\n", port, cert_filename, key_filename)
+        config_environment += fmt.Sprintf("\nexport TLS=true\nexport WS_CERT=%s\nexport WS_KEY=%s\n\n", cert_filename, key_filename)
     } 
     err = ioutil.WriteFile(path.Join(config, "config.sh"), []byte(config_environment), 0770)
     if err != nil {
