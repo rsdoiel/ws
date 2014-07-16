@@ -5,6 +5,7 @@ At its simplest _ws_ is a static content web server.  It makes it quick to proto
 that run browser side.  After you have installed _ws_ server static content is as easy as changing
 your directory to your document root and then starting _ws_. 
 
+
 ## Example 1
 
 ### Simple usage
@@ -14,7 +15,6 @@ your site with _ws_ you need to--
 
 1. Change to the /Sites directory
 2. Start _ws_
-
 
 
 ```shell
@@ -108,79 +108,12 @@ Currently the Otto Engine is quite simple. All scripts found in the *WS_OTTO_PAT
 
 Each Otto Engine defined route recieves a "Request" and "Response" object they can use to process the route (e.g. html forms submittions). The *Request* object provides full access it the request headers including two functions "GET()" and "POST()" for retrieving the values of form submissions. The *Reponse* object setups what gets sent to the browser by the web server. It has two methods if interest - "setHeader()" and "setContent()". Between these two objects and their methods a high level of useful API prototyping and be explored.
 
-The following "features" are currently remain unimplemented--
+Some "features" in a dynamic webserver are not implemented from in _ws_ with Otto Engine. These
+include--
 
-+ File system access (reading or writing)
-+ Remote system access (e.g. CURL support)
 + Data Persistenence (e.g. access a database like MySQL on MongoDB)
++ Remote system access (e.g. CURL support)
++ File system access (reading or writing)
 
-These features may be introduced in the future but at present are not
-required in the _ws_ role of prototyping tool.
-
-
-## Tutorials
-
-### Setting up
-
-Here are the steps I use to build a typical
-prototype. My prototype will be build in a directory called "demo"
-
-1. Create a directory from my prototype.
-    - *mkdir demo; cd demo*
-2. Create a directory for my static content
-    - *mkdir static*
-3. In the "demo" directory create a Bash shell script named *ws-setup.sh* with the following exported environment variables--
-
-```shell
-    #!/bin/bash
-    # I usually call this file
-
-    # Example prototype configuration
-    export WS_HOST=localhost
-    export WS_PORT=8000
-    export WS_DOCROOT=$(pwd)/static
-```
-
-These can then be made availab to _ws_ by "sourcing" the Bash script.
-
-```shell
-    . ws-setup.sh
-```
-
-You can confirm that variables *WS_OTTO*, *WS_OTTO_PATH* and *WS_DOCROOT* are set appropriately by "echoing" them to the console--
-
-```shell
-    echo "Docroot $WS_DOCROOT, Otto $WS_OTTO and $WS_OTTO_PATH"
-```
-
-If you have made it this far you are ready to begin prototyping but before we start _ws_ we need to at least have some static content. Create *index.html* in the static directory.
-
-```HTML
-    <!DOCTYPE html>
-    <html>
-        <head><title>Hello from ws</title></head>
-        <body>Hello from ws</body>
-    </html>
-```
-
-Now you are ready to start _ws_ webserver.  In your shell run the *ws* command--
-
-```shell
-    ws
-```
-
-As _ws_ starts you should see the configuration logged to the script. When _ws_ is ready it will display a startup log message indicating the URL it is listening for (e.g. http://localhost:8000). Point your web browser at it and you should see the HTML page we created.
-
-To stop _ws_ switch back to your console window and press "ctr-c" (holding down the control key you press the letter c). _ws_ should quick.
-
-### Hello World
-
-In the first tutorial we setup _ws_ to support development of static content.  This is useful. You can test your CSS, HTML and browser side JavaScript with this basic configuration.  At some point you may need to prototype a more dynamic (server side) solution. That is where Otto Engine comes in. Otto Engine supports a restricted JavaScript virtual machine where you can simulte things like API responses (e.g. Send back JSON information based on a form submission).  To add this to our protype we will do three things
-
-1. create a subdirectory for our dynamic content
-2. Update our *ws-setup.sh* to include the Otto Engine settings
-3. create a JavaScript file that returns a JSON object "hello world" message
-
-
-
+Forms of these may be introducted in the future.
 
