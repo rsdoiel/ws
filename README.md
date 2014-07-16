@@ -1,11 +1,15 @@
 ws
 ==
 
-A light weight webserver suitable for static web content development. 
+    A nimble weight webserver suitable for static web content development and API prototyping. 
 
-*ws* supports basic _http_ and _https_ (via TLS) protocols.  It does not 
+*ws* supports basic _http_ and _https_ (SSL via TLS) protocols.  It does not 
 support _SPDY_ or _http2_ protocols. It does not support PHP, Perl, Python, 
 etc. It is a static content webserver.
+
+It has experimental support for dynamic content via route handlers written in JavaScript
+and execute by the [otto](https://github.com/robertkermin/otto) JavaScript virtual machine.
+
 
 # USAGE
 
@@ -120,7 +124,7 @@ of information.
 
 1. It needs to knows where to find your *cert.pem*
 2. It needs to know where to find your  *key.pem*
-3. It needs to know to use TLS support.
+3. It needs to know to use SSL/TLS support.
 
 By default _ws_ will look for *cert.pem* and *key.pem* in your *$HOME/etc/ws* 
 directory. You can specify alternate locations with the _-cert_ and _-key_ 
@@ -147,4 +151,45 @@ variable _WS\_TLS_ set to "true".
 If this was sourced in your login scripts then by default _ws_ will run as a 
 _https_ server with the document root set to your current working directory 
 for your current hostname on port 8443.
+
+### Generating TLS certificates and keys
+
+_ws_ comes with a *-keygen* option for generating self-signed certificates
+and keys.
+
+```SHELL
+    ws -keygen
+```
+
+This was create a *cert.pen* and *key.pem* files in *$HOME/etc/ws* directory.
+
+## Otto
+
+[otto](https://github.com/robertkrimen/otto) is a JavaScript virtual machine written by Robert Krimen.
+The _ottoengine_ is allow easy route oriented API prototyping.  Each JavaScript file rendered in the 
+Otto virtual machine becomes a route.  E.g. *example-1.js* becomes the route */example-1*. *example-1* should 
+contain a closure which can recieve a "Request" and "Response" object as parameters. The "Response"
+object is used to tell the web server what to send back to the browser requesting the route.
+
+```JavaScript
+    /* example-1.js - a simple example of Request and Response objects */
+    (function (req, res) {
+        var header = req.Header;
+
+        res.setHeader("content-type", "text/html");
+        res.setContent("<p>Here is the Header array received by this request</p>" +
+            "<pre>" + JSON.stringify(header) + "</pre>");
+    }(Request, Response));
+```
+
+Assuming _ottoengine_ is turned on then the page rendered should have a content type of "text/html"
+with the body shoulding the paragraph about exposing the request headers as a JSON blob.
+
+Two command line options or environment variables turn _ottoengine_ on.
+
++ -otto, WS_OTTO - values true/false, defaults to false. True turns on _ottoengine_
++ -otto-path, WS_OTTO_PATH - sets the path to the scripts used to defined the routes being handled. Each file found in the path becomes a route.
+
+
+
 

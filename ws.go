@@ -1,219 +1,178 @@
 /**
- * ws.go - A light weight webserver for static content development.
- * Supports both http and https protocols.
+ * ws.go - A light weight webserver for static content
+ * development and prototyping route based web API.
+ *
+ * Supports both http and https protocols. Dynamic route
+ * processing available via Otto JavaScript virtual machines.
  *
  * @author R. S. Doiel, <rsdoiel@yahoo.com>
  * copyright (c) 2014
- * Released under the BSD 2-Clause License
+ * All rights reserved.
+ * @license BSD 2-Clause License
  */
 package main
 
 import (
-	"errors"
+    "./fsengine"
+	"./ottoengine"
+	"./wslog"
+    "./app"
+    "./keygen"
 	"flag"
 	"fmt"
 	"log"
-	"math/rand"
 	"net"
 	"net/http"
 	"os"
-	"os/user"
-	"path"
-	"regexp"
-	"strconv"
-	"strings"
-	"time"
+	"path/filepath"
 )
+
+var REVISION = "v0.0.0-alpha"
 
 // command line parameters that override environment variables
 var (
-	cli_use_tls = flag.Bool("tls", false, "Turn on TLS (https) support with true, off with false (default is false)")
-	cli_docroot = flag.String("docroot", "", "Path to the docment root")
-	cli_port = flag.Int("port", 0, "Port number to listen on")
-	cli_cert = flag.String("cert", "", "Path to your TLS cert.pem")
-	cli_key = flag.String("key", "", "Path to your TLS key.pem")
+	cli_use_tls   *bool
+	cli_docroot   *string
+	cli_host      *string
+	cli_port      *string
+	cli_cert      *string
+	cli_key       *string
+	cli_otto      *bool
+	cli_otto_path *string
+	cli_version   *bool
+	cli_keygen   = flag.Bool("keygen", false, "Interactive tool to generate TLS certificates and keys")
+    cli_init     = flag.Bool("init", false, "Creates a basic project structure in the current working directory")
 )
 
-var ErrHelp = errors.New("flag: Help requested")
-
 var Usage = func() {
-	fmt.Fprintf(os.Stderr, "Usage of %s\n", os.Args[0])
 	flag.PrintDefaults()
 }
 
-// Application's profile - who started the process, port assignment
-// configuration settings, etc.
-type Profile struct {
-	Username string
-	Hostname string
-	Port     string
-	Use_TLS  bool
-	Docroot  string
-	Cert     string
-	Key      string
-}
-
-func LoadProfile(cli_docroot string, cli_port int, cli_use_tls bool, cli_cert string, cli_key string) (*Profile, error) {
-	ws_user, err := user.Current()
-	if err != nil {
-		return nil, err
-	}
-	hostname, err := os.Hostname()
-	if err != nil {
-		return nil, err
-	}
-	port := "8000"
-	use_tls := false
-
-	cert, err := ConfigPathTo("cert.pem")
-	if err != nil {
-		return nil, err
-	}
-	key, err := ConfigPathTo("key.pem")
-	if err != nil {
-		return nil, err
-	}
-	docroot, _ := os.Getwd()
-
-	// now overwrite with any environment settings found.
-	env_host := os.Getenv("WS_HOST")
-	env_port := os.Getenv("WS_PORT")
-	env_use_tls := os.Getenv("WS_TLS")
-	env_cert := os.Getenv("WS_CERT")
-	env_key := os.Getenv("WS_KEY")
-	env_docroot := os.Getenv("WS_DOCROOT")
-	if env_host != "" {
-		hostname = env_host
-	}
-	if env_use_tls == "true" {
-		use_tls = true
-		port = "8443"
-	}
-	if env_port != "" {
-		port = env_port
-	}
-	if env_docroot != "" {
-		docroot = env_docroot
-	}
-	if env_cert != "" {
-		cert = env_cert
-	}
-	if env_key != "" {
-		key = env_key
-	}
-
-	// Finally resolve any command line overrides
-	if cli_docroot != "" {
-		docroot = cli_docroot
-	}
-	if cli_use_tls == true {
-		use_tls = true
-		if env_port == "" {
-			port = "8443"
-		}
-	}
-	if cli_port != 0 {
-		port = strconv.Itoa(cli_port)
-	}
-	if cli_cert != "" {
-		cert = cli_cert
-	}
-	if cli_key != "" {
-		key = cli_key
-	}
-
-	return &Profile{
-		Username: ws_user.Username,
-		Hostname: hostname,
-		Port:     port,
-		Docroot:  path.Join(docroot),
-		Use_TLS:  use_tls,
-		Cert:     cert,
-		Key:      key}, nil
-}
-
-func Log(handler http.Handler) http.Handler {
+func request_log(handler http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log.Printf("%s %s %s\n", r.RemoteAddr, r.Method, r.URL)
+		wslog.LogRequest(r.Method, r.URL, r.RemoteAddr, r.Proto, r.Referer(), r.UserAgent())
 		handler.ServeHTTP(w, r)
 	})
 }
 
-func webserver(profile *Profile) error {
-	// Define a simple static file server
-	//http.Handle("/", http.FileServer(http.Dir(profile.Docroot)))
+func Webserver(profile *app.Profile) error {
+	// If otto is enabled add routes and handle them.
+	if profile.Otto == true {
+		otto_path, err := filepath.Abs(profile.Otto_Path)
+		if err != nil {
+			log.Fatalf("Can't read %s: %s\n", profile.Otto_Path, err)
+		}
+		programs, err := ottoengine.Load(otto_path)
+		if err != nil {
+			log.Fatalf("Load error: %s\n", err)
+		}
+		ottoengine.AddRoutes(programs)
+	}
 
 	// Restricted FileService excluding dot files and directories
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		var hasDotPath = regexp.MustCompile(`\/\.`)
-		unclean_path := r.URL.Path
-		if !strings.HasPrefix(unclean_path, "/") {
-			unclean_path = "/" + unclean_path
-		}
-		clean_path := path.Clean(unclean_path)
-		r.URL.Path = clean_path
-		resolved_path := path.Clean(path.Join(profile.Docroot, clean_path))
-		if hasDotPath.MatchString(clean_path) {
-			log.Printf("Not Authorized (401) %s\n", clean_path)
-			http.Error(w, "Not Authorized", 401)
-		} else if !strings.HasPrefix(resolved_path, profile.Docroot) {
-			log.Printf("Not Found (404) %s\n", resolved_path)
-			http.NotFound(w, r)
-		} else {
-			http.ServeFile(w, r, resolved_path)
-		}
-	})
-
-	if profile.Use_TLS == false {
-		log.Printf("\n Docroot:   %s\n    Port:   %s\n"+
-			"  Run as:   %s\n\n",
-			profile.Docroot, profile.Port,
-			profile.Username)
-		log.Println("Starting http://" + net.JoinHostPort(profile.Hostname, profile.Port))
-
-		// Now start up the server and log transactions
-		return http.ListenAndServe(net.JoinHostPort(profile.Hostname, profile.Port), Log(http.DefaultServeMux))
-	}
-	log.Printf("\n    Cert:   %s\n     Key:   %s\n"+
-		" Docroot:   %s\n    Port:   %s\n"+
-		"  Run as:   %s\n\n",
-		profile.Cert, profile.Key,
-		profile.Docroot, profile.Port,
-		profile.Username)
-	log.Println("Starting https://" + net.JoinHostPort(profile.Hostname, profile.Port))
+	http.HandleFunc("/", func (w http.ResponseWriter, r *http.Request) {
+        // hande off this request/response pair to the fsengine
+        fsengine.Engine(profile, w, r)
+    })
 
 	// Now start up the server and log transactions
-	return http.ListenAndServeTLS(net.JoinHostPort(profile.Hostname, profile.Port), profile.Cert, profile.Key, Log(http.DefaultServeMux))
-}
-
-func ConfigPath() (string, error) {
-	home := os.Getenv("HOME")
-	config_path := home + "/etc/ws"
-	err := os.MkdirAll(config_path, 0700)
-	if err != nil {
-		return "", err
+	if profile.Use_TLS == true {
+		if profile.Cert == "" || profile.Key == "" {
+			log.Fatalf("TLS set true but missing key or certificate")
+		}
+		log.Println("Starting https://" + net.JoinHostPort(profile.Hostname, profile.Port))
+		return http.ListenAndServeTLS(net.JoinHostPort(profile.Hostname, profile.Port), profile.Cert, profile.Key, request_log(http.DefaultServeMux))
 	}
-	return config_path, nil
-}
-
-func ConfigPathTo(filename string) (string, error) {
-	ws_path, err := ConfigPath()
-	if err != nil {
-		return "", err
-	}
-	return ws_path + "/" + filename, nil
+	log.Println("Starting http://" + net.JoinHostPort(profile.Hostname, profile.Port))
+	// Now start up the server and log transactions
+	return http.ListenAndServe(net.JoinHostPort(profile.Hostname, profile.Port), request_log(http.DefaultServeMux))
 }
 
 func init() {
-	rand.Seed(time.Now().Unix())
+	// command line parameters that override environment variables, many have short forms too.
+	shortform := " (short form)"
+
+	// No short form
+	cli_use_tls = flag.Bool("tls", false, "When true this turns on TLS (https) support.")
+	cli_key = flag.String("key", "", "path to your SSL key pem file.")
+	cli_cert = flag.String("cert", "", "path to your SSL cert pem file.")
+
+	// These have short forms too
+	msg := "This is your document root for static files."
+	cli_docroot = flag.String("docroot", "", msg)
+	flag.StringVar(cli_docroot, "D", "", msg+shortform)
+
+	msg = "Set this hostname for webserver."
+	cli_host = flag.String("host", "", msg)
+	flag.StringVar(cli_host, "H", "", msg+shortform)
+
+	msg = "Set the port number to listen on."
+	cli_port = flag.String("port", "", msg)
+	flag.StringVar(cli_port, "P", "", msg+shortform)
+
+	msg = "When true this option turns on ottoengine. Uses the path defined by WS_OTTO_PATH environment variable or one provided by -O option."
+	cli_otto = flag.Bool("otto", false, msg)
+	flag.BoolVar(cli_otto, "o", false, msg+shortform)
+
+	msg = "Turns on otto engine using the path for route JavaScript route handlers"
+	cli_otto_path = flag.String("otto-path", "", msg)
+	flag.StringVar(cli_otto_path, "O", "", msg+shortform)
+
+	msg = "Display the version number of ws command."
+	cli_version = flag.Bool("version", false, msg)
+	flag.BoolVar(cli_version, "v", false, msg+shortform)
+
 }
 
 func main() {
 	flag.Parse()
 
-	profile, _ := LoadProfile(*cli_docroot, *cli_port, *cli_use_tls, *cli_cert, *cli_key)
-	err := webserver(profile)
+	if *cli_version == true {
+		fmt.Println(REVISION)
+		os.Exit(0)
+	}
+
+	profile, _ := app.LoadProfile(*cli_docroot, *cli_host, *cli_port, *cli_use_tls, *cli_cert, *cli_key, *cli_otto, *cli_otto_path)
+	if *cli_keygen == true {
+		certFilename, keyFilename, err := keygen.Keygen("etc/ssl", "cert.pem", "key.pem")
+		if err != nil {
+			log.Fatalf("%s\n", err)
+		}
+        fmt.Printf("Wrote %s and %s\n", certFilename, keyFilename)
+		os.Exit(0)
+	}
+
+    if *cli_init == true {
+        err := app.Init()
+        if err != nil {
+            log.Fatalf("%s\n", err)
+        }
+        os.Exit(0)
+    }
+
+	fmt.Printf("\n\n"+
+		"          TLS: %t\n"+
+		"         Cert: %s\n"+
+		"          Key: %s\n"+
+		"      Docroot: %s\n"+
+		"         Host: %s\n"+
+		"         Port: %s\n"+
+		"       Run as: %s\n\n"+
+		" Otto enabled: %t\n"+
+		"         Path: %s\n"+
+		"\n\n",
+		profile.Use_TLS,
+		profile.Cert,
+		profile.Key,
+		profile.Docroot,
+		profile.Hostname,
+		profile.Port,
+		profile.Username,
+		profile.Otto,
+		profile.Otto_Path)
+	err := Webserver(profile)
 	if err != nil {
 		log.Fatal(err)
 	}
+	os.Exit(0)
 }

@@ -1,19 +1,23 @@
 #!/bin/bash
-CWD=$(pwd)
-mkdir -p $GOPATH/bin
-go build ws.go
-if [ -f ws ]; then
-   mv ws $GOPATH/bin/
-else
-   echo "Something went wrong building ws."
-   exit 1
-fi
-cd extra
-go build ws-gencert.go
-if [ -f ws-gencert ]; then
-mv ws-gencert $GOPATH/bin/
-else
-    echo "Something went wrong building ws-gencert."
+if [ "$GOPATH" = "" ]; then
+    echo "Missing GOPATH"
     exit 1
+fi
+if [ "$GOBIN" = "" ]; then
+    echo "Missing GOBIN"
+    exit 1 
+fi
+
+CWD=$(pwd)
+if [ -f "$GOBIN/ws" ]; then
+    rm "$GOBIN/ws"
+fi
+go get github.com/robertkrimen/otto
+go install ws.go
+if [ -f "$GOBIN/ws" ]; then
+   echo "Installed in $GOBIN/ws"
+else
+   echo "Something went wrong. Missing $GOBIN/ws."
+   exit 1
 fi
 cd $CWD
