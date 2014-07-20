@@ -13,7 +13,7 @@ ws
     - Implements a restricted http.FileServer based Golang's builtin http.FileServer
 + It includes OttoEngine enabling JavaScript defined route handling
     - built on Robert Krimen's excellent [otto](https://github.com/robertkrimen/otto) JavaScript VM
-+ Persistence with integrated NoSQL/SQL engines
++ (FIXME: not implemented) Persistence with integrated NoSQL/SQL engines
 
 Got an idea for a new project? Want to prototype it quickly? 
 
@@ -25,7 +25,7 @@ _ws_ feature set has been kept minimal. Only what you need, when you turn it on.
 
 + Restricted file service, only from the docroot and no "dot files" are served
 + No dynamic content support unless you turn on OttoEngine for JavaScript defined routes
-+ Persistence only if you enable the Persistence object exposed via OttoEngine's JavaScript defined route handler
++ (FIXME: not implemented.) Persistence only if you enable the Persistence object exposed via OttoEngine's JavaScript defined route handler
 + Quick startup, everything logged to console for easy debugging or piping to a log processor
 
 
