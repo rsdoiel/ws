@@ -57,13 +57,19 @@ do_stop () {
         fi
 }
 
+do_reload () {
+    do_stop
+    do_start
+}
+
 case "$1" in
   start|"")
 	do_start
 	;;
   restart|reload|force-reload)
-	echo "Error: argument '$1' not supported" >&2
-	exit 3
+    do_reload
+	#echo "Error: argument '$1' not supported" >&2
+	#exit 3
 	;;
   stop)
 	do_stop
