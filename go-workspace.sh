@@ -7,5 +7,7 @@ fi
 WORK_PATH=$(pwd)
 cd ../..
 export GOPATH=$(pwd)
+export GOBIN=$GOPATH/bin
+mkdir -p $GOBIN
 cd $WORK_PATH
-echo "Found Golang, set workspace to $GOPATH"
+echo "Found Golang, set workspace to $GOPATH and $GOBIN"
