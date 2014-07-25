@@ -3,6 +3,7 @@
 
 ## Finish v0.0.1 Alpha
 
++ Add Persistence object and NoSQL datastore
 + Add expire, cache control and eTag headers to all requests (e.g. fsengine and ottoengine)
 + Confirm Server can support subsecond second responses for dynamic routes
 + Add a Persistence layer
