@@ -13,11 +13,11 @@
 package main
 
 import (
-    "./fsengine"
+	"./app"
+	"./fsengine"
+	"./keygen"
 	"./ottoengine"
 	"./wslog"
-    "./app"
-    "./keygen"
 	"flag"
 	"fmt"
 	"log"
@@ -40,8 +40,8 @@ var (
 	cli_otto      *bool
 	cli_otto_path *string
 	cli_version   *bool
-	cli_keygen   = flag.Bool("keygen", false, "Interactive tool to generate TLS certificates and keys")
-    cli_init     = flag.Bool("init", false, "Creates a basic project structure in the current working directory")
+	cli_keygen    = flag.Bool("keygen", false, "Interactive tool to generate TLS certificates and keys")
+	cli_init      = flag.Bool("init", false, "Creates a basic project structure in the current working directory")
 )
 
 var Usage = func() {
@@ -70,10 +70,10 @@ func Webserver(profile *app.Profile) error {
 	}
 
 	// Restricted FileService excluding dot files and directories
-	http.HandleFunc("/", func (w http.ResponseWriter, r *http.Request) {
-        // hande off this request/response pair to the fsengine
-        fsengine.Engine(profile, w, r)
-    })
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		// hande off this request/response pair to the fsengine
+		fsengine.Engine(profile, w, r)
+	})
 
 	// Now start up the server and log transactions
 	if profile.Use_TLS == true {
@@ -138,17 +138,17 @@ func main() {
 		if err != nil {
 			log.Fatalf("%s\n", err)
 		}
-        fmt.Printf("Wrote %s and %s\n", certFilename, keyFilename)
+		fmt.Printf("Wrote %s and %s\n", certFilename, keyFilename)
 		os.Exit(0)
 	}
 
-    if *cli_init == true {
-        err := app.Init()
-        if err != nil {
-            log.Fatalf("%s\n", err)
-        }
-        os.Exit(0)
-    }
+	if *cli_init == true {
+		err := app.Init()
+		if err != nil {
+			log.Fatalf("%s\n", err)
+		}
+		os.Exit(0)
+	}
 
 	fmt.Printf("\n\n"+
 		"          TLS: %t\n"+
