@@ -27,7 +27,7 @@ import (
 	"path/filepath"
 )
 
-var REVISION = "v0.0.0-alpha"
+var REVISION = "v0.0.0-gama"
 
 // command line parameters that override environment variables
 var (
