@@ -1,5 +1,8 @@
 #!/bin/bash
-
-go build ws.go
-./ws -otto=true \
-   -otto-path="otto-demo"
+#
+# Run the demo site in the demo folder with _ws_
+#
+go run ws.go \
+    -docroot="demo/static" \
+    -otto=true \
+    -otto-path="demo/dynamic"
