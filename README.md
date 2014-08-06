@@ -174,7 +174,7 @@ This was create a *cert.pen* and *key.pem* files in *$HOME/etc/ws* directory.
 
 Assuming _ottoengine_ is turned on then the page rendered should have a content type of "text/html" with the body shoulding the paragraph about exposing the request headers as a JSON blob.  Two command line options or environment variables turn _ottoengine_ on.
 
-+ -otto, WS_OTTO - values true/false, defaults to false. True turns on _ottoengine_
-+ -otto-path, WS_OTTO_PATH - sets the path to the scripts used to defined the routes being handled. Each file found in the path becomes a route.
++ -otto, WS\_OTTO - values true/false, defaults to false. True turns on _ottoengine_
++ -otto-path, WS\_OTTO\_PATH - sets the path to the scripts used to defined the routes being handled. Each file found in the path becomes a route.
 
 
