@@ -20,14 +20,43 @@ Got an idea for a new project? Want to prototype it quickly?
 2. run ". etc/config.sh" seed your environment
 3. run "ws" and start working!
 
-_ws_ feature set has been kept minimal. Only what you need, when you turn it on.
+_ws_ feature set has been kept minimal. Only what you need when you turn it on.
 
 + Restricted file service, only from the docroot and no "dot files" are served
 + No dynamic content support unless you turn on OttoEngine for JavaScript defined routes (great for creating JSON blobs used by a client side demo)
 + Quick startup, everything logged to console for easy debugging or piping to a log processor
 
 
-# USAGE
+## USAGE 
+
+```
+    ws [options]
+```
+
+## OPTIONS
+
+	-D	(defaults to ) This is your document root for static files.
+	-H	(defaults to localhost) Set this hostname for webserver.
+	-O	(defaults to ) Turns on otto engine using the path for route JavaScript route handlers
+	-P	(defaults to 8000) Set the port number to listen on.
+	-cert	(defaults to ) path to your SSL cert pem file.
+	-docroot	(defaults to ) This is your document root for static files.
+	-h	(defaults to false) This help document.
+	-help	(defaults to false) This help document.
+	-host	(defaults to localhost) Set this hostname for webserver.
+	-init	(defaults to false) Creates a basic project structure in the current working directory
+	-key	(defaults to ) Path to your SSL key pem file.
+	-keygen	(defaults to false) Interactive tool to generate TLS certificates and keys
+	-o	(defaults to false) When true this option turns on ottoengine. Uses the path defined by WS_OTTO_PATH environment variable or one provided by -O option.
+	-otto	(defaults to false) When true this option turns on ottoengine. Uses the path defined by WS_OTTO_PATH environment variable or one provided by -O option.
+	-otto-path	(defaults to ) Turns on otto engine using the path for route JavaScript route handlers
+	-port	(defaults to 8000) Set the port number to listen on.
+	-tls	(defaults to false) When true this turns on TLS (https) support.
+	-v	(defaults to false) Display the version number of ws command.
+	-version	(defaults to false) Display the version number of ws command.
+
+
+# Tour
 
 ## http support
 
@@ -181,3 +210,4 @@ Assuming _ottoengine_ is turned on then the page rendered should have a content 
 
 copyright (c) 2014 All rights reserved.
 Released under the [Simplified BSD License](http://opensource.org/licenses/bsd-license.php)
+
