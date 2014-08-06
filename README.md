@@ -1,14 +1,30 @@
 ws
 ==
 
-    A nimble weight webserver suitable for static web content development and API prototyping. 
+    A nimble webserver for prototyping. 
 
-*ws* supports basic _http_ and _https_ (SSL via TLS) protocols.  It does not 
-support _SPDY_ or _http2_ protocols. It does not support PHP, Perl, Python, 
-etc. It is a static content webserver.
 
-It has experimental support for dynamic content via route handlers written in JavaScript
-and execute by the [otto](https://github.com/robertkermin/otto) JavaScript virtual machine.
+# What is _ws_?
+
+*ws* is a simple webserver with optional support for JavaScript defined route handlers.  It supports basic _http_ and _https_ (SSL via TLS) protocols.  It does not support _SPDY_ or _http2_ protocols. It does not support PHP, Perl, Python, etc.
+
++ It is great for server static web pages!
+    - Built on Golangs native http/https modules
+    - Implements a restricted http.FileServer based Golang's builtin http.FileServer
++ It includes OttoEngine enabling JavaScript defined route handling
+    - built on Robert Krimen's excellent [otto](https://github.com/robertkrimen/otto) JavaScript VM
+
+Got an idea for a new project? Want to prototype it quickly? 
+
+1. run "ws -init" to set things up
+2. run ". etc/config.sh" seed your environment
+3. run "ws" and start working!
+
+_ws_ feature set has been kept minimal. Only what you need, when you turn it on.
+
++ Restricted file service, only from the docroot and no "dot files" are served
++ No dynamic content support unless you turn on OttoEngine for JavaScript defined routes (great for creating JSON blobs used by a client side demo)
++ Quick startup, everything logged to console for easy debugging or piping to a log processor
 
 
 # USAGE
@@ -23,27 +39,15 @@ the directory you wish to serve and type _ws_ at the command prompt. Example -
     ws
 ```
 
-When _ws_ starts up you'll some configuration information and the URL that it 
-is listening for. Notice the default port is 8000 so you need to include that 
-part in your URL too. If your machine was named _example.local_ then you the URL 
-might look like "http://example.local:8000". Point your web browser at the URL 
-you see for your system.  When the web browser connections you should see a 
-stream of log information. The stream of text will continue as long as you 
-continue to have requests to the server until you shutdown _ws_. To shutdown
-_ws_ you can press the "ctrl" key and letter "c". This will kill the process
-and shutdown your web server.
+When _ws_ starts up you'll some configuration information and the URL that it is listening for. Notice the default port is 8000 so you need to include that part in your URL too. If your machine was named _example.local_ then you the URL might look like "http://localhost:8000". Point your web browser at the URL you see for your system.  When the web browser connections you should see a stream of log information. The stream of text will continue as long as you continue to have requests to the server until you shutdown _ws_. To shutdown _ws_ you can press the "ctrl" key and letter "c". This will kill the process and shutdown your web server.
 
-You don't have to run _ws_ with the defaults.  You can specity a different 
-document root with the _-docroot_ option. Here is an example of telling _ws_ to 
-use the */www* directory for the document
-root.
+You don't have to run _ws_ with the defaults.  You can specity a different document root with the _-docroot_ option. Here is an example of telling _ws_ to use the */www* directory for the document root.
 
 ```shell
     ws -docroot=/www
 ```
 
-You can also pass these setting via your operating system's environment. Here is 
-an example of configuration the above setting in a Bash script.
+You can also pass these setting via your operating system's environment. Here is an example of configuration the above setting in a Bash script.
 
 
 ```shell
@@ -51,28 +55,23 @@ an example of configuration the above setting in a Bash script.
     ws
 ```
 
-More typically you'll create a configuration file, source it (E.g. in your
-.profile or .bashrc setup files) and _ws_ will pickup the settings that
-way.
+More typically you'll create a configuration file, source it (E.g. in your .profile or .bashrc setup files) and _ws_ will pickup the settings that way.
 
 ```bash
     #!/bin/bash
     export WS_DOCROOT=/www
 ```
 
-If that was sourced in our login scripts then typing _ws_ on the command
-line would server the contents of */www* by default. You can override the
-defaults with the command line option _-docroot_.
-
-
+If that was sourced in our login scripts then typing _ws_ on the command line would server the contents of */www* by default. You can override the defaults with the command line option _-docroot_.
 
 In this way you can configure hostname, port.  In the following example
-the port will be set to 8081 and the hostname will be "example.com".
+the port will be set to 8081 and the hostname will be "localhost".
+
 
 ### Command line version
 
 ```shell
-    ws -docroot=/www -host=example.com -port=8081
+    ws -docroot=/www -host=localhost -port=8081
 ```
 
 ### The envirnonment version
@@ -80,7 +79,7 @@ the port will be set to 8081 and the hostname will be "example.com".
 ```bash
     #!/bin/bash
     export WS_DOCROOT=/www
-    export WS_HOST=example.com
+    export WS_HOST=localhost
     export WS_PORT=8081
 ```
 
@@ -97,7 +96,7 @@ example _ws_ will listen on port 8007.
 ```bash
     #!/bin/bash
     WS_DOCROOT=/www
-    WS_HOST=example.com
+    WS_HOST=localhost
     WS_PORT=8080
 ```
 
@@ -118,26 +117,21 @@ The environment variables for _http_ service are
 
 ## https support
 
-If you want to run with _https_ support it works on the same 
-principles as _http_ support. It requires three additional pieces
-of information. 
+If you want to run with _https_ support it works on the same principles as _http_ support. It requires three additional pieces of information. 
 
 1. It needs to knows where to find your *cert.pem*
 2. It needs to know where to find your  *key.pem*
 3. It needs to know to use SSL/TLS support.
 
-By default _ws_ will look for *cert.pem* and *key.pem* in your *$HOME/etc/ws* 
-directory. You can specify alternate locations with the _-cert_ and _-key_ 
-command line options or the _WS\_CERT_ and _WS\_KEY_ environment variables.
+By default _ws_ will look for *cert.pem* and *key.pem* in your *$HOME/etc/ws* directory. You can specify alternate locations with the _-cert_ and _-key_ command line options or the _WS\_CERT_ and _WS\_KEY_ environment variables.  To turn _https_ support on you need the option _-tls=true_ or the environment variable _WS\_TLS_ set to "true".
 
-To turn _https_ support on you need the option _-tls=true_ or the environment 
-variable _WS\_TLS_ set to "true".
 
 ### Command line example
 
 ```bash
     ws -tls=true -cert=my-cert.pem -key=my-key.pem
 ```
+
 
 ### The environment version
 
@@ -149,13 +143,12 @@ variable _WS\_TLS_ set to "true".
 ```
 
 If this was sourced in your login scripts then by default _ws_ will run as a 
-_https_ server with the document root set to your current working directory 
-for your current hostname on port 8443.
+_https_ server with the document root set to your current working directory for your current hostname on port 8443.
+
 
 ### Generating TLS certificates and keys
 
-_ws_ comes with a *-keygen* option for generating self-signed certificates
-and keys.
+_ws_ comes with a *-keygen* option for generating self-signed certificates and keys.
 
 ```SHELL
     ws -keygen
@@ -163,13 +156,10 @@ and keys.
 
 This was create a *cert.pen* and *key.pem* files in *$HOME/etc/ws* directory.
 
+
 ## Otto
 
-[otto](https://github.com/robertkrimen/otto) is a JavaScript virtual machine written by Robert Krimen.
-The _ottoengine_ is allow easy route oriented API prototyping.  Each JavaScript file rendered in the 
-Otto virtual machine becomes a route.  E.g. *example-1.js* becomes the route */example-1*. *example-1* should 
-contain a closure which can recieve a "Request" and "Response" object as parameters. The "Response"
-object is used to tell the web server what to send back to the browser requesting the route.
+[otto](https://github.com/robertkrimen/otto) is a JavaScript virtual machine written by Robert Krimen.  The _ottoengine_ is allow easy route oriented API prototyping.  Each JavaScript file rendered in the Otto virtual machine becomes a route.  E.g. *example-1.js* becomes the route */example-1*. *example-1* should contain a closure which can recieve a "Request" and "Response" object as parameters. The "Response" object is used to tell the web server what to send back to the browser requesting the route.
 
 ```JavaScript
     /* example-1.js - a simple example of Request and Response objects */
@@ -182,14 +172,9 @@ object is used to tell the web server what to send back to the browser requestin
     }(Request, Response));
 ```
 
-Assuming _ottoengine_ is turned on then the page rendered should have a content type of "text/html"
-with the body shoulding the paragraph about exposing the request headers as a JSON blob.
-
-Two command line options or environment variables turn _ottoengine_ on.
+Assuming _ottoengine_ is turned on then the page rendered should have a content type of "text/html" with the body shoulding the paragraph about exposing the request headers as a JSON blob.  Two command line options or environment variables turn _ottoengine_ on.
 
 + -otto, WS_OTTO - values true/false, defaults to false. True turns on _ottoengine_
 + -otto-path, WS_OTTO_PATH - sets the path to the scripts used to defined the routes being handled. Each file found in the path becomes a route.
-
-
 
 
