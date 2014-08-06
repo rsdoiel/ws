@@ -5,24 +5,24 @@
 package fsengine
 
 import (
-    "../wslog"
-    "../app"
-    "net/http"
-    "path"
-    "os"
-    "strings"
-    "regexp"
+	"../app"
+	"../wslog"
+	"net/http"
+	"os"
+	"path"
+	"regexp"
+	"strings"
 )
 
 // This is a Restricted FileService excluding dot files and directories.
-func Engine(profile *app.Profile, w http.ResponseWriter, r *http.Request) {
-    var (
-        hasDotPath = regexp.MustCompile(`\/\.`)
-        docroot = profile.Docroot
-    )
+func Engine(cfg *app.Cfg, w http.ResponseWriter, r *http.Request) {
+	var (
+		hasDotPath = regexp.MustCompile(`\/\.`)
+		docroot    = cfg.Docroot
+	)
 
-    unclean_path := r.URL.Path
-    if !strings.HasPrefix(unclean_path, "/") {
+	unclean_path := r.URL.Path
+	if !strings.HasPrefix(unclean_path, "/") {
 		unclean_path = "/" + unclean_path
 	}
 	clean_path := path.Clean(unclean_path)
@@ -44,5 +44,5 @@ func Engine(profile *app.Profile, w http.ResponseWriter, r *http.Request) {
 		// Easter egg
 		wslog.LogResponse(418, "I'm a teapot", r.Method, r.URL, r.RemoteAddr, resolved_path, "")
 		http.Error(w, "I'm a teapot", 418)
-    }
+	}
 }
