@@ -5,7 +5,7 @@
 package fsengine
 
 import (
-	"../app"
+	"../cfg"
 	"../wslog"
 	"net/http"
 	"os"
@@ -15,10 +15,10 @@ import (
 )
 
 // This is a Restricted FileService excluding dot files and directories.
-func Engine(cfg *app.Cfg, w http.ResponseWriter, r *http.Request) {
+func Engine(config *cfg.Cfg, w http.ResponseWriter, r *http.Request) {
 	var (
 		hasDotPath = regexp.MustCompile(`\/\.`)
-		docroot    = cfg.Docroot
+		docroot    = config.Docroot
 	)
 
 	unclean_path := r.URL.Path

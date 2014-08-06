@@ -13,7 +13,7 @@
 package main
 
 import (
-	"./app"
+	"./cfg"
 	"./fsengine"
 	"./keygen"
 	"./ottoengine"
@@ -84,12 +84,12 @@ func request_log(handler http.Handler) http.Handler {
 	})
 }
 
-func Webserver(cfg *app.Cfg) error {
+func Webserver(config *cfg.Cfg) error {
 	// If otto is enabled add routes and handle them.
-	if cfg.Otto == true {
-		otto_path, err := filepath.Abs(cfg.Otto_Path)
+	if config.Otto == true {
+		otto_path, err := filepath.Abs(config.OttoPath)
 		if err != nil {
-			log.Fatalf("Can't read %s: %s\n", cfg.Otto_Path, err)
+			log.Fatalf("Can't read %s: %s\n", config.OttoPath, err)
 		}
 		programs, err := ottoengine.Load(otto_path)
 		if err != nil {
@@ -101,20 +101,20 @@ func Webserver(cfg *app.Cfg) error {
 	// Restricted FileService excluding dot files and directories
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		// hande off this request/response pair to the fsengine
-		fsengine.Engine(cfg, w, r)
+		fsengine.Engine(config, w, r)
 	})
 
 	// Now start up the server and log transactions
-	if cfg.Use_TLS == true {
-		if cfg.Cert == "" || cfg.Key == "" {
+	if config.UseTLS == true {
+		if config.Cert == "" || config.Key == "" {
 			log.Fatalf("TLS set true but missing key or certificate")
 		}
-		log.Println("Starting https://" + net.JoinHostPort(cfg.Hostname, strconv.Itoa(cfg.Port)))
-		return http.ListenAndServeTLS(net.JoinHostPort(cfg.Hostname, strconv.Itoa(cfg.Port)), cfg.Cert, cfg.Key, request_log(http.DefaultServeMux))
+		log.Println("Starting https://" + net.JoinHostPort(config.Hostname, strconv.Itoa(config.Port)))
+		return http.ListenAndServeTLS(net.JoinHostPort(config.Hostname, strconv.Itoa(config.Port)), config.Cert, config.Key, request_log(http.DefaultServeMux))
 	}
-	log.Println("Starting http://" + net.JoinHostPort(cfg.Hostname, strconv.Itoa(cfg.Port)))
+	log.Println("Starting http://" + net.JoinHostPort(config.Hostname, strconv.Itoa(config.Port)))
 	// Now start up the server and log transactions
-	return http.ListenAndServe(net.JoinHostPort(cfg.Hostname, strconv.Itoa(cfg.Port)), request_log(http.DefaultServeMux))
+	return http.ListenAndServe(net.JoinHostPort(config.Hostname, strconv.Itoa(config.Port)), request_log(http.DefaultServeMux))
 }
 
 func defaultEnvBool(environment_var string, default_value bool) bool {
@@ -175,7 +175,7 @@ func init() {
 	use_tls = defaultEnvBool("WS_TLS", false)
 	key = defaultEnvString("WS_KEY", "")
 	cert = defaultEnvString("WS_CERT", "")
-	docroot = defaultEnvString("WS_DOCROOT", "static")
+	docroot = defaultEnvString("WS_DOCROOT", "")
 	otto = defaultEnvBool("WS_OTTO", false)
 	otto_path = defaultEnvString("WS_OTTO_PATH", "dynamic")
 	host = defaultEnvString("WS_HOST", "localhost")
@@ -206,7 +206,7 @@ func main() {
 		Usage(0, "")
 	}
 
-	cfg, err := app.Configure(docroot, host, port, use_tls, cert, key, otto, otto_path)
+	config, err := cfg.Configure(docroot, host, port, use_tls, cert, key, otto, otto_path)
 	if err != nil {
 		Usage(1, fmt.Sprintf("%s", err))
 	}
@@ -221,7 +221,7 @@ func main() {
 	}
 
 	if do_init == true {
-		err := app.InitProject()
+		err := cfg.InitProject()
 		if err != nil {
 			log.Fatalf("%s\n", err)
 		}
@@ -239,16 +239,16 @@ func main() {
 		" Otto enabled: %t\n"+
 		"         Path: %s\n"+
 		"\n\n",
-		cfg.Use_TLS,
-		cfg.Cert,
-		cfg.Key,
-		cfg.Docroot,
-		cfg.Hostname,
-		cfg.Port,
-		cfg.Username,
-		cfg.Otto,
-		cfg.Otto_Path)
-	err = Webserver(cfg)
+		config.UseTLS,
+		config.Cert,
+		config.Key,
+		config.Docroot,
+		config.Hostname,
+		config.Port,
+		config.Username,
+		config.Otto,
+		config.OttoPath)
+	err = Webserver(config)
 	if err != nil {
 		log.Fatal(err)
 	}

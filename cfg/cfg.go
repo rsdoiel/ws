@@ -1,7 +1,7 @@
 /**
- * app.go - general configuration methods for ws.go
+ * cfg.go - general configuration methods for ws.go
  */
-package app
+package cfg
 
 import (
 	"../keygen"
@@ -22,12 +22,12 @@ type Cfg struct {
 	Username  string
 	Hostname  string
 	Port      int
-	Use_TLS   bool
+	UseTLS   bool
 	Docroot   string
 	Cert      string
 	Key       string
 	Otto      bool
-	Otto_Path string
+	OttoPath string
 }
 
 // Configure this application.
@@ -60,11 +60,11 @@ func Configure(docroot string, hostname string, port int, use_tls bool, cert str
 		Hostname:  hostname,
 		Port:      port,
 		Docroot:   docroot,
-		Use_TLS:   use_tls,
+		UseTLS:   use_tls,
 		Cert:      cert,
 		Key:       key,
 		Otto:      otto,
-		Otto_Path: otto_path}, nil
+		OttoPath: otto_path}, nil
 }
 
 // InitProject - initializes a basic project structure (e.g. creates static, dynamic, README.md, etc/config.sh)
