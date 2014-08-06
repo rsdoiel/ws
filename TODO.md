@@ -3,11 +3,8 @@
 
 ## Finish v0.0.1 Alpha
 
-+ Add Persistence object and NoSQL datastore
-+ Add expire, cache control and eTag headers to all requests (e.g. fsengine and ottoengine)
++ Redo commandline arg/environment initialization to be more idiomatic
 + Confirm Server can support subsecond second responses for dynamic routes
-+ Add a Persistence layer
-    - Look at Tiedot, figure out if it can refactored to run on a Raspberry Pi
 + Finish ottoengine
     - Make it more like http.FileServe()
     - Add support for route files as path prefix
@@ -22,11 +19,16 @@
     - make sure -keygen is generating valid keys
     - make sure -init works in generating both default and customized setup
     - make sure turning on/off ottoengine and tls works
-+ When ready tag as v0.0.1-beta
++ When ready tag as v0.0.1-alpha and announce
 
 
 # Someday, maybe
 
++ Add support for SPDY/HTTP 2
++ Add Persistence object and NoSQL datastore
+    - Look at Tiedot, figure out if it can refactored to run on a Raspberry Pi
+    - If not Tiedot then find another DB storage that works on RPi (ql might work)
++ Add expire, cache control and eTag headers to all requests (e.g. fsengine and ottoengine)
 + Make a better -init and -keygen CUI using come sort of Curses like control
 + Add a page speed like module (e.g. automatic cache control headers, expire and etag; gzip content)
 + Explore a server side xhr object to let ottoengine function as middleware to other web services
@@ -37,5 +39,5 @@
 + Add support for alternative JS engines (e.g. SpiderMonkey)
 + Add deb package support
 + Add Mac ports package support
-+ Add support for Common Lisp
++ Add support for Common Lisp backend
 

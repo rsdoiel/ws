@@ -1,5 +1,7 @@
 #!/bin/sh
 #
+# Example init.d startup script. Should be modified to suite deployment.
+#
 ### BEGIN INIT INFO
 # Provides:          ws
 # Required-Start:    $network $local_fs $remote_fs $syslog
@@ -14,10 +16,15 @@
 ### END INIT INFO
 #
 
-WEBROOT=/Sites/minime.local
-
+#
+# deployment specific vars
+#
+WEBROOT=/Sites
 PATH=/sbin:/usr/sbin:/bin:/usr/bin:/usr/local/bin:/usr/local/go/bin
 
+#
+# Normal init.d script example code below
+#
 do_start () {
 	cd $WEBROOT
         if [ -f "$WEBROOT/etc/config.sh" ]; then

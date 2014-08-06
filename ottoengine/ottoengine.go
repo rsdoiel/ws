@@ -10,7 +10,9 @@ package ottoengine
 import (
 	"../wslog"
 	//"./reload"
+	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/robertkrimen/otto"
 	"io/ioutil"
@@ -19,9 +21,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
-    "bytes"
 	"strings"
-	"errors"
 )
 
 type Program struct {
@@ -34,12 +34,12 @@ type Program struct {
 
 func LoadFile(root string, filename string, file_info os.FileInfo, err error) (*Program, error) {
 	var (
-		ext string
+		ext       string
 		full_path string
-		route string
-		source []byte
-		vm *otto.Otto
-		script *otto.Script
+		route     string
+		source    []byte
+		vm        *otto.Otto
+		script    *otto.Script
 	)
 
 	// Trim the leading path from the path string Trim ext from path string, save this as route.
@@ -72,14 +72,14 @@ func Load(root string) ([]Program, error) {
 	var programs []Program
 
 	err := filepath.Walk(root, func(filename string, file_info os.FileInfo, err error) error {
-	    ext := path.Ext(filename)
-	    if file_info != nil && file_info.IsDir() != true && ext == ".js" {
-		    p, err := LoadFile(root, filename, file_info, err)
-		    if err != nil {
-			    return err
-		    }
-            programs = append(programs, Program{Route: p.Route, Filename: p.Filename, Source: p.Source, VM: p.VM, Script: p.Script})
-        }
+		ext := path.Ext(filename)
+		if file_info != nil && file_info.IsDir() != true && ext == ".js" {
+			p, err := LoadFile(root, filename, file_info, err)
+			if err != nil {
+				return err
+			}
+			programs = append(programs, Program{Route: p.Route, Filename: p.Filename, Source: p.Source, VM: p.VM, Script: p.Script})
+		}
 		return nil
 	})
 	if err != nil {
@@ -89,7 +89,7 @@ func Load(root string) ([]Program, error) {
 }
 
 func jsMethodHandler(method string, data string) string {
-    return fmt.Sprintf(`function (debug) {
+	return fmt.Sprintf(`function (debug) {
         var data_as_string = %q.trim(),
             key_value_as_string = [],
             data = {},
@@ -129,14 +129,14 @@ func jsMethodHandler(method string, data string) string {
 }
 
 func jsInjectMethod(name string, src string, buf []byte) string {
-    end := bytes.LastIndex(buf, []byte("}"))
-    if end > -1 {
-        // Insert our literal function def for GET
-        src = fmt.Sprintf("%s,%s:%s%s", string(buf[0:end]), name, src, string(buf[end]))
-    } else {
-	    src = string(buf)
-    }
-    return src
+	end := bytes.LastIndex(buf, []byte("}"))
+	if end > -1 {
+		// Insert our literal function def for GET
+		src = fmt.Sprintf("%s,%s:%s%s", string(buf[0:end]), name, src, string(buf[end]))
+	} else {
+		src = string(buf)
+	}
+	return src
 }
 
 func createRequestLiteral(r *http.Request) string {
@@ -144,17 +144,17 @@ func createRequestLiteral(r *http.Request) string {
 	if err != nil {
 		return "{}"
 	}
-    switch r.Method {
-        case "POST":
-            //FIXME: need to handle multi-part requests (E.g. uploading a file)
-            body, err := ioutil.ReadAll(r.Body)
-            if err != nil {
-                  log.Printf("POST read eror: %s", err)
-                  return string(buf)
-            }
-            return jsInjectMethod("POST", jsMethodHandler(r.Method, string(body)), buf)
-    }
-    return jsInjectMethod(r.Method, jsMethodHandler(r.Method, r.URL.RawQuery), buf) 
+	switch r.Method {
+	case "POST":
+		//FIXME: need to handle multi-part requests (E.g. uploading a file)
+		body, err := ioutil.ReadAll(r.Body)
+		if err != nil {
+			log.Printf("POST read eror: %s", err)
+			return string(buf)
+		}
+		return jsInjectMethod("POST", jsMethodHandler(r.Method, string(body)), buf)
+	}
+	return jsInjectMethod(r.Method, jsMethodHandler(r.Method, r.URL.RawQuery), buf)
 }
 
 type Response struct {
@@ -248,11 +248,11 @@ func Engine(program Program) {
 			http.Error(w, "Internal Server Error", 500)
 			return
 		}
-        // See if we're rendering from a returned text string or JSON
-        // via the Response object.
+		// See if we're rendering from a returned text string or JSON
+		// via the Response object.
 		json_err := json.Unmarshal([]byte(json_src), &go_response)
 		if json_err != nil {
-            // We're rendering from a text string, try to calc the content type.
+			// We're rendering from a text string, try to calc the content type.
 			// 5. Calc headers
 			content_type := "text/plain; charset=utf-8"
 			if IsJSON(output) {
@@ -268,13 +268,13 @@ func Engine(program Program) {
 			return
 		}
 
-        // We're rendering completely from the response object.
+		// We're rendering completely from the response object.
 		// 5. update headers from responseObject
 		content_type := "text/plain; charset=utf-8"
 		for key, value := range go_response.Headers {
-            if key == "content-type" {
-                content_type = value
-            }
+			if key == "content-type" {
+				content_type = value
+			}
 			w.Header().Set(key, value)
 		}
 		fmt.Fprintf(w, "%s", go_response.Content)
