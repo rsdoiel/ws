@@ -64,7 +64,7 @@ var Usage = func(exit_code int, msg string) {
 `, msg, os.Args[0])
 
 	flag.VisitAll(func(f *flag.Flag) {
-		fmt.Fprintf(fh, "\t-%s\t(defaults to %s) %s\n", f.Name, f.Value, f.Usage)
+		fmt.Fprintf(fh, "\t-%s\t(defaults to %s) %s\n", f.Name, f.DefValue, f.Usage)
 	})
 
 	fmt.Fprintf(fh, `
@@ -177,7 +177,7 @@ func init() {
 	cert = defaultEnvString("WS_CERT", "")
 	docroot = defaultEnvString("WS_DOCROOT", "")
 	otto = defaultEnvBool("WS_OTTO", false)
-	otto_path = defaultEnvString("WS_OTTO_PATH", "dynamic")
+	otto_path = defaultEnvString("WS_OTTO_PATH", "")
 	host = defaultEnvString("WS_HOST", "localhost")
 	port = defaultEnvInt("WS_PORT", 8000)
 
