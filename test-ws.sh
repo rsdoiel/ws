@@ -17,7 +17,7 @@ go build ws.go
 # Try to run ws in this directory.
 echo "Try to run ws"
 if [ -f "./ws" ]; then
-    ws -otto=false -tls=false
+    ./ws -otto=false -tls=false
 else
     echo "Something went wrong building ws."
 fi
