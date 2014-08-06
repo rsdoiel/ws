@@ -181,4 +181,7 @@ Assuming _ottoengine_ is turned on then the page rendered should have a content 
 
 
 
+## LICENSE
 
+copyright (c) 2014 All rights reserved.
+Released under the [Simplified BSD License](http://opensource.org/licenses/bsd-license.php)
