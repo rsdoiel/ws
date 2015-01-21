@@ -34,17 +34,17 @@ var revision = "v0.0.0-alpha"
 // command line parameters that override environment variables
 var (
 	useTLS   bool
-	docroot   string
-	host      string
-	port      int
-	cert      string
-	key       string
-	otto      bool
+	docroot  string
+	host     string
+	port     int
+	cert     string
+	key      string
+	otto     bool
 	ottoPath string
-	version   bool
+	version  bool
 	doKeygen bool
 	doInit   bool
-	help      bool
+	help     bool
 )
 
 type stringValue string
@@ -150,18 +150,18 @@ func defaultEnvInt(environmentVar string, defaultValue int) int {
 
 func init() {
 	const (
-		helpUsage      = "This help document."
-		keygenUsage    = "Interactive tool to generate TLS certificates and keys"
-		initUsage      = "Creates a basic project structure in the current working directory"
+		helpUsage     = "This help document."
+		keygenUsage   = "Interactive tool to generate TLS certificates and keys"
+		initUsage     = "Creates a basic project structure in the current working directory"
 		useTLSUsage   = "When true this turns on TLS (https) support."
-		keyUsage       = "Path to your SSL key pem file."
-		certUsage      = "path to your SSL cert pem file."
-		docrootUsage   = "This is your document root for static files."
-		hostUsage      = "Set this hostname for webserver."
-		portUsage      = "Set the port number to listen on."
-		ottoUsage      = "When true this option turns on ottoengine. Uses the path defined by WS_OTTO_PATH environment variable or one provided by -O option."
+		keyUsage      = "Path to your SSL key pem file."
+		certUsage     = "path to your SSL cert pem file."
+		docrootUsage  = "This is your document root for static files."
+		hostUsage     = "Set this hostname for webserver."
+		portUsage     = "Set the port number to listen on."
+		ottoUsage     = "When true this option turns on ottoengine. Uses the path defined by WS_OTTO_PATH environment variable or one provided by -O option."
 		ottoPathUsage = "Turns on otto engine using the path for route JavaScript route handlers"
-		versionUsage   = "Display the version number of ws command."
+		versionUsage  = "Display the version number of ws command."
 	)
 
 	flag.BoolVar(&help, "help", false, helpUsage)

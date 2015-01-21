@@ -1,7 +1,7 @@
-/**
- * fsengine.go - a simple restricted FileServer Handler for
- * ws.go.  Avoids exposing dot files via http requests.
- */
+//
+// Package fsengine is a simple restricted FileServer Handler for
+// ws.go.  Avoids exposing dot files via http requests.
+//
 package fsengine
 
 import (
@@ -14,35 +14,35 @@ import (
 	"strings"
 )
 
-// This is a Restricted FileService excluding dot files and directories.
+// Engine is a Restricted FileService excluding dot files and directories.
 func Engine(config *cfg.Cfg, w http.ResponseWriter, r *http.Request) {
 	var (
 		hasDotPath = regexp.MustCompile(`\/\.`)
 		docroot    = config.Docroot
 	)
 
-	unclean_path := r.URL.Path
-	if !strings.HasPrefix(unclean_path, "/") {
-		unclean_path = "/" + unclean_path
+	uncleanPath := r.URL.Path
+	if !strings.HasPrefix(uncleanPath, "/") {
+		uncleanPath = "/" + uncleanPath
 	}
-	clean_path := path.Clean(unclean_path)
-	r.URL.Path = clean_path
-	resolved_path := path.Clean(path.Join(docroot, clean_path))
-	_, err := os.Stat(resolved_path)
-	if hasDotPath.MatchString(clean_path) == true ||
-		strings.HasPrefix(resolved_path, docroot) == false ||
+	cleanPath := path.Clean(uncleanPath)
+	r.URL.Path = cleanPath
+	resolvedPath := path.Clean(path.Join(docroot, cleanPath))
+	_, err := os.Stat(resolvedPath)
+	if hasDotPath.MatchString(cleanPath) == true ||
+		strings.HasPrefix(resolvedPath, docroot) == false ||
 		os.IsPermission(err) == true {
-		wslog.LogResponse(401, "Not Authorized", r.Method, r.URL, r.RemoteAddr, resolved_path, "")
+		wslog.LogResponse(401, "Not Authorized", r.Method, r.URL, r.RemoteAddr, resolvedPath, "")
 		http.Error(w, "Not Authorized", 401)
 	} else if os.IsNotExist(err) == true {
-		wslog.LogResponse(404, "Not Found", r.Method, r.URL, r.RemoteAddr, resolved_path, "")
+		wslog.LogResponse(404, "Not Found", r.Method, r.URL, r.RemoteAddr, resolvedPath, "")
 		http.NotFound(w, r)
 	} else if err == nil {
-		wslog.LogResponse(200, "OK", r.Method, r.URL, r.RemoteAddr, resolved_path, "")
-		http.ServeFile(w, r, resolved_path)
+		wslog.LogResponse(200, "OK", r.Method, r.URL, r.RemoteAddr, resolvedPath, "")
+		http.ServeFile(w, r, resolvedPath)
 	} else {
 		// Easter egg
-		wslog.LogResponse(418, "I'm a teapot", r.Method, r.URL, r.RemoteAddr, resolved_path, "")
+		wslog.LogResponse(418, "I'm a teapot", r.Method, r.URL, r.RemoteAddr, resolvedPath, "")
 		http.Error(w, "I'm a teapot", 418)
 	}
 }

@@ -1,11 +1,12 @@
 /**
- * reload.go - a simplistic file watcher to hold the fort until Go 1.4 when
+ * Package reload.go is a simplistic file watcher to hold the fort until Go 1.4 when
  * fsnotify is expected to become core.
  */
 
 package reload
 
-func WatchFile(filePath string, checks_every_n_seconds int) error {
+// WatchFile takes a filename and interval and polls for changes.
+func WatchFile(filePath string, checkEveryNSeconds int) error {
 	// Record the initial stat of the file.
 	initialStat, err := os.Stat(filePath)
 	if err != nil {
@@ -13,7 +14,7 @@ func WatchFile(filePath string, checks_every_n_seconds int) error {
 	}
 
 	// Sleep before we start polling
-	time.Sleep(check_every_n_seconds * time.Second)
+	time.Sleep(checkEveryNSeconds * time.Second)
 
 	// polling forever waiting for Guffman
 	for {
@@ -29,7 +30,7 @@ func WatchFile(filePath string, checks_every_n_seconds int) error {
 		}
 
 		// Sleep for a time
-		time.Sleep(check_every_n_seconds * time.Second)
+		time.Sleep(checkEveryNSeconds * time.Second)
 	}
 	return nil
 }
