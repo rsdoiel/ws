@@ -29,27 +29,27 @@ import (
 	"strings"
 )
 
-var REVISION = "v0.0.0-alpha"
+var revision = "v0.0.0-alpha"
 
 // command line parameters that override environment variables
 var (
-	use_tls   bool
+	useTLS   bool
 	docroot   string
 	host      string
 	port      int
 	cert      string
 	key       string
 	otto      bool
-	otto_path string
+	ottoPath string
 	version   bool
-	do_keygen bool
-	do_init   bool
+	doKeygen bool
+	doInit   bool
 	help      bool
 )
 
 type stringValue string
 
-var Usage = func(exit_code int, msg string) {
+var usage = func(exit_code int, msg string) {
 	var fh = os.Stderr
 	if exit_code == 0 {
 		fh = os.Stdout
@@ -77,21 +77,21 @@ var Usage = func(exit_code int, msg string) {
 	os.Exit(exit_code)
 }
 
-func request_log(handler http.Handler) http.Handler {
+func requestLog(handler http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		wslog.LogRequest(r.Method, r.URL, r.RemoteAddr, r.Proto, r.Referer(), r.UserAgent())
 		handler.ServeHTTP(w, r)
 	})
 }
 
-func Webserver(config *cfg.Cfg) error {
+func webserver(config *cfg.Cfg) error {
 	// If otto is enabled add routes and handle them.
 	if config.Otto == true {
-		otto_path, err := filepath.Abs(config.OttoPath)
+		ottoPath, err := filepath.Abs(config.OttoPath)
 		if err != nil {
 			log.Fatalf("Can't read %s: %s\n", config.OttoPath, err)
 		}
-		programs, err := ottoengine.Load(otto_path)
+		programs, err := ottoengine.Load(ottoPath)
 		if err != nil {
 			log.Fatalf("Load error: %s\n", err)
 		}
@@ -110,108 +110,108 @@ func Webserver(config *cfg.Cfg) error {
 			log.Fatalf("TLS set true but missing key or certificate")
 		}
 		log.Println("Starting https://" + net.JoinHostPort(config.Hostname, strconv.Itoa(config.Port)))
-		return http.ListenAndServeTLS(net.JoinHostPort(config.Hostname, strconv.Itoa(config.Port)), config.Cert, config.Key, request_log(http.DefaultServeMux))
+		return http.ListenAndServeTLS(net.JoinHostPort(config.Hostname, strconv.Itoa(config.Port)), config.Cert, config.Key, requestLog(http.DefaultServeMux))
 	}
 	log.Println("Starting http://" + net.JoinHostPort(config.Hostname, strconv.Itoa(config.Port)))
 	// Now start up the server and log transactions
-	return http.ListenAndServe(net.JoinHostPort(config.Hostname, strconv.Itoa(config.Port)), request_log(http.DefaultServeMux))
+	return http.ListenAndServe(net.JoinHostPort(config.Hostname, strconv.Itoa(config.Port)), requestLog(http.DefaultServeMux))
 }
 
-func defaultEnvBool(environment_var string, default_value bool) bool {
-	tmp := strings.ToLower(os.Getenv(environment_var))
+func defaultEnvBool(environmentVar string, defaultValue bool) bool {
+	tmp := strings.ToLower(os.Getenv(environmentVar))
 	if tmp == "true" {
 		return true
 	}
 	if tmp == "false" {
 		return false
 	}
-	return default_value
+	return defaultValue
 }
 
-func defaultEnvString(environment_var string, default_value string) string {
-	tmp := os.Getenv(environment_var)
+func defaultEnvString(environmentVar string, defaultValue string) string {
+	tmp := os.Getenv(environmentVar)
 	if tmp != "" {
 		return tmp
 	}
-	return default_value
+	return defaultValue
 }
 
-func defaultEnvInt(environment_var string, default_value int) int {
-	tmp := os.Getenv(environment_var)
+func defaultEnvInt(environmentVar string, defaultValue int) int {
+	tmp := os.Getenv(environmentVar)
 	if tmp != "" {
 		i, err := strconv.Atoi(tmp)
 		if err != nil {
-			Usage(1, environment_var+" must be an integer.")
+			usage(1, environmentVar+" must be an integer.")
 		}
 		return i
 	}
-	return default_value
+	return defaultValue
 }
 
 func init() {
 	const (
-		help_usage      = "This help document."
-		keygen_usage    = "Interactive tool to generate TLS certificates and keys"
-		init_usage      = "Creates a basic project structure in the current working directory"
-		use_tls_usage   = "When true this turns on TLS (https) support."
-		key_usage       = "Path to your SSL key pem file."
-		cert_usage      = "path to your SSL cert pem file."
-		docroot_usage   = "This is your document root for static files."
-		host_usage      = "Set this hostname for webserver."
-		port_usage      = "Set the port number to listen on."
-		otto_usage      = "When true this option turns on ottoengine. Uses the path defined by WS_OTTO_PATH environment variable or one provided by -O option."
-		otto_path_usage = "Turns on otto engine using the path for route JavaScript route handlers"
-		version_usage   = "Display the version number of ws command."
+		helpUsage      = "This help document."
+		keygenUsage    = "Interactive tool to generate TLS certificates and keys"
+		initUsage      = "Creates a basic project structure in the current working directory"
+		useTLSUsage   = "When true this turns on TLS (https) support."
+		keyUsage       = "Path to your SSL key pem file."
+		certUsage      = "path to your SSL cert pem file."
+		docrootUsage   = "This is your document root for static files."
+		hostUsage      = "Set this hostname for webserver."
+		portUsage      = "Set the port number to listen on."
+		ottoUsage      = "When true this option turns on ottoengine. Uses the path defined by WS_OTTO_PATH environment variable or one provided by -O option."
+		ottoPathUsage = "Turns on otto engine using the path for route JavaScript route handlers"
+		versionUsage   = "Display the version number of ws command."
 	)
 
-	flag.BoolVar(&help, "help", false, help_usage)
-	flag.BoolVar(&help, "h", false, help_usage)
-	flag.BoolVar(&do_keygen, "keygen", false, keygen_usage)
-	flag.BoolVar(&do_init, "init", false, init_usage)
-	flag.BoolVar(&version, "version", false, version_usage)
-	flag.BoolVar(&version, "v", false, version_usage)
+	flag.BoolVar(&help, "help", false, helpUsage)
+	flag.BoolVar(&help, "h", false, helpUsage)
+	flag.BoolVar(&doKeygen, "keygen", false, keygenUsage)
+	flag.BoolVar(&doInit, "init", false, initUsage)
+	flag.BoolVar(&version, "version", false, versionUsage)
+	flag.BoolVar(&version, "v", false, versionUsage)
 
 	// Settable via environment
-	use_tls = defaultEnvBool("WS_TLS", false)
+	useTLS = defaultEnvBool("WS_TLS", false)
 	key = defaultEnvString("WS_KEY", "")
 	cert = defaultEnvString("WS_CERT", "")
 	docroot = defaultEnvString("WS_DOCROOT", "")
 	otto = defaultEnvBool("WS_OTTO", false)
-	otto_path = defaultEnvString("WS_OTTO_PATH", "")
+	ottoPath = defaultEnvString("WS_OTTO_PATH", "")
 	host = defaultEnvString("WS_HOST", "localhost")
 	port = defaultEnvInt("WS_PORT", 8000)
 
-	flag.BoolVar(&use_tls, "tls", use_tls, use_tls_usage)
-	flag.StringVar(&key, "key", key, key_usage)
-	flag.StringVar(&cert, "cert", cert, cert_usage)
-	flag.StringVar(&docroot, "docroot", docroot, docroot_usage)
-	flag.StringVar(&docroot, "D", docroot, docroot_usage)
-	flag.StringVar(&host, "host", host, host_usage)
-	flag.StringVar(&host, "H", host, host_usage)
-	flag.IntVar(&port, "port", port, port_usage)
-	flag.IntVar(&port, "P", port, port_usage)
-	flag.BoolVar(&otto, "otto", otto, otto_usage)
-	flag.BoolVar(&otto, "o", otto, otto_usage)
-	flag.StringVar(&otto_path, "otto-path", otto_path, otto_path_usage)
-	flag.StringVar(&otto_path, "O", otto_path, otto_path_usage)
+	flag.BoolVar(&useTLS, "tls", useTLS, useTLSUsage)
+	flag.StringVar(&key, "key", key, keyUsage)
+	flag.StringVar(&cert, "cert", cert, certUsage)
+	flag.StringVar(&docroot, "docroot", docroot, docrootUsage)
+	flag.StringVar(&docroot, "D", docroot, docrootUsage)
+	flag.StringVar(&host, "host", host, hostUsage)
+	flag.StringVar(&host, "H", host, hostUsage)
+	flag.IntVar(&port, "port", port, portUsage)
+	flag.IntVar(&port, "P", port, portUsage)
+	flag.BoolVar(&otto, "otto", otto, ottoUsage)
+	flag.BoolVar(&otto, "o", otto, ottoUsage)
+	flag.StringVar(&ottoPath, "otto-path", ottoPath, ottoPathUsage)
+	flag.StringVar(&ottoPath, "O", ottoPath, ottoPathUsage)
 }
 
 func main() {
 	flag.Parse()
 	if version == true {
-		fmt.Println(REVISION)
+		fmt.Println(revision)
 		os.Exit(0)
 	}
 	if help == true {
-		Usage(0, "")
+		usage(0, "")
 	}
 
-	config, err := cfg.Configure(docroot, host, port, use_tls, cert, key, otto, otto_path)
+	config, err := cfg.Configure(docroot, host, port, useTLS, cert, key, otto, ottoPath)
 	if err != nil {
-		Usage(1, fmt.Sprintf("%s", err))
+		usage(1, fmt.Sprintf("%s", err))
 	}
 
-	if do_keygen == true {
+	if doKeygen == true {
 		certFilename, keyFilename, err := keygen.Keygen("etc/ssl", "cert.pem", "key.pem")
 		if err != nil {
 			log.Fatalf("%s\n", err)
@@ -220,7 +220,7 @@ func main() {
 		os.Exit(0)
 	}
 
-	if do_init == true {
+	if doInit == true {
 		err := cfg.InitProject()
 		if err != nil {
 			log.Fatalf("%s\n", err)
@@ -248,7 +248,7 @@ func main() {
 		config.Username,
 		config.Otto,
 		config.OttoPath)
-	err = Webserver(config)
+	err = webserver(config)
 	if err != nil {
 		log.Fatal(err)
 	}
