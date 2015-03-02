@@ -6,3 +6,18 @@ but for search should be possible to implement. It could be either an in-memory 
 The directory to pass to _ws -D_ would be scanned, database populated with an inverted keyword list and the result made available
 via the _ws_ JavaScript API for constructing a search results page or JSON API.
 
+## background resources
+
++ [BoldDB](https://github.com/boltdb/bolt)
+    + [BoltDB article on Progville](https://www.progville.com/go/bolt-embedded-db-golang/)
++ [https://github.com/google/cayley](cayley) - graph database
++ [goleveldb](https://github.com/syndtr/goleveldb) (an implementation of LevelDB in Go)
++ [LedisDB](http://ledisdb.com/)
++ [etcd](https://github.com/coreos/etcd) coreos key/value configuration db
+
+Alternatives that my not work on a Pi
+
++ [Tiedot](https://github.com/HouzuoGuo/tiedot)
+
+
+
