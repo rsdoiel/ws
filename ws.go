@@ -29,7 +29,7 @@ import (
 	"strings"
 )
 
-var revision = "v0.0.0-alpha"
+var revision = "v0.0.1"
 
 // command line parameters that override environment variables
 var (
