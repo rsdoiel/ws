@@ -13,11 +13,11 @@
 package main
 
 import (
-	"./cfg"
-	"./fsengine"
-	"./keygen"
-	"./ottoengine"
-	"./wslog"
+	"../../cfg"
+	"../../fsengine"
+	"../../keygen"
+	"../../ottoengine"
+	"../../wslog"
 	"flag"
 	"fmt"
 	"log"
@@ -29,7 +29,7 @@ import (
 	"strings"
 )
 
-var revision = "v0.0.1"
+var revision = "v0.0.2-alpha"
 
 // command line parameters that override environment variables
 var (

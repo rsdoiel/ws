@@ -2,10 +2,10 @@
 #
 # Run the contents of this repository with ws
 #
-if [ -f "./ws.go" ]; then
+if [ -f "cmds/ws/ws.go" ]; then
     echo "Running test from "$(pwd)
 else
-    echo "Can't find ws.go"
+    echo "Can't find cmds/ws/ws.go"
     exit 1
 fi
 if [ -f "./ws" ]; then
@@ -13,13 +13,13 @@ if [ -f "./ws" ]; then
     /bin/rm ./ws
 fi
 # build ws
-echo "Building ws.go"
-go build ws.go
+echo "Building cmds/ws/ws.go"
+go build cmds/ws/ws.go
 # Try to run ws in this directory.
 echo "Try to run ws"
 if [ -f "./ws" ]; then
     echo "Build OK, starting with otto and TLS false"
-    ./ws -otto=false -tls=false
+    ./ws -otto=false -tls=false -D doc
 else
     echo "Something went wrong building ws."
 fi
