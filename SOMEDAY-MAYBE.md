@@ -1,6 +1,9 @@
 
 # Someday, maybe
 
++ Could you support a simple site search without requiring a DB server?
+    + BoltDB
+    + goleveldb
 + Add support for on the fly compression (gzip) of text/* content types
 + Is there a core set of APIs that would be easy to support for non-static content?
 	- examples (currently available)
