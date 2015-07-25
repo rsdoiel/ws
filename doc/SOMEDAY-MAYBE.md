@@ -17,6 +17,7 @@
 	- examples (historical)
 		+ [Jaxer](http://www.ibm.com/developerworks/library/wa-aj-jaxer/index.html?ca=drs-tp3508) (apache module for embedding server/client JS processing)
 		+ [Lively Kernel](http://www.lively-kernel.org/repository/lively-kernel/trunk/doc/website-index.html)
-
++ Look at Echo router and see if this is a useful way to support FastCGI
++ Look at libsecurity and see how it might help *ws* stay safe.
 
 
