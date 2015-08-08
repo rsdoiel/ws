@@ -5,4 +5,5 @@
     + look at CodeMirror and AceEditor as candidates for the in browser editing
     + research best approach to embedding the editor in the go compiled binary
     + review scripted-editor for approach.
++ create a slug and unslug command for making URL friendly file references and anchor labels.
 
