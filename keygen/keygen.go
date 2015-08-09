@@ -127,6 +127,6 @@ func Keygen(basedir string, certPem string, keyPem string) (string, string, erro
 	pem.Encode(keyOut, &pem.Block{Type: "RSA PRIVATE KEY", Bytes: x509.MarshalPKCS1PrivateKey(priv)})
 	keyOut.Close()
 	fmt.Printf("Wrote %s\n", keyFilename)
-	// We got this for so no errors
+	// We got this far so no errors
 	return certFilename, keyFilename, nil
 }
