@@ -24,3 +24,5 @@ _testmain.go
 
 bin/*
 ws
+slugify
+unslugify
