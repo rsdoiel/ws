@@ -1,3 +1,4 @@
+build: ws slugify unslugify
 
 slugify: cmds/slugify/slugify.go slug/slug.go
 	go build cmds/slugify/slugify.go
@@ -8,7 +9,6 @@ unslugify: cmds/unslugify/unslugify.go slug/slug.go
 ws: cmds/ws/ws.go
 	go build cmds/ws/ws.go
 
-build: ws slugify unslugify
 
 install: ws slugify unslugify test
 	go install cmds/ws/ws.go
