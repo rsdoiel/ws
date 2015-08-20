@@ -1,5 +1,11 @@
 
+# TODO fixes
+
++ OttoEngine - request object getting pasted to wrapping JS function is not getting populated.
+    + Need to had actual tests or the web server itself.
+
 # Todo ideas
+
 
 ## Someday Maybe
 
