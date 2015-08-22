@@ -1,16 +1,15 @@
 /**
- * wskeygen.go - Generate appropriate certs for use with
- * a webserver.
+ * wsinit.go - Initialize a project setup for use with the ws webserver.
  *
  * @author R. S. Doiel, <rsdoiel@yahoo.com>
- * copyright (c) 2014
+ * copyright (c) 2015
  * All rights reserved.
  * @license BSD 2-Clause License
  */
 package main
 
 import (
-	"../../keygen"
+	"../../cfg"
 	"flag"
 	"fmt"
 	"log"
@@ -19,14 +18,10 @@ import (
 	"strings"
 )
 
-var revision = "v0.0.2"
+var revision = "v0.0.3"
 
 // command line parameters that override environment variables
 var (
-	host    string
-	port    int
-	cert    string
-	key     string
 	version bool
 	help    bool
 )
@@ -41,8 +36,9 @@ var usage = func(exit_code int, msg string) {
 	fmt.Fprintf(fh, `%s
  USAGE %s [options]
 
- EXAMPLES
-      
+		Create a basic project structure in the current working 
+		directory and generates SSL/TLS certificates if needed.
+
  OPTIONS
 
 `, msg, os.Args[0])
@@ -95,29 +91,13 @@ func defaultEnvInt(environmentVar string, defaultValue int) int {
 func init() {
 	const (
 		helpUsage    = "This help document."
-		keygenUsage  = "Interactive tool to generate TLS certificates and keys"
-		keyUsage     = "Set path to your SSL key pem file."
-		certUsage    = "Set path to your SSL cert pem file."
-		hostUsage    = "Set this hostname for webserver."
-		portUsage    = "Set the port number to listen on."
-		versionUsage = "Display the version number of ws command."
+		versionUsage = "Display the version number of wsinit command."
 	)
 
 	flag.BoolVar(&help, "help", false, helpUsage)
 	flag.BoolVar(&help, "h", false, helpUsage)
 	flag.BoolVar(&version, "version", false, versionUsage)
 	flag.BoolVar(&version, "v", false, versionUsage)
-
-	// Settable via environment
-	key = defaultEnvString("WS_KEY", "")
-	cert = defaultEnvString("WS_CERT", "")
-	host = defaultEnvString("WS_HOST", "localhost")
-	port = defaultEnvInt("WS_PORT", 8000)
-
-	flag.StringVar(&key, "key", key, keyUsage)
-	flag.StringVar(&cert, "cert", cert, certUsage)
-	flag.StringVar(&host, "host", host, hostUsage)
-	flag.IntVar(&port, "port", port, portUsage)
 }
 
 func main() {
@@ -130,9 +110,9 @@ func main() {
 		usage(0, "")
 	}
 
-	certFilename, keyFilename, err := keygen.Keygen("etc/ssl", "cert.pem", "key.pem")
+	err := cfg.InitProject()
 	if err != nil {
 		log.Fatalf("%s\n", err)
 	}
-	log.Printf("Wrote %s and %s\n", certFilename, keyFilename)
+	log.Println("Project initialization complete.")
 }

@@ -1,6 +1,7 @@
 //
 // Package fsengine is a simple restricted FileServer Handler for
-// ws.go.  Avoids exposing dot files via http requests.
+// ws.go. The primary difference between the stock http file server
+// and fsengine is fsengine avoids exposing dot files via http requests.
 //
 package fsengine
 

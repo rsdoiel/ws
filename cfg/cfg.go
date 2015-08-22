@@ -91,16 +91,16 @@ func InitProject() error {
 	otto = false
 	ottoPath = "dynamic"
 	for OK == false {
-		projectName = prompt.Question("Name of Project: (e.g. Big Reptiles)", "Big Reptiles")
-		authorName = prompt.Question("Name of Author(s): (e.g. Mr. Lizard)", "Mr. Lizard")
-		description = prompt.Question("Description (e.g A demo project)", "A Demo Project")
-		host = prompt.Question("Hostname (e.g. localhost)", "localhost")
-		port = prompt.Question("Post (e.g. 8000)", "8000")
-		docroot = prompt.Question("Document root for static files (e.g. ./static)", docroot)
-		config = prompt.Question("Directory to use for configuration files (e.g. ./etc)", "etc")
-		otto = prompt.YesNo("Turn on Otto Engine?")
+		projectName = prompt.Question("Name of Project (e.g. Big Reptiles): ", "Big Reptiles")
+		authorName = prompt.Question("Name of Author(s) (e.g. Mr. Lizard): ", "Mr. Lizard")
+		description = prompt.Question("Description (e.g A demo project): ", "A Demo Project")
+		host = prompt.Question("Hostname (e.g. localhost): ", "localhost")
+		port = prompt.Question("Post (e.g. 8000): ", "8000")
+		docroot = prompt.Question("Document root for static files (e.g. ./static): ", docroot)
+		config = prompt.Question("Directory to use for configuration files (e.g. ./etc): ", "etc")
+		otto = prompt.YesNo("Turn on Otto Engine? ")
 		if otto == true {
-			ottoPath = prompt.Question("Path to Otto Engine routes (e.g. ./dyanmic)", ottoPath)
+			ottoPath = prompt.Question("Path to Otto Engine routes (e.g. ./dyanmic): ", ottoPath)
 		}
 		fmt.Printf("Configuration choosen\nProject: %s\nAuthor(s): %s\nDescription: %s\nDocroot: %s\n",
 			projectName,
@@ -110,10 +110,10 @@ func InitProject() error {
 		fmt.Printf("Turn on Otto Engine: %v %s\n", otto, ottoPath)
 
 		// Display current settings
-		OK = prompt.YesNo("Is this OK?")
+		OK = prompt.YesNo("Is this OK? ")
 	}
 
-	useTLS = prompt.YesNo("Configure for SSL support?")
+	useTLS = prompt.YesNo("Configure for SSL support? ")
 	if useTLS == true {
 		// Defer handling of SSL questions to keygen.Keygen()
 		certFilename, keyFilename, err = keygen.Keygen(path.Join(config, "ssl"), "cert.pem", "key.pem")
@@ -143,7 +143,7 @@ func InitProject() error {
 	}
 
 	fmt.Println("Creating README.md")
-	readme := fmt.Sprintf("\n# %s\n\nBy %s\n\n## Overview\n%s\n\n", projectName, authorName, description)
+	readme := fmt.Sprintf("\n\n# %s\n\nBy %s\n\n## Overview\n\n%s\n\n", projectName, authorName, description)
 	err = ioutil.WriteFile("README.md", []byte(readme), 0664)
 	if err != nil {
 		return err

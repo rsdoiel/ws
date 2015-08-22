@@ -15,7 +15,6 @@ package main
 import (
 	"../../cfg"
 	"../../fsengine"
-	"../../keygen"
 	"../../ottoengine"
 	"../../wslog"
 	"flag"
@@ -29,7 +28,7 @@ import (
 	"strings"
 )
 
-var revision = "v0.0.2-alpha"
+var revision = "v0.0.3"
 
 // command line parameters that override environment variables
 var (
@@ -151,8 +150,6 @@ func defaultEnvInt(environmentVar string, defaultValue int) int {
 func init() {
 	const (
 		helpUsage     = "This help document."
-		keygenUsage   = "Interactive tool to generate TLS certificates and keys"
-		initUsage     = "Creates a basic project structure in the current working directory"
 		useTLSUsage   = "When true this turns on TLS (https) support."
 		keyUsage      = "Path to your SSL key pem file."
 		certUsage     = "path to your SSL cert pem file."
@@ -166,8 +163,6 @@ func init() {
 
 	flag.BoolVar(&help, "help", false, helpUsage)
 	flag.BoolVar(&help, "h", false, helpUsage)
-	flag.BoolVar(&doKeygen, "keygen", false, keygenUsage)
-	flag.BoolVar(&doInit, "init", false, initUsage)
 	flag.BoolVar(&version, "version", false, versionUsage)
 	flag.BoolVar(&version, "v", false, versionUsage)
 
@@ -209,23 +204,6 @@ func main() {
 	config, err := cfg.Configure(docroot, host, port, useTLS, cert, key, otto, ottoPath)
 	if err != nil {
 		usage(1, fmt.Sprintf("%s", err))
-	}
-
-	if doKeygen == true {
-		certFilename, keyFilename, err := keygen.Keygen("etc/ssl", "cert.pem", "key.pem")
-		if err != nil {
-			log.Fatalf("%s\n", err)
-		}
-		fmt.Printf("Wrote %s and %s\n", certFilename, keyFilename)
-		os.Exit(0)
-	}
-
-	if doInit == true {
-		err := cfg.InitProject()
-		if err != nil {
-			log.Fatalf("%s\n", err)
-		}
-		os.Exit(0)
 	}
 
 	fmt.Printf("\n\n"+

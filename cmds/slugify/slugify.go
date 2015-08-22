@@ -61,7 +61,7 @@ func slugify(s string, extension string) string {
 func main() {
 	help := false
 	extension := ""
-	flag.StringVar(&extension, "e", extension, "Remove the extention from the slug phrase. E.g. .html")
+	flag.StringVar(&extension, "e", extension, "Add an extention from the slug phrase. E.g. .html")
 	flag.BoolVar(&help, "h", help, "Display this help document.")
 	flag.BoolVar(&help, "help", help, "Display this help document.")
 	flag.Parse()

@@ -1,58 +1,16 @@
-ws
-==
 
     A nimble webserver for prototyping. 
 
 
 # What is _ws_?
 
-*ws* is a simple webserver with optional support for JavaScript defined route handlers.  _http_ and _https_ (SSL via TLS) protocols via Golang's _net/http_ package.  At this time it does not support PHP, Perl, Python, Lua, etc.
-
-+ It is great for server static web pages!
-    - Built on Golangs native http/https modules
-    - Implements a restricted http.FileServer based Golang's builtin http.FileServer
-+ It includes OttoEngine enabling JavaScript defined route handling
-    - built on Robert Krimen's excellent [otto](https://github.com/robertkrimen/otto) JavaScript VM
-
-Got an idea for a new project? Want to prototype it quickly? 
-
-1. run "wsinit" to set things up
-2. run ". etc/config.sh" seed your environment
-3. run "ws" and start working!
-
-_ws_ feature set has been kept minimal. Only what you need when you turn it on.
-
-+ Restricted file service, only from the docroot and no "dot files" are served
-+ No dynamic content support unless you turn on OttoEngine for JavaScript defined routes (great for creating JSON blobs used by a client side demo)
-+ Quick startup, everything logged to console for easy debugging or piping to a log processor
-
-
-## USAGE 
-
-```
-    ws [options]
-```
-
-## OPTIONS
-
-	-D	(defaults to ) This is your document root for static files.
-	-H	(defaults to localhost) Set this hostname for webserver.
-	-O	(defaults to ) Turns on otto engine using the path for route JavaScript route handlers
-	-P	(defaults to 8000) Set the port number to listen on.
-	-cert	(defaults to ) path to your SSL cert pem file.
-	-docroot	(defaults to ) This is your document root for static files.
-	-h	(defaults to false) This help document.
-	-help	(defaults to false) This help document.
-	-host	(defaults to localhost) Set this hostname for webserver.
-	-key	(defaults to ) Path to your SSL key pem file.
-	-o	(defaults to false) When true this option turns on ottoengine. Uses the path defined by WS_OTTO_PATH environment variable or one provided by -O option.
-	-otto	(defaults to false) When true this option turns on ottoengine. Uses the path defined by WS_OTTO_PATH environment variable or one provided by -O option.
-	-otto-path	(defaults to ) Turns on otto engine using the path for route JavaScript route handlers
-	-port	(defaults to 8000) Set the port number to listen on.
-	-tls	(defaults to false) When true this turns on TLS (https) support.
-	-v	(defaults to false) Display the version number of ws command.
-	-version	(defaults to false) Display the version number of ws command.
-
+The project started in 2014 after having setup another instance Apache just to show something to a colleague.
+Have been playing around with NodeJS and Golang for building RESTful services it just seemed that Apache was
+overkill. I just wanted to type "webserver" and have an ephemerial webserver instance running rather than
+creating another virtualhost.  That is the itch that _ws_ tries to skratch.  It is not intended to be a full
+featured webserver. It is designed to be simple to start from the command line, configurable via the environment
+(inspired by 12 factor apps) and have the minimum of functionality to do a quick prototype, static site or 
+API mockup.
 
 # Tour
 
@@ -175,13 +133,22 @@ _https_ server with the document root set to your current working directory for 
 
 ### Generating TLS certificates and keys
 
-_ws_ comes with a *-keygen* option for generating self-signed certificates and keys.
+_ws_ comes with *wskeygen* for generating self-signed certificates and keys.
 
 ```SHELL
-    ws -keygen
+    wskeygen
 ```
 
 This was create a *cert.pem* and *key.pem* files in *$HOME/etc/ws* directory.
+
+
+### Generate a project folder and certificates
+
+_ws_ comes with _wsinit_ for interactively generating a project tree and certificates.
+
+```SHELL
+    wsinit
+```
 
 
 ## Otto
