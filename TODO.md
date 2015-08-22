@@ -12,7 +12,6 @@
     + decide how to handle TLS key generation seemlessly
         + use existing certs for host machine
         + create one time self signed certs with signatures in browser display along with onetime URL
-+ create a slug and unslug command for making URL friendly file references and anchor labels.
 + create a nav generator based on file system organization
     + autogenerate sitemap.xml and siteindex.html for improved search engine ingest
 + develop a generator and JS for browser side site specific search
