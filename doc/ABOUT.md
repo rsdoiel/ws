@@ -7,7 +7,7 @@
 The project started in 2014 after having setup another instance Apache just to show something to a colleague.
 Have been playing around with NodeJS and Golang for building RESTful services it just seemed that Apache was
 overkill. I just wanted to type "webserver" and have an ephemerial webserver instance running rather than
-creating another virtualhost.  That is the itch that _ws_ tries to skratch.  It is not intended to be a full
+creating another virtualhost.  That is the itch that _ws_ tries to scratch.  It is not intended to be a full
 featured webserver. It is designed to be simple to start from the command line, configurable via the environment
 (inspired by 12 factor apps) and have the minimum of functionality to do a quick prototype, static site or 
 API mockup.
