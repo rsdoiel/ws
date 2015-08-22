@@ -1,10 +1,10 @@
-/**
- * ottoengine.go - ottoengine module provides a way to define route processing
- * using the Otto JavaScript virutal machine.
- *
- * Otto is written by Robert Krimen, see https://github.com/robertkrimen/otto
- * Otto Engine is written by Robert Doiel, see https://github.com/rsdoiel/ws
- */
+//
+// Package ottoengine is a module providing a way to define route processing
+// using the Otto JavaScript virutal machine.
+//
+// Otto is written by Robert Krimen, see https://github.com/robertkrimen/otto
+// Otto Engine is written by Robert Doiel, see https://github.com/rsdoiel/ws
+//
 package ottoengine
 
 import (
@@ -12,7 +12,6 @@ import (
 	//"./reload"
 	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"github.com/robertkrimen/otto"
 	"io/ioutil"
@@ -24,6 +23,8 @@ import (
 	"strings"
 )
 
+// Program keeps track of assigned route, the JS file, the source of
+// the JS file as well as handles for the VM and Script elements in otto.
 type Program struct {
 	Route    string
 	Filename string
@@ -32,19 +33,20 @@ type Program struct {
 	Script   *otto.Script
 }
 
-func LoadFile(root string, filename string, file_info os.FileInfo, err error) (*Program, error) {
+// LoadFile ingests a JavaScript file and returns a Program struct.
+func LoadFile(root string, filename string, fileInfo os.FileInfo, err error) (*Program, error) {
 	var (
-		ext       string
-		full_path string
-		route     string
-		source    []byte
-		vm        *otto.Otto
-		script    *otto.Script
+		ext      string
+		fullPath string
+		route    string
+		source   []byte
+		vm       *otto.Otto
+		script   *otto.Script
 	)
 
 	// Trim the leading path from the path string Trim ext from path string, save this as route.
 	ext = path.Ext(filename)
-	if file_info != nil && file_info.IsDir() != true && ext == ".js" {
+	if fileInfo != nil && fileInfo.IsDir() != true && ext == ".js" {
 		if ext == ".js" {
 			route = strings.TrimSuffix(strings.TrimPrefix(filename, root), ".js")
 			log.Printf("Reading %s\n", filename)
@@ -53,28 +55,30 @@ func LoadFile(root string, filename string, file_info os.FileInfo, err error) (*
 				return nil, err
 			}
 			vm = otto.New()
-			full_path, err = filepath.Abs(filename)
+			fullPath, err = filepath.Abs(filename)
 			if err != nil {
 				return nil, err
 			}
 
 			// Attempt to compile source and abort is there is a problem
-			script, err = vm.Compile(full_path, source)
+			script, err = vm.Compile(fullPath, source)
 			if err != nil {
-				return nil, errors.New(fmt.Sprintf("File: %s, %s\n", full_path, err))
+				return nil, fmt.Errorf("File: %s, %s\n", fullPath, err)
 			}
 		}
 	}
 	return &Program{Route: route, Filename: filename, Source: source, VM: vm, Script: script}, nil
 }
 
+// Load evals a string and returns a Program Struct. This is an alternative to reading
+// a file and eval with LoadFile().
 func Load(root string) ([]Program, error) {
 	var programs []Program
 
-	err := filepath.Walk(root, func(filename string, file_info os.FileInfo, err error) error {
+	err := filepath.Walk(root, func(filename string, fileInfo os.FileInfo, err error) error {
 		ext := path.Ext(filename)
-		if file_info != nil && file_info.IsDir() != true && ext == ".js" {
-			p, err := LoadFile(root, filename, file_info, err)
+		if fileInfo != nil && fileInfo.IsDir() != true && ext == ".js" {
+			p, err := LoadFile(root, filename, fileInfo, err)
 			if err != nil {
 				return err
 			}
@@ -139,8 +143,13 @@ func jsInjectMethod(name string, src string, buf []byte) string {
 	return src
 }
 
+func requestAsJson(r *http.Request) (buf []byte, err error) {
+	jsonURL, err := json.Marshal(r.URL)
+	return []byte(fmt.Sprintf("{\"Method\":\"%s\",\"URL\":%s}", r.Method, jsonURL)), err
+}
+
 func createRequestLiteral(r *http.Request) string {
-	buf, err := json.Marshal(r)
+	buf, err := requestAsJson(r)
 	if err != nil {
 		return "{}"
 	}
@@ -157,6 +166,8 @@ func createRequestLiteral(r *http.Request) string {
 	return jsInjectMethod(r.Method, jsMethodHandler(r.Method, r.URL.RawQuery), buf)
 }
 
+// Response sets up the structure for forming HTTP headers for
+// OttoEngine scripts.
 type Response struct {
 	Code    int
 	Status  string
@@ -191,6 +202,7 @@ func createResponseLiteral() string {
 	return src
 }
 
+// IsJSON is a predicate that returns true if the content is JSON otherwise false.
 func IsJSON(value otto.Value) bool {
 	blob, _ := value.ToString()
 	if (strings.HasPrefix(blob, "[\"") == true &&
@@ -202,45 +214,60 @@ func IsJSON(value otto.Value) bool {
 	return false
 }
 
+// IsHTML is a predicate the returns true if the content is HTML otherwise false.
 func IsHTML(value otto.Value) bool {
 	blob, _ := value.ToString()
 	return strings.HasPrefix(blob, "<!DOCTYPE html>")
 }
 
+func numberLines(src string) string {
+	var (
+		results []string
+	)
+
+	for i, line := range strings.Split(src, "\n") {
+		results = append(results, fmt.Sprintf("%d:\t%s\n", i, line))
+	}
+
+	return strings.Join(results, "")
+}
+
+// Engine provides the basic service for ws.go to handle JavaScript interactions server side.
 func Engine(program Program) {
 	http.HandleFunc(program.Route, func(w http.ResponseWriter, r *http.Request) {
 		var (
-			vm               *otto.Otto
-			script           string
-			closure_script   string
-			run_script       string
-			request_literal  string
-			response_literal string
-			go_response      Response
+			vm              *otto.Otto
+			script          string
+			closureScript   string
+			runScript       string
+			requestLiteral  string
+			responseLiteral string
+			goResponse      Response
 		)
 
 		// 1 Create fresh Request object literal.
-		request_literal = createRequestLiteral(r)
+		requestLiteral = createRequestLiteral(r)
 
 		// 2. Create a fresh Response object literal.
-		response_literal = createResponseLiteral()
+		responseLiteral = createResponseLiteral()
 
 		// 3. Setup the VM for the Route with our closure
 		vm = program.VM
 		script = string(program.Source)
-		closure_script = `JSON.stringify((function(Request,Response){var value = %s;if (value) { Response.setContent(value); };return Response;}(%s,%s)));`
-		run_script = fmt.Sprintf(closure_script, script, request_literal, response_literal)
+		closureScript = `JSON.stringify((function(Request,Response){var value = %s;if (value) { Response.setContent(value); };return Response;}(%s,%s)));`
+		runScript = fmt.Sprintf(closureScript, script, requestLiteral, responseLiteral)
 
 		// 4. Run the VM wrapped with a closure containing`Request, Response
-		output, err := vm.Run(run_script)
+		output, err := vm.Run(runScript)
 		if err != nil {
-			msg := fmt.Sprintf("Script: %s", err)
+			msg := fmt.Sprintf("JavaScript Error: %s", err)
 			wslog.LogResponse(500, "Internal Server Error",
 				r.Method, r.URL, r.RemoteAddr, program.Filename, msg)
+			log.Println(numberLines(runScript))
 			http.Error(w, "Internal Server Error", 500)
 			return
 		}
-		json_src, err := output.ToString()
+		jsonSrc, err := output.ToString()
 		if err != nil {
 			msg := fmt.Sprintf("Conversion to JSON: %s", err)
 			wslog.LogResponse(500, "Internal Server Error",
@@ -250,38 +277,39 @@ func Engine(program Program) {
 		}
 		// See if we're rendering from a returned text string or JSON
 		// via the Response object.
-		json_err := json.Unmarshal([]byte(json_src), &go_response)
-		if json_err != nil {
+		jsonErr := json.Unmarshal([]byte(jsonSrc), &goResponse)
+		if jsonErr != nil {
 			// We're rendering from a text string, try to calc the content type.
 			// 5. Calc headers
-			content_type := "text/plain; charset=utf-8"
+			contentType := "text/plain; charset=utf-8"
 			if IsJSON(output) {
-				content_type = "application/json; charset=utf-8"
+				contentType = "application/json; charset=utf-8"
 			} else if IsHTML(output) {
-				content_type = "text/html; charset=utf-8"
+				contentType = "text/html; charset=utf-8"
 			}
-			w.Header().Set("Content-Type", content_type)
+			w.Header().Set("Content-Type", contentType)
 
 			// 6. send the output to the browser.
 			fmt.Fprintf(w, "%s", output)
-			wslog.LogResponse(200, "OK", r.Method, r.URL, r.RemoteAddr, program.Filename, content_type)
+			wslog.LogResponse(200, "OK", r.Method, r.URL, r.RemoteAddr, program.Filename, contentType)
 			return
 		}
 
 		// We're rendering completely from the response object.
 		// 5. update headers from responseObject
-		content_type := "text/plain; charset=utf-8"
-		for key, value := range go_response.Headers {
+		contentType := "text/plain; charset=utf-8"
+		for key, value := range goResponse.Headers {
 			if key == "content-type" {
-				content_type = value
+				contentType = value
 			}
 			w.Header().Set(key, value)
 		}
-		fmt.Fprintf(w, "%s", go_response.Content)
-		wslog.LogResponse(go_response.Code, go_response.Status, r.Method, r.URL, r.RemoteAddr, program.Filename, content_type)
+		fmt.Fprintf(w, "%s", goResponse.Content)
+		wslog.LogResponse(goResponse.Code, goResponse.Status, r.Method, r.URL, r.RemoteAddr, program.Filename, contentType)
 	})
 }
 
+// AddRoutes allows a Program structure to fine an approach route handler.
 func AddRoutes(programs []Program) {
 	for i := range programs {
 		log.Printf("Adding route (%d) %s from %s\n", i, programs[i].Route, programs[i].Filename)

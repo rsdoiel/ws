@@ -1,12 +1,11 @@
-/**
- * cfg.go - general configuration methods for ws.go
- */
+//
+// Package cfg is a general configuration methods for ws.go
+//
 package cfg
 
 import (
 	"../keygen"
 	"../prompt"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -16,108 +15,108 @@ import (
 	"strings"
 )
 
-// Application's configuration - who started the process, port assignment
+// Cfg is an application's configuration - who started the process, port assignment
 // configuration settings, etc.
 type Cfg struct {
-	Username  string
-	Hostname  string
-	Port      int
+	Username string
+	Hostname string
+	Port     int
 	UseTLS   bool
-	Docroot   string
-	Cert      string
-	Key       string
-	Otto      bool
+	Docroot  string
+	Cert     string
+	Key      string
+	Otto     bool
 	OttoPath string
 }
 
-// Configure this application.
-func Configure(docroot string, hostname string, port int, use_tls bool, cert string, key string, otto bool, otto_path string) (*Cfg, error) {
-	ws_user, err := user.Current()
+// Configure an application.
+func Configure(docroot string, hostname string, port int, useTLS bool, cert string, key string, otto bool, ottoPath string) (*Cfg, error) {
+	wsUser, err := user.Current()
 	if err != nil {
 		return nil, err
 	}
 
 	// Normalize docroot
 	if strings.HasPrefix(docroot, "/") == false {
-		clean_docroot, err := filepath.Abs(path.Join("./", docroot))
+		cleanDocroot, err := filepath.Abs(path.Join("./", docroot))
 		if err != nil {
-			return nil, errors.New(fmt.Sprintf("Can't expand docroot %s: %s\n", docroot, err))
+			return nil, fmt.Errorf("Can't expand docroot %s: %s\n", docroot, err)
 		}
-		docroot = clean_docroot
+		docroot = cleanDocroot
 	}
-	// Normalize otto_path
-	if otto == true && strings.HasPrefix(otto_path, "/") == false {
-		clean_otto_path, err := filepath.Abs(path.Join("./", otto_path))
+	// Normalize ottoPath
+	if otto == true && strings.HasPrefix(ottoPath, "/") == false {
+		cleanOttoPath, err := filepath.Abs(path.Join("./", ottoPath))
 		if err != nil {
-			return nil, errors.New(fmt.Sprintf("Can't expand otto_path %s: %s\n", otto_path, err))
+			return nil, fmt.Errorf("Can't expand ottoPath %s: %s\n", ottoPath, err)
 		}
-		otto_path = clean_otto_path
+		ottoPath = cleanOttoPath
 	} else if otto == false {
-		otto_path = ""
+		ottoPath = ""
 	}
 	return &Cfg{
-		Username:  ws_user.Username,
-		Hostname:  hostname,
-		Port:      port,
-		Docroot:   docroot,
-		UseTLS:   use_tls,
-		Cert:      cert,
-		Key:       key,
-		Otto:      otto,
-		OttoPath: otto_path}, nil
+		Username: wsUser.Username,
+		Hostname: hostname,
+		Port:     port,
+		Docroot:  docroot,
+		UseTLS:   useTLS,
+		Cert:     cert,
+		Key:      key,
+		Otto:     otto,
+		OttoPath: ottoPath}, nil
 }
 
-// InitProject - initializes a basic project structure (e.g. creates static, dynamic, README.md, etc/config.sh)
+// InitProject initializes a basic project structure (e.g. creates static, dynamic, README.md, etc/config.sh)
 func InitProject() error {
 	var (
-		host          string
-		port          string
-		project_name  string
-		author_name   string
-		description   string
-		docroot       string
-		use_tls       bool
-		cert_filename string
-		key_filename  string
-		otto          bool
-		otto_path     string
-		config        string
-		OK            bool
-		err           error
+		host         string
+		port         string
+		projectName  string
+		authorName   string
+		description  string
+		docroot      string
+		useTLS       bool
+		certFilename string
+		keyFilename  string
+		otto         bool
+		ottoPath     string
+		config       string
+		OK           bool
+		err          error
 	)
 
 	OK = false
-	use_tls = false
+	useTLS = false
 	docroot = "static"
 	otto = false
-	otto_path = "dynamic"
+	ottoPath = "dynamic"
 	for OK == false {
-		project_name = prompt.PromptString("Name of Project: (e.g. Big Reptiles)", "Big Reptiles")
-		author_name = prompt.PromptString("Name of Author(s): (e.g. Mr. Lizard)", "Mr. Lizard")
-		description = prompt.PromptString("Description (e.g A demo project)", "A Demo Project")
-		host = prompt.PromptString("Hostname (e.g. localhost)", "localhost")
-		port = prompt.PromptString("Post (e.g. 8000)", "8000")
-		docroot = prompt.PromptString("Document root for static files (e.g. ./static)", docroot)
-		config = prompt.PromptString("Directory to use for configuration files (e.g. ./etc)", "etc")
-		otto = prompt.YesNo("Turn on Otto Engine?")
+		projectName = prompt.Question("Name of Project (e.g. Big Reptiles): ", "Big Reptiles")
+		authorName = prompt.Question("Name of Author(s) (e.g. Mr. Lizard): ", "Mr. Lizard")
+		description = prompt.Question("Description (e.g A demo project): ", "A Demo Project")
+		host = prompt.Question("Hostname (e.g. localhost): ", "localhost")
+		port = prompt.Question("Post (e.g. 8000): ", "8000")
+		docroot = prompt.Question("Document root for static files (e.g. ./static): ", docroot)
+		config = prompt.Question("Directory to use for configuration files (e.g. ./etc): ", "etc")
+		otto = prompt.YesNo("Turn on Otto Engine? ")
 		if otto == true {
-			otto_path = prompt.PromptString("Path to Otto Engine routes (e.g. ./dyanmic)", otto_path)
+			ottoPath = prompt.Question("Path to Otto Engine routes (e.g. ./dyanmic): ", ottoPath)
 		}
 		fmt.Printf("Configuration choosen\nProject: %s\nAuthor(s): %s\nDescription: %s\nDocroot: %s\n",
-			project_name,
-			author_name,
+			projectName,
+			authorName,
 			description,
 			docroot)
-		fmt.Printf("Turn on Otto Engine: %v %s\n", otto, otto_path)
+		fmt.Printf("Turn on Otto Engine: %v %s\n", otto, ottoPath)
 
 		// Display current settings
-		OK = prompt.YesNo("Is this OK?")
+		OK = prompt.YesNo("Is this OK? ")
 	}
 
-	use_tls = prompt.YesNo("Configure for SSL support?")
-	if use_tls == true {
+	useTLS = prompt.YesNo("Configure for SSL support? ")
+	if useTLS == true {
 		// Defer handling of SSL questions to keygen.Keygen()
-		cert_filename, key_filename, err = keygen.Keygen(path.Join(config, "ssl"), "cert.pem", "key.pem")
+		certFilename, keyFilename, err = keygen.Keygen(path.Join(config, "ssl"), "cert.pem", "key.pem")
 		if err != nil {
 			return err
 		}
@@ -136,27 +135,27 @@ func InitProject() error {
 	}
 
 	if otto == true {
-		fmt.Printf("Creating %s\n", otto_path)
-		err = os.MkdirAll(otto_path, 0775)
+		fmt.Printf("Creating %s\n", ottoPath)
+		err = os.MkdirAll(ottoPath, 0775)
 		if err != nil {
 			return err
 		}
 	}
 
 	fmt.Println("Creating README.md")
-	readme := fmt.Sprintf("\n# %s\n\nBy %s\n\n## Overview\n%s\n\n", project_name, author_name, description)
+	readme := fmt.Sprintf("\n\n# %s\n\nBy %s\n\n## Overview\n\n%s\n\n", projectName, authorName, description)
 	err = ioutil.WriteFile("README.md", []byte(readme), 0664)
 	if err != nil {
 		return err
 	}
 
 	fmt.Printf("Creating %s\n", path.Join(config, "config.sh"))
-	config_environment := fmt.Sprintf("#!/bin/bash\n# %s configuration\n# Source this file before running ws\n#\n\nexport WS_HOST=%q\nexport WS_PORT=%q\nexport WS_DOCROOT=%q\nexport WS_OTTO=%v\nexport WS_OTTO_PATH=%q\n", project_name, host, port, docroot, otto, otto_path)
+	configEnvironment := fmt.Sprintf("#!/bin/bash\n# %s configuration\n# Source this file before running ws\n#\n\nexport WS_HOST=%q\nexport WS_PORT=%q\nexport WS_DOCROOT=%q\nexport WS_OTTO=%v\nexport WS_OTTO_PATH=%q\n", projectName, host, port, docroot, otto, ottoPath)
 
-	if use_tls == true {
-		config_environment += fmt.Sprintf("\nexport TLS=true\nexport WS_CERT=%s\nexport WS_KEY=%s\n\n", cert_filename, key_filename)
+	if useTLS == true {
+		configEnvironment += fmt.Sprintf("\nexport TLS=true\nexport WS_CERT=%s\nexport WS_KEY=%s\n\n", certFilename, keyFilename)
 	}
-	err = ioutil.WriteFile(path.Join(config, "config.sh"), []byte(config_environment), 0770)
+	err = ioutil.WriteFile(path.Join(config, "config.sh"), []byte(configEnvironment), 0770)
 	if err != nil {
 		return err
 	}
@@ -173,14 +172,14 @@ func InitProject() error {
         <div>%s</div>
     </body>
 </html>
-`, project_name, project_name, author_name, description)
+`, projectName, projectName, authorName, description)
 	err = ioutil.WriteFile(path.Join(docroot, "index.html"), []byte(index), 0664)
 	if err != nil {
 		return err
 	}
 
 	if otto == true {
-		test_js := `/**
+		testJs := `/**
  * test.js - an example Otto Engine route handler
  */
 /*jslint browser: false, indent: 4 */
@@ -190,8 +189,8 @@ func InitProject() error {
     res.setContent("Hello World!")
 }(Request, Response))
 `
-		fmt.Printf("Creating %s/test.js\n", otto_path)
-		err = ioutil.WriteFile(path.Join(otto_path, "test.js"), []byte(test_js), 0664)
+		fmt.Printf("Creating %s/test.js\n", ottoPath)
+		err = ioutil.WriteFile(path.Join(ottoPath, "test.js"), []byte(testJs), 0664)
 		if err != nil {
 			return err
 		}
