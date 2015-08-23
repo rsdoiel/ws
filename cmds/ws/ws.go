@@ -175,7 +175,6 @@ func init() {
 	ottoPath = defaultEnvString("WS_OTTO_PATH", "")
 	host = defaultEnvString("WS_HOST", "localhost")
 	port = defaultEnvInt("WS_PORT", 8000)
-
 	flag.BoolVar(&useTLS, "tls", useTLS, useTLSUsage)
 	flag.StringVar(&key, "key", key, keyUsage)
 	flag.StringVar(&cert, "cert", cert, certUsage)

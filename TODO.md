@@ -17,6 +17,10 @@
 + develop a generator and JS for browser side site specific search
     + create an inverted word list as JSON file
     + create a sitemap JSON file
-
++ explore cli tools as CMS to produce static websites
+    + a markdown processor for generating static site content
+    + shorthand for embedding content or as a alternate to Golang template pages
+    + slugify/unslugify to generate appropriate page titles based on titles in text files.
++ explore interfacing with Solr
 
 
