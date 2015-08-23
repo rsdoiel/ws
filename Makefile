@@ -1,21 +1,21 @@
 build: ws wsjs wskeygen wsinit slugify unslugify 
 
-ws: cmds/ws/ws.go cfg/cfg.go fsengine/fsengine.go ottoengine/ottoengine.go
+ws: cmds/ws/ws.go cfg/cfg.go fsengine/fsengine.go ottoengine/ottoengine.go cli/cli.go wslog/wslog.go
 	go build cmds/ws/ws.go
 
-wsjs: cmds/wsjs/wsjs.go cfg/cfg.go fsengine/fsengine.go ottoengine/ottoengine.go
+wsjs: cmds/wsjs/wsjs.go cfg/cfg.go fsengine/fsengine.go ottoengine/ottoengine.go cli/cli.go wslog/wslog.go
 	go build cmds/wsjs/wsjs.go
 
-wskeygen: cmds/wskeygen/wskeygen.go cfg/cfg.go keygen/keygen.go
+wskeygen: cmds/wskeygen/wskeygen.go cfg/cfg.go keygen/keygen.go cli/cli.go
 	go build cmds/wskeygen/wskeygen.go
 
-wsinit: cmds/wsinit/wsinit.go cfg/cfg.go keygen/keygen.go
+wsinit: cmds/wsinit/wsinit.go cfg/cfg.go keygen/keygen.go cli/cli.go
 	go build cmds/wsinit/wsinit.go
 
-slugify: cmds/slugify/slugify.go slug/slug.go
+slugify: cmds/slugify/slugify.go slug/slug.go cli/cli.go
 	go build cmds/slugify/slugify.go
 
-unslugify: cmds/unslugify/unslugify.go slug/slug.go
+unslugify: cmds/unslugify/unslugify.go slug/slug.go cli/cli.go
 	go build cmds/unslugify/unslugify.go
 
 

@@ -13,8 +13,8 @@ package main
 
 import (
 	"../../cfg"
+	cli "../../cli"
 	"../../fsengine"
-	ver "../../version"
 	"../../wslog"
 	"flag"
 	"fmt"
@@ -22,9 +22,7 @@ import (
 	"net"
 	"net/http"
 	"os"
-	"path/filepath"
 	"strconv"
-	"strings"
 )
 
 // command line parameters that override environment variables
@@ -41,41 +39,6 @@ var (
 
 type stringValue string
 
-var usage = func(exit_code int, msg string) {
-	var fh = os.Stderr
-	if exit_code == 0 {
-		fh = os.Stdout
-	}
-	fmt.Fprintf(fh, `%s
- USAGE %s [options]
-
- EXAMPLES
-      
- OPTIONS
-
-`, msg, os.Args[0])
-
-	flag.VisitAll(func(f *flag.Flag) {
-		fmt.Fprintf(fh, "\t-%s\t(defaults to %s) %s\n", f.Name, f.DefValue, f.Usage)
-	})
-
-	fmt.Fprintf(fh, `
-
- copyright (c) 2014 all rights reserved.
- Released under the Simplified BSD License
- See: http://opensource.org/licenses/bsd-license.php
-
-`)
-	os.Exit(exit_code)
-}
-
-func requestLog(handler http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		wslog.LogRequest(r.Method, r.URL, r.RemoteAddr, r.Proto, r.Referer(), r.UserAgent())
-		handler.ServeHTTP(w, r)
-	})
-}
-
 func webserver(config *cfg.Cfg) error {
 	// Restricted FileService excluding dot files and directories
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
@@ -89,42 +52,11 @@ func webserver(config *cfg.Cfg) error {
 			log.Fatalf("TLS set true but missing key or certificate")
 		}
 		log.Println("Starting https://" + net.JoinHostPort(config.Hostname, strconv.Itoa(config.Port)))
-		return http.ListenAndServeTLS(net.JoinHostPort(config.Hostname, strconv.Itoa(config.Port)), config.Cert, config.Key, requestLog(http.DefaultServeMux))
+		return http.ListenAndServeTLS(net.JoinHostPort(config.Hostname, strconv.Itoa(config.Port)), config.Cert, config.Key, wslog.RequestLog(http.DefaultServeMux))
 	}
 	log.Println("Starting http://" + net.JoinHostPort(config.Hostname, strconv.Itoa(config.Port)))
 	// Now start up the server and log transactions
-	return http.ListenAndServe(net.JoinHostPort(config.Hostname, strconv.Itoa(config.Port)), requestLog(http.DefaultServeMux))
-}
-
-func defaultEnvBool(environmentVar string, defaultValue bool) bool {
-	tmp := strings.ToLower(os.Getenv(environmentVar))
-	if tmp == "true" {
-		return true
-	}
-	if tmp == "false" {
-		return false
-	}
-	return defaultValue
-}
-
-func defaultEnvString(environmentVar string, defaultValue string) string {
-	tmp := os.Getenv(environmentVar)
-	if tmp != "" {
-		return tmp
-	}
-	return defaultValue
-}
-
-func defaultEnvInt(environmentVar string, defaultValue int) int {
-	tmp := os.Getenv(environmentVar)
-	if tmp != "" {
-		i, err := strconv.Atoi(tmp)
-		if err != nil {
-			usage(1, environmentVar+" must be an integer.")
-		}
-		return i
-	}
-	return defaultValue
+	return http.ListenAndServe(net.JoinHostPort(config.Hostname, strconv.Itoa(config.Port)), wslog.RequestLog(http.DefaultServeMux))
 }
 
 func init() {
@@ -145,36 +77,41 @@ func init() {
 	flag.BoolVar(&version, "v", false, versionUsage)
 
 	// Settable via environment
-	useTLS = defaultEnvBool("WS_TLS", false)
-	key = defaultEnvString("WS_KEY", "")
-	cert = defaultEnvString("WS_CERT", "")
-	docroot = defaultEnvString("WS_DOCROOT", "")
-	host = defaultEnvString("WS_HOST", "localhost")
-	port = defaultEnvInt("WS_PORT", 8000)
+	useTLS = cli.DefaultEnvBool("WS_TLS", false)
+	key = cli.DefaultEnvString("WS_KEY", "")
+	cert = cli.DefaultEnvString("WS_CERT", "")
+	docroot = cli.DefaultEnvString("WS_DOCROOT", "")
+	host = cli.DefaultEnvString("WS_HOST", "localhost")
+	port = cli.DefaultEnvInt("WS_PORT", 8000)
 	flag.BoolVar(&useTLS, "tls", useTLS, useTLSUsage)
 	flag.StringVar(&key, "key", key, keyUsage)
 	flag.StringVar(&cert, "cert", cert, certUsage)
 	flag.StringVar(&docroot, "docroot", docroot, docrootUsage)
-	flag.StringVar(&docroot, "D", docroot, docrootUsage)
+	flag.StringVar(&docroot, "d", docroot, docrootUsage)
 	flag.StringVar(&host, "host", host, hostUsage)
 	flag.StringVar(&host, "H", host, hostUsage)
 	flag.IntVar(&port, "port", port, portUsage)
-	flag.IntVar(&port, "P", port, portUsage)
+	flag.IntVar(&port, "p", port, portUsage)
 }
 
 func main() {
+	usageDescription := fmt.Sprintf(`
+ %s is a static content web server suitable for prototyping and
+ development. It supports both http and https protocols.
+
+`, cli.CommandName(os.Args[0]))
+
 	flag.Parse()
 	if help == true {
-		usage(0, "")
+		cli.Usage(0, usageDescription, "")
 	}
 	if version == true {
-		fmt.Printf("%s version %s\n", os.Args[0], ver.Revision)
-		os.Exit(0)
+		cli.Version()
 	}
 
 	config, err := cfg.Configure(docroot, host, port, useTLS, cert, key, false, "")
 	if err != nil {
-		usage(1, fmt.Sprintf("%s", err))
+		cli.Usage(1, usageDescription, fmt.Sprintf("%s", err))
 	}
 
 	fmt.Printf("\n\n"+

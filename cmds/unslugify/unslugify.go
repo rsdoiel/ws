@@ -11,47 +11,13 @@
 package main
 
 import (
+	cli "../../cli"
 	"../../slug"
-	ver "../../version"
 	"flag"
 	"fmt"
 	"os"
 	"strings"
 )
-
-var usage = func(exit_code int, msg string) {
-	var fh = os.Stderr
-	if exit_code == 0 {
-		fh = os.Stdout
-	}
-	cmdName := os.Args[0]
-
-	fmt.Fprintf(fh, `%s
-USAGE %s [options]
-
-%s is a command line utility to changing slug phrases into friendly
-strings. E.g. "This_famous_poem" would become "This famous poem".
-
-EXAMPLE
-
-    %s "The_World_in_a_Nutshell"
-
-Would yield "The World in a Nutshell"
-
-OPTIONS
-`, msg, cmdName, cmdName, cmdName)
-
-	flag.VisitAll(func(f *flag.Flag) {
-		fmt.Fprintf(fh, "\t-%s\t\t%s\n", f.Name, f.Usage)
-	})
-
-	fmt.Fprintf(fh, `
-copyright (c) 2015 all rights reserved.
-Released under the BSD 2-Clause license.
-See: http://opensource.org/licenses/BSD-2-Clause
-`)
-	os.Exit(exit_code)
-}
 
 func unslugify(s string, extension string) string {
 	if extension != "" {
@@ -61,6 +27,19 @@ func unslugify(s string, extension string) string {
 }
 
 func main() {
+	usageDescription := fmt.Sprintf(`
+ %s is a command line utility to changing URL friendly
+ and human readable string backinto a phrase. E.g. 
+ "This_famous_poem" would become "This famous poem".
+
+ EXAMPLE
+
+    %s "The_World_in_a_Nutshell"
+
+ Would yield "The World in a Nutshell"
+
+`, cli.CommandName(os.Args[0]), cli.CommandName(os.Args[0]))
+
 	help := false
 	version := false
 	extension := ""
@@ -71,15 +50,14 @@ func main() {
 	flag.BoolVar(&version, "version", version, "Display the version number.")
 	flag.Parse()
 	if help == true {
-		usage(0, "")
+		cli.Usage(0, usageDescription, "")
 	}
 	if version == true {
-		fmt.Printf("%s version %s\n", os.Args[0], ver.Revision)
-		os.Exit(0)
+		cli.Version()
 	}
 
 	if flag.NArg() < 1 {
-		usage(1, "Missing phrase to unslugify")
+		cli.Usage(1, usageDescription, "Missing phrase to unslugify")
 	}
 	for _, arg := range flag.Args() {
 		fmt.Println(unslugify(arg, extension))
