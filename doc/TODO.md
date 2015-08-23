@@ -3,7 +3,7 @@
 
 ## Someday Maybe
 
-+ separate ws JavaScript support into wsjs
++ wsjs improvements 
     + add a CURL like object to the wsjs
 + create wsedit for remote editing content of specific files over https connections.
     + look at CodeMirror and AceEditor as candidates for web browser editing

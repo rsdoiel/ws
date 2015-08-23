@@ -4,7 +4,7 @@
 ## Someday Maybe
 
 + Add session and auth support methods
-+ separate ws JavaScript support into wsjs
++ wsjs improvements 
     + add a CURL like object to the wsjs
     + add a built in DB object like SQLite or a JSON store for persistence between restarts
 + create wsedit for remote editing content of specific files over https connections.
