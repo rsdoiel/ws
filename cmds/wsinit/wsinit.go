@@ -10,6 +10,7 @@ package main
 
 import (
 	"../../cfg"
+	ver "../../version"
 	"flag"
 	"fmt"
 	"log"
@@ -17,8 +18,6 @@ import (
 	"strconv"
 	"strings"
 )
-
-var revision = "v0.0.3"
 
 // command line parameters that override environment variables
 var (
@@ -103,7 +102,7 @@ func init() {
 func main() {
 	flag.Parse()
 	if version == true {
-		fmt.Println(revision)
+		fmt.Printf("%s version %s\n", os.Args[0], ver.Revision)
 		os.Exit(0)
 	}
 	if help == true {

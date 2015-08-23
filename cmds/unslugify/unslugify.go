@@ -12,6 +12,7 @@ package main
 
 import (
 	"../../slug"
+	ver "../../version"
 	"flag"
 	"fmt"
 	"os"
@@ -61,13 +62,20 @@ func unslugify(s string, extension string) string {
 
 func main() {
 	help := false
+	version := false
 	extension := ""
 	flag.StringVar(&extension, "e", extension, "Remove the extention from the slug phrase. E.g. .html")
 	flag.BoolVar(&help, "h", help, "Display this help document.")
 	flag.BoolVar(&help, "help", help, "Display this help document.")
+	flag.BoolVar(&version, "v", version, "Display the version number.")
+	flag.BoolVar(&version, "version", version, "Display the version number.")
 	flag.Parse()
 	if help == true {
 		usage(0, "")
+	}
+	if version == true {
+		fmt.Printf("%s version %s\n", os.Args[0], ver.Revision)
+		os.Exit(0)
 	}
 
 	if flag.NArg() < 1 {

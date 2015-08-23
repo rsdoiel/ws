@@ -11,6 +11,7 @@ package main
 
 import (
 	"../../keygen"
+	ver "../../version"
 	"flag"
 	"fmt"
 	"log"
@@ -18,8 +19,6 @@ import (
 	"strconv"
 	"strings"
 )
-
-var revision = "v0.0.2"
 
 // command line parameters that override environment variables
 var (
@@ -122,12 +121,12 @@ func init() {
 
 func main() {
 	flag.Parse()
-	if version == true {
-		fmt.Println(revision)
-		os.Exit(0)
-	}
 	if help == true {
 		usage(0, "")
+	}
+	if version == true {
+		fmt.Printf("%s version %s\n", os.Args[0], ver.Revision)
+		os.Exit(0)
 	}
 
 	certFilename, keyFilename, err := keygen.Keygen("etc/ssl", "cert.pem", "key.pem")

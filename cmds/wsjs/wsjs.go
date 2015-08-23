@@ -1,8 +1,10 @@
 /**
- * ws.go - A light weight webserver for static content
- * development and prototyping.
+ * wsjs.go - A light weight webserver for static content
+ * and dynamic content calculated via JavaScript files. It is
+ * intended for development and prototyping route based web API.
  *
- * Supports both http and https protocols.
+ * Supports both http and https protocols. Dynamic route
+ * processing available via Otto JavaScript virtual machines.
  *
  * @author R. S. Doiel, <rsdoiel@yahoo.com>
  * copyright (c) 2014
@@ -14,6 +16,7 @@ package main
 import (
 	"../../cfg"
 	"../../fsengine"
+	"../../ottoengine"
 	ver "../../version"
 	"../../wslog"
 	"flag"
@@ -29,14 +32,18 @@ import (
 
 // command line parameters that override environment variables
 var (
-	useTLS  bool
-	docroot string
-	host    string
-	port    int
-	cert    string
-	key     string
-	version bool
-	help    bool
+	useTLS   bool
+	docroot  string
+	host     string
+	port     int
+	cert     string
+	key      string
+	otto     bool
+	ottoPath string
+	version  bool
+	doKeygen bool
+	doInit   bool
+	help     bool
 )
 
 type stringValue string
@@ -77,6 +84,19 @@ func requestLog(handler http.Handler) http.Handler {
 }
 
 func webserver(config *cfg.Cfg) error {
+	// If otto is enabled add routes and handle them.
+	if config.Otto == true {
+		ottoPath, err := filepath.Abs(config.OttoPath)
+		if err != nil {
+			log.Fatalf("Can't read %s: %s\n", config.OttoPath, err)
+		}
+		programs, err := ottoengine.Load(ottoPath)
+		if err != nil {
+			log.Fatalf("Load error: %s\n", err)
+		}
+		ottoengine.AddRoutes(programs)
+	}
+
 	// Restricted FileService excluding dot files and directories
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		// hande off this request/response pair to the fsengine
@@ -129,14 +149,15 @@ func defaultEnvInt(environmentVar string, defaultValue int) int {
 
 func init() {
 	const (
-		helpUsage    = "This help document."
-		useTLSUsage  = "When true this turns on TLS (https) support."
-		keyUsage     = "Path to your SSL key pem file."
-		certUsage    = "path to your SSL cert pem file."
-		docrootUsage = "This is your document root for static files."
-		hostUsage    = "Set this hostname for webserver."
-		portUsage    = "Set the port number to listen on."
-		versionUsage = "Display the version number of ws command."
+		helpUsage     = "This help document."
+		useTLSUsage   = "When true this turns on TLS (https) support."
+		keyUsage      = "Path to your SSL key pem file."
+		certUsage     = "path to your SSL cert pem file."
+		docrootUsage  = "This is your document root for static files."
+		hostUsage     = "Set this hostname for webserver."
+		portUsage     = "Set the port number to listen on."
+		ottoPathUsage = "Turns on otto engine using the path for route JavaScript route handlers"
+		versionUsage  = "Display the version number of ws command."
 	)
 
 	flag.BoolVar(&help, "help", false, helpUsage)
@@ -149,6 +170,8 @@ func init() {
 	key = defaultEnvString("WS_KEY", "")
 	cert = defaultEnvString("WS_CERT", "")
 	docroot = defaultEnvString("WS_DOCROOT", "")
+	otto = defaultEnvBool("WS_OTTO", true)
+	ottoPath = defaultEnvString("WS_OTTO_PATH", "")
 	host = defaultEnvString("WS_HOST", "localhost")
 	port = defaultEnvInt("WS_PORT", 8000)
 	flag.BoolVar(&useTLS, "tls", useTLS, useTLSUsage)
@@ -160,21 +183,28 @@ func init() {
 	flag.StringVar(&host, "H", host, hostUsage)
 	flag.IntVar(&port, "port", port, portUsage)
 	flag.IntVar(&port, "P", port, portUsage)
+	flag.StringVar(&ottoPath, "otto-path", ottoPath, ottoPathUsage)
+	flag.StringVar(&ottoPath, "o", ottoPath, ottoPathUsage)
 }
 
 func main() {
 	flag.Parse()
-	if help == true {
-		usage(0, "")
-	}
 	if version == true {
 		fmt.Printf("%s version %s\n", os.Args[0], ver.Revision)
 		os.Exit(0)
 	}
+	if help == true {
+		usage(0, "")
+	}
 
-	config, err := cfg.Configure(docroot, host, port, useTLS, cert, key, false, "")
+	config, err := cfg.Configure(docroot, host, port, useTLS, cert, key, otto, ottoPath)
 	if err != nil {
 		usage(1, fmt.Sprintf("%s", err))
+	}
+	if ottoPath == "" {
+		otto = false
+	} else {
+		otto = true
 	}
 
 	fmt.Printf("\n\n"+
@@ -185,6 +215,7 @@ func main() {
 		"         Host: %s\n"+
 		"         Port: %d\n"+
 		"       Run as: %s\n\n"+
+		" Otto enabled: %t\n"+
 		"         Path: %s\n"+
 		"\n\n",
 		config.UseTLS,
@@ -193,7 +224,9 @@ func main() {
 		config.Docroot,
 		config.Hostname,
 		config.Port,
-		config.Username)
+		config.Username,
+		config.Otto,
+		config.OttoPath)
 	err = webserver(config)
 	if err != nil {
 		log.Fatal(err)
