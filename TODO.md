@@ -28,5 +28,6 @@
     + look at LispEx (a Schema?)
     + look at glisp (a lisp/schema dialect?)
     + Find a CL, FranzLisp (e.g. PC-LISP) or XLisp port to Go.
++ explore a wsphp based on PHP parse in https://github.com/stephens2424/php
 
 

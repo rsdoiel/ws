@@ -17,7 +17,8 @@
 + develop a generator and JS for browser side site specific search
     + create an inverted word list as JSON file
     + create a sitemap JSON file
-+ As support for Solr integration or other search option.
++ Add support for Solr integration or other search option.
++ explore a wsphp based on PHP parse in https://github.com/stephens2424/php
 
 
 
