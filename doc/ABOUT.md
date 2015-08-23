@@ -16,7 +16,7 @@ API mockup.
 
 ## http support
 
-Make sure _ws_ is your path. To run for basic _http_ service change to 
+Make sure _ws_ and friends are in your path. To run for basic _http_ service change to 
 the directory you wish to serve and type _ws_ at the command prompt. Example -
 
 ```shell
@@ -168,8 +168,7 @@ _ws_ comes with _wsinit_ for interactively generating a project tree and certifi
 
 Assuming _ottoengine_ is turned on then the page rendered should have a content type of "text/html" with the body shoulding the paragraph about exposing the request headers as a JSON blob.  Two command line options or environment variables turn _ottoengine_ on.
 
-+ -otto, WS\_OTTO - values true/false, defaults to false. True turns on _ottoengine_
-+ -otto-path, WS\_OTTO\_PATH - sets the path to the scripts used to defined the routes being handled. Each file found in the path becomes a route.
++ -otto-path, WS\_OTTO\_PATH - sets the path to the scripts used to defined the routes being handled. This path turns on otto engine support. Each file found in the path becomes a route.
 
 ## LICENSE
 

@@ -6,21 +6,28 @@ ws
 
 # What is _ws_?
 
-*ws* is a simple webserver with optional support for JavaScript defined route handlers.  _http_ and _https_ (SSL via TLS) protocols via Golang's _net/http_ package.  At this time it does not support PHP, Perl, Python, Lua, etc.
+*ws/wsjs* is simple webserver with optional support for JavaScript defined route handlers.
+Both _http_ and _https_ (SSL via TLS) protocols via Golang's _net/http_ package. When SPDY
+and HTTP2 are added to golang's http package a recompile should enable picking those protocols
+as well.
 
-+ It is great for server static web pages!
+At this time it does not support other embedded languages PHP, Perl, Python, Lua, etc. It 
+does come with some helpful utilities for setting up the enviroment, stubbing directories 
+and files for projects and generating self signed SSL/TLS certs and keys.
+
++ *ws* is great for server static web pages!
     - Built on Golangs native http/https modules
     - Implements a restricted http.FileServer based Golang's builtin http.FileServer
-+ It includes OttoEngine enabling JavaScript defined route handling
++ *wsjs* includes OttoEngine enabling JavaScript defined route handling
     - built on Robert Krimen's excellent [otto](https://github.com/robertkrimen/otto) JavaScript VM
 
 Got an idea for a new project? Want to prototype it quickly? 
 
 1. run "wsinit" to set things up
 2. run ". etc/config.sh" seed your environment
-3. run "ws" and start working!
+3. run "ws" or "wsjs" and start working!
 
-_ws_ feature set has been kept minimal. Only what you need when you turn it on.
+_ws_ and _wsjs_ feature sets have been kept minimal. Only what you need when you turn it on.
 
 + Restricted file service, only from the docroot and no "dot files" are served
 + No dynamic content support unless you turn on OttoEngine for JavaScript defined routes (great for creating JSON blobs used by a client side demo)
@@ -35,18 +42,16 @@ _ws_ feature set has been kept minimal. Only what you need when you turn it on.
 
 ## OPTIONS
 
-	-D	(defaults to ) This is your document root for static files.
+	-d	(defaults to ) This is your document root for static files.
 	-H	(defaults to localhost) Set this hostname for webserver.
-	-O	(defaults to ) Turns on otto engine using the path for route JavaScript route handlers
-	-P	(defaults to 8000) Set the port number to listen on.
+	-o	(defaults to ) Turns on otto engine using the path for route JavaScript route handlers
+	-p	(defaults to 8000) Set the port number to listen on.
 	-cert	(defaults to ) path to your SSL cert pem file.
 	-docroot	(defaults to ) This is your document root for static files.
 	-h	(defaults to false) This help document.
 	-help	(defaults to false) This help document.
 	-host	(defaults to localhost) Set this hostname for webserver.
 	-key	(defaults to ) Path to your SSL key pem file.
-	-o	(defaults to false) When true this option turns on ottoengine. Uses the path defined by WS_OTTO_PATH environment variable or one provided by -O option.
-	-otto	(defaults to false) When true this option turns on ottoengine. Uses the path defined by WS_OTTO_PATH environment variable or one provided by -O option.
 	-otto-path	(defaults to ) Turns on otto engine using the path for route JavaScript route handlers
 	-port	(defaults to 8000) Set the port number to listen on.
 	-tls	(defaults to false) When true this turns on TLS (https) support.
@@ -178,7 +183,7 @@ _https_ server with the document root set to your current working directory for 
 _ws_ comes with a *-keygen* option for generating self-signed certificates and keys.
 
 ```SHELL
-    ws -keygen
+    wskeygen
 ```
 
 This was create a *cert.pem* and *key.pem* files in *$HOME/etc/ws* directory.
@@ -201,8 +206,7 @@ This was create a *cert.pem* and *key.pem* files in *$HOME/etc/ws* directory.
 
 Assuming _ottoengine_ is turned on then the page rendered should have a content type of "text/html" with the body shoulding the paragraph about exposing the request headers as a JSON blob.  Two command line options or environment variables turn _ottoengine_ on.
 
-+ -otto, WS\_OTTO - values true/false, defaults to false. True turns on _ottoengine_
-+ -otto-path, WS\_OTTO\_PATH - sets the path to the scripts used to defined the routes being handled. Each file found in the path becomes a route.
++ -otto-path, WS\_OTTO\_PATH - sets the path to the scripts used to defined the routes being handled. This enables otto engine.  Each file found in the path becomes a route.
 
 ## LICENSE
 
