@@ -6,7 +6,10 @@ if [ "$GO" = "" ]; then
     echo "See http://golang.org for instructions"
     exit 1
 fi
-# Install dependent library.
+# Install dependent libraries
 go get github.com/robertkrimen/otto
+# go get github.com/knieriem/markdown
+# go get github.com/zhemao/glisp
+# go get github.com/kedebug/LispEx
 make
 make test
