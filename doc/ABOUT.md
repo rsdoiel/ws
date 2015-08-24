@@ -1,69 +1,22 @@
-ws
-==
 
     A nimble webserver for prototyping. 
 
 
 # What is _ws_?
 
-*ws/wsjs* is simple webserver with optional support for JavaScript defined route handlers.
-Both _http_ and _https_ (SSL via TLS) protocols via Golang's _net/http_ package. When SPDY
-and HTTP2 are added to golang's http package a recompile should enable picking those protocols
-as well.
-
-At this time it does not support other embedded languages PHP, Perl, Python, Lua, etc. It 
-does come with some helpful utilities for setting up the enviroment, stubbing directories 
-and files for projects and generating self signed SSL/TLS certs and keys.
-
-+ *ws* is great for server static web pages!
-    - Built on Golangs native http/https modules
-    - Implements a restricted http.FileServer based Golang's builtin http.FileServer
-+ *wsjs* includes OttoEngine enabling JavaScript defined route handling
-    - built on Robert Krimen's excellent [otto](https://github.com/robertkrimen/otto) JavaScript VM
-
-Got an idea for a new project? Want to prototype it quickly? 
-
-1. run "wsinit" to set things up
-2. run ". etc/config.sh" seed your environment
-3. run "ws" or "wsjs" and start working!
-
-_ws_ and _wsjs_ feature sets have been kept minimal. Only what you need when you turn it on.
-
-+ Restricted file service, only from the docroot and no "dot files" are served
-+ No dynamic content support unless you turn on OttoEngine for JavaScript defined routes (great for creating JSON blobs used by a client side demo)
-+ Quick startup, everything logged to console for easy debugging or piping to a log processor
-
-
-## USAGE 
-
-```
-    ws [options]
-```
-
-## OPTIONS
-
-	-d	(defaults to ) This is your document root for static files.
-	-H	(defaults to localhost) Set this hostname for webserver.
-	-o	(defaults to ) Turns on otto engine using the path for route JavaScript route handlers
-	-p	(defaults to 8000) Set the port number to listen on.
-	-cert	(defaults to ) path to your SSL cert pem file.
-	-docroot	(defaults to ) This is your document root for static files.
-	-h	(defaults to false) This help document.
-	-help	(defaults to false) This help document.
-	-host	(defaults to localhost) Set this hostname for webserver.
-	-key	(defaults to ) Path to your SSL key pem file.
-	-otto-path	(defaults to ) Turns on otto engine using the path for route JavaScript route handlers
-	-port	(defaults to 8000) Set the port number to listen on.
-	-tls	(defaults to false) When true this turns on TLS (https) support.
-	-v	(defaults to false) Display the version number of ws command.
-	-version	(defaults to false) Display the version number of ws command.
-
+The project started in 2014 after having setup another instance Apache just to show something to a colleague.
+Have been playing around with NodeJS and Golang for building RESTful services it just seemed that Apache was
+overkill. I just wanted to type "webserver" and have an ephemerial webserver instance running rather than
+creating another virtualhost.  That is the itch that _ws_ tries to scratch.  It is not intended to be a full
+featured webserver. It is designed to be simple to start from the command line, configurable via the environment
+(inspired by 12 factor apps) and have the minimum of functionality to do a quick prototype, static site or 
+API mockup.
 
 # Tour
 
 ## http support
 
-Make sure _ws_ is your path. To run for basic _http_ service change to 
+Make sure _ws_ and friends are in your path. To run for basic _http_ service change to 
 the directory you wish to serve and type _ws_ at the command prompt. Example -
 
 ```shell
@@ -180,13 +133,22 @@ _https_ server with the document root set to your current working directory for 
 
 ### Generating TLS certificates and keys
 
-_ws_ comes with a *-keygen* option for generating self-signed certificates and keys.
+_ws_ comes with *wskeygen* for generating self-signed certificates and keys.
 
 ```SHELL
     wskeygen
 ```
 
 This was create a *cert.pem* and *key.pem* files in *$HOME/etc/ws* directory.
+
+
+### Generate a project folder and certificates
+
+_ws_ comes with _wsinit_ for interactively generating a project tree and certificates.
+
+```SHELL
+    wsinit
+```
 
 
 ## Otto
@@ -206,7 +168,7 @@ This was create a *cert.pem* and *key.pem* files in *$HOME/etc/ws* directory.
 
 Assuming _ottoengine_ is turned on then the page rendered should have a content type of "text/html" with the body shoulding the paragraph about exposing the request headers as a JSON blob.  Two command line options or environment variables turn _ottoengine_ on.
 
-+ -otto-path, WS\_OTTO\_PATH - sets the path to the scripts used to defined the routes being handled. This enables otto engine.  Each file found in the path becomes a route.
++ -otto-path, WS\_OTTO\_PATH - sets the path to the scripts used to defined the routes being handled. This path turns on otto engine support. Each file found in the path becomes a route.
 
 ## LICENSE
 

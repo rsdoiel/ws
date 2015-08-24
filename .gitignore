@@ -23,4 +23,11 @@ _testmain.go
 *.test
 
 bin/*
+etc/certs/*
 ws
+wsjs
+wsinit
+wskeygen
+slugify
+unslugify
+

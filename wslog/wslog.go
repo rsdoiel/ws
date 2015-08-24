@@ -5,6 +5,7 @@ package wslog
 
 import (
 	"log"
+	"net/http"
 	"net/url"
 )
 
@@ -29,4 +30,11 @@ func LogRequest(method string, url *url.URL, remoteAddr, proto, referrer, userAg
 		proto,
 		referrer,
 		userAgent)
+}
+
+func RequestLog(handler http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		LogRequest(r.Method, r.URL, r.RemoteAddr, r.Proto, r.Referer(), r.UserAgent())
+		handler.ServeHTTP(w, r)
+	})
 }

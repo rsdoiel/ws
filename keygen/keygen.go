@@ -41,9 +41,9 @@ func Keygen(basedir string, certPem string, keyPem string) (string, string, erro
 	for OK == false {
 		sslPath = prompt.Question(fmt.Sprintf("Use %s for cert and key? (enter accepts the default) ",
 			sslPath), sslPath)
-		certFilename = prompt.Question("Certificate filename (default is cert.pem)?", "cert.pem")
-		keyFilename = prompt.Question("Key filename (default key.pem)?", "key.pem")
-		hostnames = prompt.Question(fmt.Sprintf("SSL certs for %s? (enter accepts default, use comma to separate hostnames)", hostnames), hostnames)
+		certFilename = prompt.Question("Certificate filename? (default is cert.pem) ", "cert.pem")
+		keyFilename = prompt.Question("Key filename? (default key.pem) ", "key.pem")
+		hostnames = prompt.Question(fmt.Sprintf("SSL certs for %s? (enter accepts default, use comma to separate hostnames) ", hostnames), hostnames)
 		if hostnames == "" {
 			hostnames = "localhost"
 		}

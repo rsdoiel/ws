@@ -11,3 +11,5 @@ You can easily make you own self signed certificates for development purposes us
 
 Make sure your key.pem file is protected. I usually put these in $HOME/etc/ws/ for my _ws_ development server.
 
+You can also use the _wskeygen_ command and save some typing.
+

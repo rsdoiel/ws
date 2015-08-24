@@ -143,8 +143,13 @@ func jsInjectMethod(name string, src string, buf []byte) string {
 	return src
 }
 
+func requestAsJson(r *http.Request) (buf []byte, err error) {
+	jsonURL, err := json.Marshal(r.URL)
+	return []byte(fmt.Sprintf("{\"Method\":\"%s\",\"URL\":%s}", r.Method, jsonURL)), err
+}
+
 func createRequestLiteral(r *http.Request) string {
-	buf, err := json.Marshal(r)
+	buf, err := requestAsJson(r)
 	if err != nil {
 		return "{}"
 	}
@@ -215,6 +220,18 @@ func IsHTML(value otto.Value) bool {
 	return strings.HasPrefix(blob, "<!DOCTYPE html>")
 }
 
+func numberLines(src string) string {
+	var (
+		results []string
+	)
+
+	for i, line := range strings.Split(src, "\n") {
+		results = append(results, fmt.Sprintf("%d:\t%s\n", i, line))
+	}
+
+	return strings.Join(results, "")
+}
+
 // Engine provides the basic service for ws.go to handle JavaScript interactions server side.
 func Engine(program Program) {
 	http.HandleFunc(program.Route, func(w http.ResponseWriter, r *http.Request) {
@@ -243,9 +260,10 @@ func Engine(program Program) {
 		// 4. Run the VM wrapped with a closure containing`Request, Response
 		output, err := vm.Run(runScript)
 		if err != nil {
-			msg := fmt.Sprintf("Script: %s", err)
+			msg := fmt.Sprintf("JavaScript Error: %s", err)
 			wslog.LogResponse(500, "Internal Server Error",
 				r.Method, r.URL, r.RemoteAddr, program.Filename, msg)
+			log.Println(numberLines(runScript))
 			http.Error(w, "Internal Server Error", 500)
 			return
 		}
