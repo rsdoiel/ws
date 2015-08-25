@@ -9,7 +9,10 @@
 
 ## Someday Maybe
 
-+ Add session and auth support methods
++ merge in shorthand from stngo project into ws utilities
++ add "debug" option to ws, wsjs which logs full get/post/delete/put requests
++ add support to wsjs to handle JSON post as well as url encoded posts
++ add session and auth support
 + wsjs improvements 
     + add a CURL like object to the wsjs
     + add a built in DB object like SQLite or a JSON store for persistence between restarts

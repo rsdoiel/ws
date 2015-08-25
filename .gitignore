@@ -30,4 +30,6 @@ wsinit
 wskeygen
 slugify
 unslugify
-
+range
+reldate
+shorthand
