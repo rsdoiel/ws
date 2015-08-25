@@ -133,7 +133,7 @@ Did it work?
 }
 
 func TestShellAssignment(t *testing.T) {
-	Assign("@ECHO :! echo Hello World!")
+	Assign("@ECHO :! echo 'Hello World!'")
 	expected := true
 	results := HasAssignment("@ECHO")
 	ok.Ok(t, results == expected, "Should have @ECHO assignment")

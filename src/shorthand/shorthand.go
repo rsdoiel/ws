@@ -51,8 +51,7 @@ func Assign(s string) bool {
 		parts[1] = string(buf)
 	} else if strings.Index(s, " :! ") != -1 {
 		parts = strings.SplitN(strings.TrimSpace(s), " :! ", 2)
-		cmdParts := strings.SplitN(parts[1], " ", 2)
-		buf, err := exec.Command(cmdParts[0], cmdParts[1]).Output()
+		buf, err := exec.Command("bash", "-c", parts[1]).Output()
 		if err != nil {
 			log.Fatal(err)
 		}
