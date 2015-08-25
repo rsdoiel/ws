@@ -131,3 +131,15 @@ Did it work?
 	ok.Ok(t, strings.Contains(resultText, "A nimble webserver"), "Should have 'A nimble webserver' in "+resultText)
 	ok.Ok(t, strings.Contains(resultText, "JSON"), "Should have 'JSON' in "+resultText)
 }
+
+func TestShellAssignment(t *testing.T) {
+	Assign("@ECHO :! echo 'Hello World!'")
+	expected := true
+	results := HasAssignment("@ECHO")
+	ok.Ok(t, results == expected, "Should have @ECHO assignment")
+	expectedText := "Hello World!"
+	resultText := Expand("@ECHO")
+	l := len(resultText)
+	ok.Ok(t, l == len(expectedText), "Should have expected length for @ECHO")
+	ok.Ok(t, strings.Contains(resultText, expectedText), "Should have matching text for @ECHO")
+}
