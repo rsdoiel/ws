@@ -7,7 +7,11 @@ if [ "$GO" = "" ]; then
     exit 1
 fi
 # Install dependent libraries
+## Used by wsjs
 go get github.com/robertkrimen/otto
+## Use by wsmarkdown
+go get github.com/russross/blackfriday
+go get github.com/microcosm-cc/bluemonday
 # go get github.com/knieriem/markdown
 # go get github.com/zhemao/glisp
 # go get github.com/kedebug/LispEx

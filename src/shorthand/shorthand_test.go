@@ -10,8 +10,10 @@ package shorthand
 
 import (
 	"../ok"
+	"fmt"
 	"strings"
 	"testing"
+	"time"
 )
 
 // Test IsAssignment
@@ -142,4 +144,23 @@ func TestShellAssignment(t *testing.T) {
 	l := len(strings.Trim(resultText, "\n"))
 	ok.Ok(t, l == len(expectedText), "Should have expected length for @ECHO")
 	ok.Ok(t, strings.Contains(strings.Trim(resultText, "\n"), expectedText), "Should have matching text for @ECHO")
+}
+
+func TestExpandedAssignment(t *testing.T) {
+	dateFormat := "2006-01-02"
+	now := time.Now()
+	// Date will generate a LF so the text will also contain it. So we'll test against a Trim later.
+	Assign(`@now :! date +%Y-%m-%d`)
+	Assign("@title :{ This is a title with date: @now")
+	text := `@title`
+	expected := true
+	results := HasAssignment("@now")
+	ok.Ok(t, results == expected, "Should have @now")
+	results = HasAssignment("@title")
+	ok.Ok(t, results == expected, "Should have @title")
+	expectedText := fmt.Sprintf("This is a title with date: %s", now.Format(dateFormat))
+	resultText := Expand(text)
+	l := len(strings.Trim(resultText, "\n"))
+	ok.Ok(t, l == len(expectedText), "Should have expected length for @title")
+	ok.Ok(t, strings.Contains(strings.Trim(resultText, "\n"), expectedText), "Should have matching text for @title")
 }

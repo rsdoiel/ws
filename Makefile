@@ -1,4 +1,4 @@
-build: ws wsjs wskeygen wsinit slugify unslugify range reldate shorthand
+build: ws wsjs wskeygen wsinit slugify unslugify range reldate shorthand wsmarkdown
 
 ws: cmds/ws/ws.go src/cfg/cfg.go src/fsengine/fsengine.go src/ottoengine/ottoengine.go src/cli/cli.go src/wslog/wslog.go
 	go build cmds/ws/ws.go
@@ -27,6 +27,9 @@ reldate: cmds/reldate/reldate.go
 shorthand: cmds/shorthand/shorthand.go src/shorthand/shorthand.go
 	go build cmds/shorthand/shorthand.go
 
+wsmarkdown: cmds/wsmarkdown/wsmarkdown.go
+	go build cmds/wsmarkdown/wsmarkdown.go
+
 install: ws wsjs wskeygen wsinit slugify unslugify range reldate shorthand
 	go install cmds/ws/ws.go
 	go install cmds/wsjs/wsjs.go
@@ -37,6 +40,7 @@ install: ws wsjs wskeygen wsinit slugify unslugify range reldate shorthand
 	go install cmds/range/range.go
 	go install cmds/reldate/reldate.go
 	go install cmds/shorthand/shorthand.go
+	go install cmds/wsmarkdown/wsmarkdown.go
 
 clean: 
 	if [ -f ws ]; then rm ws; fi
@@ -48,8 +52,10 @@ clean:
 	if [ -f range ]; then rm range; fi
 	if [ -f reldate ]; then rm reldate; fi
 	if [ -f shorthand ]; then rm shorthand; fi
+	if [ -f wsmarkdown ]; then rm wsmarkdown; fi
 
 
 test:
 	cd src/slugify && go test
 	cd src/shorthand && go test
+

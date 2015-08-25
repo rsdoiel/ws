@@ -25,7 +25,8 @@ var Abbreviations = make(map[string]string)
 func IsAssignment(text string) bool {
 	if strings.Index(text, " := ") == -1 &&
 		strings.Index(text, " :< ") == -1 &&
-		strings.Index(text, " :! ") == -1 {
+		strings.Index(text, " :! ") == -1 &&
+		strings.Index(text, " :{ ") == -1 {
 		return false
 	}
 	return true
@@ -40,7 +41,10 @@ func HasAssignment(key string) bool {
 // Assign stores a shorthand and its expansion
 func Assign(s string) bool {
 	var parts []string
-	if strings.Index(s, " := ") != -1 {
+	if strings.Index(s, " :{ ") != -1 {
+		parts = strings.SplitN(strings.TrimSpace(s), " :{ ", 2)
+		parts[1] = Expand(parts[1])
+	} else if strings.Index(s, " := ") != -1 {
 		parts = strings.SplitN(strings.TrimSpace(s), " := ", 2)
 	} else if strings.Index(s, " :< ") != -1 {
 		parts = strings.SplitN(strings.TrimSpace(s), " :< ", 2)
