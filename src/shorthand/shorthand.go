@@ -14,6 +14,7 @@ package shorthand
 import (
 	"io/ioutil"
 	"log"
+	"os/exec"
 	"strings"
 )
 
@@ -22,7 +23,9 @@ var Abbreviations = make(map[string]string)
 
 // IsAssignment checks to see if a string contains an assignment (i.e. has a ' := ' in the string.)
 func IsAssignment(text string) bool {
-	if strings.Index(text, " := ") == -1 && strings.Index(text, " :< ") == -1 {
+	if strings.Index(text, " := ") == -1 &&
+		strings.Index(text, " :< ") == -1 &&
+		strings.Index(text, " :! ") == -1 {
 		return false
 	}
 	return true
@@ -44,6 +47,14 @@ func Assign(s string) bool {
 		buf, err := ioutil.ReadFile(parts[1])
 		if err != nil {
 			log.Fatalf("Cannot read %s: %v\n", parts[1], err)
+		}
+		parts[1] = string(buf)
+	} else if strings.Index(s, " :! ") != -1 {
+		parts = strings.SplitN(strings.TrimSpace(s), " :! ", 2)
+		cmdParts := strings.SplitN(parts[1], " ", 2)
+		buf, err := exec.Command(cmdParts[0], cmdParts[1]).Output()
+		if err != nil {
+			log.Fatal(err)
 		}
 		parts[1] = string(buf)
 	} else {

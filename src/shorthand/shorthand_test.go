@@ -133,13 +133,13 @@ Did it work?
 }
 
 func TestShellAssignment(t *testing.T) {
-	Assign("@ECHO :! echo 'Hello World!'")
+	Assign("@ECHO :! echo Hello World!")
 	expected := true
 	results := HasAssignment("@ECHO")
 	ok.Ok(t, results == expected, "Should have @ECHO assignment")
 	expectedText := "Hello World!"
 	resultText := Expand("@ECHO")
-	l := len(resultText)
+	l := len(strings.Trim(resultText, "\n"))
 	ok.Ok(t, l == len(expectedText), "Should have expected length for @ECHO")
-	ok.Ok(t, strings.Contains(resultText, expectedText), "Should have matching text for @ECHO")
+	ok.Ok(t, strings.Contains(strings.Trim(resultText, "\n"), expectedText), "Should have matching text for @ECHO")
 }
