@@ -18,6 +18,14 @@ slugify: cmds/slugify/slugify.go slug/slug.go cli/cli.go
 unslugify: cmds/unslugify/unslugify.go slug/slug.go cli/cli.go
 	go build cmds/unslugify/unslugify.go
 
+range: cmds/range/range.go
+	go build cmds/range/range.go
+
+reldate: cmds/reldate/reldate.go
+	go build cmds/reldate/reldate.go
+
+shorthand: cmds/shorthand/shorthand.go
+	go build cmds/shorthand/shorthand.go
 
 install: ws wsjs wskeygen wsinit slugify unslugify range reldate shorthand
 	go install cmds/ws/ws.go
@@ -44,3 +52,4 @@ clean:
 
 test: slug
 	cd slug && go test
+	cd short && go test

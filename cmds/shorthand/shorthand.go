@@ -10,7 +10,7 @@
 package main
 
 import (
-	"../../stn/shorthand"
+	"../../short"
 	"bufio"
 	"errors"
 	"flag"
@@ -95,10 +95,10 @@ func (e *expressionList) String() string {
 }
 
 func (e *expressionList) Set(value string) error {
-	if shorthand.IsAssignment(value) == false {
+	if short.IsAssignment(value) == false {
 		return errors.New("Shorthand is not valid (LABEL := VALUE)")
 	}
-	shorthand.Assign(value)
+	short.Assign(value)
 	return nil
 }
 
@@ -118,10 +118,10 @@ func main() {
 		if err != nil {
 			break
 		}
-		if shorthand.IsAssignment(line) {
-			shorthand.Assign(line)
+		if short.IsAssignment(line) {
+			short.Assign(line)
 		} else {
-			fmt.Print(shorthand.Expand(line))
+			fmt.Print(short.Expand(line))
 		}
 	}
 }
