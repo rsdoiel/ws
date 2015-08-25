@@ -26,17 +26,18 @@ I have assumed your running some type of *NIX with Bash or Sh.
     - cd $GOPATH/src/ws
 3. Make sure [otto](https://github.com/robertkrimen/otto) is available
     - go get github.com/robertkrimen/otto
-4. Compile _ws_ web server. E.g.
-    - go build cmds/ws/ws.go
+4. Compile _ws_, _wsjs_, and related utilities. E.g.
+    - make build
+    - make test
 5. Setup for testing
     - export WS_HOST=localhost
     - export WS_PORT=8000
     - export WS_DOCROOT=$(pwd)
     - export WS_OTTO=true
     - export WS_OTTO_PATH=$(pwd)/demo
-6. Test
-    + Start the _ws_ webserver
-        - ./ws
+6. Test web server with JavaScript support
+    + Start the _wsjs_ webserver
+        - ./wsjs
     + Try the following URLs in your favorite web browser
         - http://localhost:8000
         - http://localhost:8000/helloworld
