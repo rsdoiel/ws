@@ -13,7 +13,7 @@ import (
 	"strings"
 )
 
-const revision = "v0.0.4"
+const revision = "v0.0.4-alpha"
 
 var CommandName = func(s string) string {
 	return filepath.Base(s)
