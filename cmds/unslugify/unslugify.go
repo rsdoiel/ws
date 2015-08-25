@@ -1,5 +1,5 @@
 /**
- * unslugify.go - command line utility to change slug text phrases into
+ * unslugify.go - command line utility to change slugify text phrases into
  * readable text strings. E.g. "This_famous_poem" would become
  * "This famous poem".
  *
@@ -11,8 +11,8 @@
 package main
 
 import (
-	cli "../../cli"
-	"../../slug"
+	cli "../../src/cli"
+	slug "../../src/slugify"
 	"flag"
 	"fmt"
 	"os"

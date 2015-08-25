@@ -1,5 +1,5 @@
 /**
- * slug.go - A library to convert strings to and from slug form.
+ * slugify.go - A library to convert strings to and from slug form.
  * slug forms are often used to generate strings that are URL friendly
  * with out resorting to URL encoding. This leaves them more human readable.
  * The downside is that the transformation is loosy.  Generally the approach
@@ -12,7 +12,7 @@
  * Released under the BSD 2-Clause license.
  * See: http://opensource.org/licenses/BSD-2-Clause
  */
-package slug
+package slugify
 
 import (
 	"strings"

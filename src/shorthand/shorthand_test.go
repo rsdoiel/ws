@@ -1,10 +1,12 @@
 /**
- * short_test.go - tests for short package for handling shorthand definition and expansion.
+ * shorthand_test.go - tests for short package for handling shorthand
+ * definition and expansion.
+ *
  * @author R. S. Doiel, <rsdoiel@gmail.com>
  * copyright (c) 2015 all rights reserved.
  * Released under the BSD 2-Clause license
  */
-package short
+package shorthand
 
 import (
 	"../ok"
@@ -19,7 +21,7 @@ func TestIsAssignment(t *testing.T) {
 		"this := a valid assignment",
 		"this; := is a valid assignment",
 		"now; := $(date +\"%H:%M\");",
-		"@here :< ./README.md",
+		"@here :< ./testme.md",
 	}
 
 	invalidAssignments := []string{
@@ -110,9 +112,9 @@ func TestInclude(t *testing.T) {
 	text := `
 Today is @NOW.
 
-Now add the README.md to this.
+Now add the testme.md to this.
 -------------------------------
-@README
+@TESTME
 -------------------------------
 Did it work?
 `
@@ -120,13 +122,12 @@ Did it work?
 	expected := true
 	results := HasAssignment("@NOW")
 	ok.Ok(t, results == expected, "Should have @NOW assignment")
-	Assign("@README :< ../README.md")
-	results = HasAssignment("@README")
-	ok.Ok(t, results == expected, "Should have @README assignment")
+	Assign("@TESTME :< ./testme.md")
+	results = HasAssignment("@TESTME")
+	ok.Ok(t, results == expected, "Should have @TESTME assignment")
 	resultText := Expand(text)
 	l := len(text)
 	ok.Ok(t, len(resultText) > l, "Should have more results: "+resultText)
 	ok.Ok(t, strings.Contains(resultText, "A nimble webserver"), "Should have 'A nimble webserver' in "+resultText)
-	ok.Ok(t, strings.Contains(resultText, "LICENSE"), "Should have 'LICENSE' in "+resultText)
 	ok.Ok(t, strings.Contains(resultText, "JSON"), "Should have 'JSON' in "+resultText)
 }

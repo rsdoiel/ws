@@ -14,11 +14,11 @@
 package main
 
 import (
-	"../../cfg"
-	cli "../../cli"
-	"../../fsengine"
-	"../../ottoengine"
-	"../../wslog"
+	"../../src/cfg"
+	cli "../../src/cli"
+	"../../src/fsengine"
+	"../../src/ottoengine"
+	"../../src/wslog"
 	"flag"
 	"fmt"
 	"log"
