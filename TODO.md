@@ -1,15 +1,13 @@
 
 # TODO fixes
 
-+ OttoEngine - request object getting pasted to wrapping JS function is not getting populated.
-    + Need to had actual tests or the web server itself.
++ Finish integrating utilities pulled in from stngo
 
 # Todo ideas
 
 
 ## Someday Maybe
 
-+ merge in shorthand from stngo project into ws utilities
 + add "debug" option to ws, wsjs which logs full get/post/delete/put requests
 + add support to wsjs to handle JSON post as well as url encoded posts
 + add session and auth support
