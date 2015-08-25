@@ -122,7 +122,6 @@ func main() {
 		"         Host: %s\n"+
 		"         Port: %d\n"+
 		"       Run as: %s\n\n"+
-		"         Path: %s\n"+
 		"\n\n",
 		config.UseTLS,
 		config.Cert,
