@@ -1,0 +1,15 @@
+@header :< text/header.md
+@nav :! find doc -type f| grep -E "\.md$" | while read ITEM; do T=${ITEM/doc\//};echo "+ [$T]($ITEM)";done
+@content :< README.md
+@footer :< text/footer.md
+<!DOCTYPE html>
+<html>
+    <head>
+    </head>
+    <body>
+        @header
+        @content
+        @nav
+        @footer
+    </body>
+</html>
