@@ -1,5 +1,4 @@
 build: ws wsjs wskeygen wsinit slugify unslugify range reldate shorthand wsmarkdown
-	mkdir -p bin
 
 ws: cmds/ws/ws.go src/cfg/cfg.go src/fsengine/fsengine.go src/ottoengine/ottoengine.go src/cli/cli.go src/wslog/wslog.go
 	go build -o bin/ws cmds/ws/ws.go
