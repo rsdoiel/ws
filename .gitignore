@@ -24,13 +24,3 @@ _testmain.go
 
 bin/*
 etc/certs/*
-ws
-wsjs
-wsinit
-wskeygen
-slugify
-unslugify
-range
-reldate
-shorthand
-wsmarkdown
