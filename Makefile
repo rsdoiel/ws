@@ -1,34 +1,34 @@
 build: ws wsjs wskeygen wsinit slugify unslugify range reldate shorthand wsmarkdown
 
 ws: cmds/ws/ws.go src/cfg/cfg.go src/fsengine/fsengine.go src/ottoengine/ottoengine.go src/cli/cli.go src/wslog/wslog.go
-	go build cmds/ws/ws.go
+	go build -o bin/ws cmds/ws/ws.go
 
 wsjs: cmds/wsjs/wsjs.go src/cfg/cfg.go src/fsengine/fsengine.go src/ottoengine/ottoengine.go src/cli/cli.go src/wslog/wslog.go
-	go build cmds/wsjs/wsjs.go
+	go build -o bin/wsjs cmds/wsjs/wsjs.go
 
 wskeygen: cmds/wskeygen/wskeygen.go src/cfg/cfg.go src/keygen/keygen.go src/cli/cli.go
-	go build cmds/wskeygen/wskeygen.go
+	go build -o bin/wskeygen cmds/wskeygen/wskeygen.go
 
 wsinit: cmds/wsinit/wsinit.go src/cfg/cfg.go src/keygen/keygen.go src/cli/cli.go
-	go build cmds/wsinit/wsinit.go
+	go build -o bin/wsinit cmds/wsinit/wsinit.go
 
 slugify: cmds/slugify/slugify.go src/slugify/slugify.go src/cli/cli.go
-	go build cmds/slugify/slugify.go
+	go build -o bin/slugify cmds/slugify/slugify.go
 
 unslugify: cmds/unslugify/unslugify.go src/slugify/slugify.go src/cli/cli.go
-	go build cmds/unslugify/unslugify.go
+	go build -o bin/unslugify cmds/unslugify/unslugify.go
 
 range: cmds/range/range.go
-	go build cmds/range/range.go
+	go build -o bin/range cmds/range/range.go
 
 reldate: cmds/reldate/reldate.go
-	go build cmds/reldate/reldate.go
+	go build -o bin/reldate cmds/reldate/reldate.go
 
 shorthand: cmds/shorthand/shorthand.go src/shorthand/shorthand.go
-	go build cmds/shorthand/shorthand.go
+	go build -o bin/shorthand cmds/shorthand/shorthand.go
 
 wsmarkdown: cmds/wsmarkdown/wsmarkdown.go
-	go build cmds/wsmarkdown/wsmarkdown.go
+	go build -o bin/wsmarkdown cmds/wsmarkdown/wsmarkdown.go
 
 install: ws wsjs wskeygen wsinit slugify unslugify range reldate shorthand
 	go install cmds/ws/ws.go
@@ -43,16 +43,16 @@ install: ws wsjs wskeygen wsinit slugify unslugify range reldate shorthand
 	go install cmds/wsmarkdown/wsmarkdown.go
 
 clean: 
-	if [ -f ws ]; then rm ws; fi
-	if [ -f wsjs ]; then rm wsjs; fi
-	if [ -f slugify ]; then rm slugify; fi
-	if [ -f unslugify ]; then rm unslugify; fi
-	if [ -f wskeygen ]; then rm wskeygen; fi
-	if [ -f wsinit ]; then rm wsinit; fi
-	if [ -f range ]; then rm range; fi
-	if [ -f reldate ]; then rm reldate; fi
-	if [ -f shorthand ]; then rm shorthand; fi
-	if [ -f wsmarkdown ]; then rm wsmarkdown; fi
+	if [ -f bin/ws ]; then rm bin/ws; fi
+	if [ -f bin/wsjs ]; then rm bin/wsjs; fi
+	if [ -f bin/slugify ]; then rm bin/slugify; fi
+	if [ -f bin/unslugify ]; then rm bin/unslugify; fi
+	if [ -f bin/wskeygen ]; then rm bin/wskeygen; fi
+	if [ -f bin/wsinit ]; then rm bin/wsinit; fi
+	if [ -f bin/range ]; then rm bin/range; fi
+	if [ -f bin/reldate ]; then rm bin/reldate; fi
+	if [ -f bin/shorthand ]; then rm bin/shorthand; fi
+	if [ -f bin/wsmarkdown ]; then rm bin/wsmarkdown; fi
 
 
 test:
