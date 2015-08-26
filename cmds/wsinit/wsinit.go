@@ -9,8 +9,8 @@
 package main
 
 import (
-	"../../src/cfg"
-	cli "../../src/cli"
+	"../../cfg"
+	cli "../../cli"
 	"flag"
 	"log"
 )

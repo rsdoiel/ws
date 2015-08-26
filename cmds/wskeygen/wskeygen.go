@@ -10,8 +10,8 @@
 package main
 
 import (
-	cli "../../src/cli"
-	"../../src/keygen"
+	cli "../../cli"
+	"../../keygen"
 	"flag"
 	"fmt"
 	"log"

@@ -23,12 +23,10 @@ The complete list of utilities
     + Mockup your dynamic content via JavaScript defined routes (great for creating JSON blobs used by a browser side demo)
 + [wsinit](document) will generate a project structure as well as a shell script for configuring _ws_ and _wsjs_ in a 12 factor app manor.
 + [wsmarkdown](doc/wsmarkdown.md) renders markdown as HTML
-    + is built on the Blackfriday Markdown library
+    + this markdown is built on the [Blackfriday](https://github.com/russross/blackfriday) Markdown library
 + [shorthand](doc/shorthand.md) a domain specific language that expands shorthand labels into associated replacement values
 + [slugify](doc/slugify.md) turns text phrases into readibly URL friendly phrases (e.g. "Hello World" becomes "Hello_World")
 + [unslugify](doc/unslugify.md) returns slugs into simple phrase (e.g. "Hello_World" becomes "Hello World")
-+ [reldate](doc/reldate.md) calculates relative dates (e.g. +1 week, -3 months)
-+ [range](doc/range.md) generates a range of integers (makes I to N for loops in Bash a breeze)
 
 Got an idea for a new project? Want to prototype it quickly? 
 

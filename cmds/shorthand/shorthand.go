@@ -10,7 +10,7 @@
 package main
 
 import (
-	short "../../src/shorthand"
+	short "../../shorthand"
 	"bufio"
 	"errors"
 	"flag"

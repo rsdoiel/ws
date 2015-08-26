@@ -9,7 +9,7 @@
 package main
 
 import (
-	cli "../../src/cli"
+	cli "../../cli"
 	"flag"
 	"fmt"
 	//"github.com/microcosm-cc/bluemonday"

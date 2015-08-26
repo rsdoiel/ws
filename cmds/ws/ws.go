@@ -12,10 +12,10 @@
 package main
 
 import (
-	"../../src/cfg"
-	cli "../../src/cli"
-	"../../src/fsengine"
-	"../../src/wslog"
+	"../../cfg"
+	cli "../../cli"
+	"../../fsengine"
+	"../../wslog"
 	"flag"
 	"fmt"
 	"log"

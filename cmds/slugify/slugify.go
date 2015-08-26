@@ -11,8 +11,8 @@
 package main
 
 import (
-	cli "../../src/cli"
-	slug "../../src/slugify"
+	cli "../../cli"
+	slug "../../slugify"
 	"flag"
 	"fmt"
 	"os"
