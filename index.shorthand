@@ -1,5 +1,5 @@
 @header :! bin/wsmarkdown < text/header.md
-@nav :! find doc -type f| grep -E "\.md$" | while read ITEM; do T=${ITEM/doc\//};echo "+ [$T]($ITEM)";done | bin/wsmarkdown
+@nav :! find doc -type f| grep -E "\.md$" | while read ITEM; do T=${ITEM/doc\//};T=$(echo $T | tr - _);T=$(unslugify -e .md $T);echo "+ [$T]($ITEM)";done | bin/wsmarkdown
 @content :! bin/wsmarkdown < README.md
 @footer :! bin/wsmarkdown < text/footer.md
 <!DOCTYPE html>
