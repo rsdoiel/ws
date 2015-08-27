@@ -8,6 +8,7 @@
 
 ## Someday Maybe
 
++ add a lines tool that can select a range of lines, using positive or negative indexes and send the results to stnout
 + add "debug" option to ws, wsjs which logs full get/post/delete/put requests
 + add support to wsjs to handle JSON post as well as url encoded posts
 + add session and auth support
