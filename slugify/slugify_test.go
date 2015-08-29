@@ -11,7 +11,7 @@
 package slugify
 
 import (
-	"../ok"
+	"github.com/rsdoiel/ok"
 	"testing"
 )
 

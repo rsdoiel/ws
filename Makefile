@@ -1,7 +1,7 @@
 #
 # Biuld the project.
 #
-build: bin/ws bin/wsjs bin/wskeygen bin/wsinit bin/slugify bin/unslugify bin/shorthand bin/wsmarkdown
+build: bin/ws bin/wsjs bin/wskeygen bin/wsinit bin/slugify bin/unslugify bin/wsmarkdown
 
 bin/ws: cmds/ws/ws.go cfg/cfg.go fsengine/fsengine.go ottoengine/ottoengine.go cli/cli.go wslog/wslog.go
 	go build -o bin/ws cmds/ws/ws.go
@@ -21,8 +21,6 @@ bin/slugify: cmds/slugify/slugify.go slugify/slugify.go cli/cli.go
 bin/unslugify: cmds/unslugify/unslugify.go slugify/slugify.go cli/cli.go
 	go build -o bin/unslugify cmds/unslugify/unslugify.go
 
-bin/shorthand: cmds/shorthand/shorthand.go shorthand/shorthand.go
-	go build -o bin/shorthand cmds/shorthand/shorthand.go
 
 bin/wsmarkdown: cmds/wsmarkdown/wsmarkdown.go
 	go build -o bin/wsmarkdown cmds/wsmarkdown/wsmarkdown.go
@@ -32,13 +30,10 @@ lint:
 	gofmt -w cli/cli.go && golint cli/cli.go
 	gofmt -w fsengine/fsengine.go && golint fsengine/fsengine.go
 	gofmt -w keygen/keygen.go && golint keygen/keygen.go
-	gofmt -w shorthand/shorthand.go && golint shorthand/shorthand.go
 	gofmt -w ottoengine/ottoengine.go && golint ottoengine/ottoengine.go
 	gofmt -w slugify/slugify.go && golint slugify/slugify.go
 	gofmt -w wslog/wslog.go && golint wslog/wslog.go
 	gofmt -w prompt/prompt.go && golint prompt/prompt.go
-	gofmt -w ok/ok.go && golint ok/ok.go
-	gofmt -w ok/ok_test.go && golint ok/ok_test.go
 	gofmt -w cmds/ws/ws.go && golint cmds/ws/ws.go
 	gofmt -w cmds/wsjs/wsjs.go && golint cmds/wsjs/wsjs.go
 	gofmt -w cmds/wsinit/wsinit.go && golint cmds/wsinit/wsinit.go
@@ -46,17 +41,15 @@ lint:
 	gofmt -w cmds/wsmarkdown/wsmarkdown.go && golint cmds/wsmarkdown/wsmarkdown.go
 	gofmt -w cmds/slugify/slugify.go && golint cmds/slugify/slugify.go
 	gofmt -w cmds/unslugify/unslugify.go && golint cmds/unslugify/unslugify.go
-	gofmt -w cmds/shorthand/shorthand.go && golint cmds/shorthand/shorthand.go
 
 
-install: bin/ws bin/wsjs bin/wskeygen bin/wsinit bin/slugify bin/unslugify bin/shorthand
+install: bin/ws bin/wsjs bin/wskeygen bin/wsinit bin/slugify bin/unslugify
 	go install cmds/ws/ws.go
 	go install cmds/wsjs/wsjs.go
 	go install cmds/wskeygen/wskeygen.go
 	go install cmds/wsinit/wsinit.go
 	go install cmds/slugify/slugify.go
 	go install cmds/unslugify/unslugify.go
-	go install cmds/shorthand/shorthand.go
 	go install cmds/wsmarkdown/wsmarkdown.go
 
 clean: 
@@ -66,10 +59,8 @@ clean:
 	if [ -f bin/unslugify ]; then rm bin/unslugify; fi
 	if [ -f bin/wskeygen ]; then rm bin/wskeygen; fi
 	if [ -f bin/wsinit ]; then rm bin/wsinit; fi
-	if [ -f bin/shorthand ]; then rm bin/shorthand; fi
 	if [ -f bin/wsmarkdown ]; then rm bin/wsmarkdown; fi
 
 test:
 	cd slugify && go test
-	cd shorthand && go test
 
