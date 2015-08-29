@@ -1,6 +1,11 @@
 //
 // Package wslog standardizes logging format for ws.go and ottoengine/ottoengine.go
 //
+// @author R. S. Doiel, <rsdoiel@gmail.com>
+// copyright (c) 2015 all rights reserved.
+// Released under the BSD 2-Clause license
+// See: http://opensource.org/licenses/BSD-2-Clause
+//
 package wslog
 
 import (

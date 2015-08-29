@@ -10,11 +10,11 @@
 package main
 
 import (
-	short "../../shorthand"
 	"bufio"
 	"errors"
 	"flag"
 	"fmt"
+	short "github.com/rsdoiel/stngo/shorthand"
 	"os"
 )
 

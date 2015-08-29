@@ -1,13 +1,14 @@
-/**
- * ok.go - A small library to make assertion like testing statements friendly to the standard testing
- * package available with Go.
- * @author R. S. Doiel, <rsdoiel@gmail.com>
- * copyright (c) 2015 all rights reserved.
- * Released under the Simplified BSD License.
- * See:
- */
-
+//
 // Package ok provides a functions similar to those in NodeJS's assert module without catastrophic side effects.
+//
+// ok - A small library to make assertion like testing statements friendly to the standard testing
+// package available with Go.
+//
+// @author R. S. Doiel, <rsdoiel@gmail.com>
+// copyright (c) 2015 all rights reserved.
+// Released under the Simplified BSD License.
+// See: http://opensource.org/licenses/BSD-2-Clause
+//
 package ok
 
 import (

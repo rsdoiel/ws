@@ -1,13 +1,13 @@
-/**
- * ok_test.go - tests for ok.go
- *
- * @author R. S. Doiel, <rsdoiel@gmail.com>
- * copyright (c) 2015 all rights reserved.
- * Released under the Simplified BSD License.
- * See:
- */
-
+//
 // Package ok provides a functions similar to those in NodeJS's assert module without catastrophic side effects.
+//
+// ok_test.go - tests for ok.go
+//
+// @author R. S. Doiel, <rsdoiel@gmail.com>
+// copyright (c) 2015 all rights reserved.
+// Released under the Simplified BSD License.
+// See: http://opensource.org/licenses/BSD-2-Clause
+//
 package ok
 
 import (

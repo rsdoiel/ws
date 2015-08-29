@@ -1,11 +1,14 @@
-/**
- * shorthand_test.go - tests for short package for handling shorthand
- * definition and expansion.
- *
- * @author R. S. Doiel, <rsdoiel@gmail.com>
- * copyright (c) 2015 all rights reserved.
- * Released under the BSD 2-Clause license
- */
+//
+// Package shorthand provides a simple substitution mechanism
+//
+// shorthand_test.go - tests for short package for handling shorthand
+// definition and expansion.
+//
+// @author R. S. Doiel, <rsdoiel@gmail.com>
+// copyright (c) 2015 all rights reserved.
+// Released under the BSD 2-Clause license
+// See: http://opensource.org/licenses/BSD-2-Clause
+//
 package shorthand
 
 import (

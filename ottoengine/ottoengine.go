@@ -5,6 +5,11 @@
 // Otto is written by Robert Krimen, see https://github.com/robertkrimen/otto
 // Otto Engine is written by Robert Doiel, see https://github.com/rsdoiel/ws
 //
+// @author R. S. Doiel, <rsdoiel@gmail.com>
+// copyright (c) 2015 all rights reserved.
+// Released under the Simplified BSD License.
+// See: http://opensource.org/licenses/BSD-2-Clause
+//
 package ottoengine
 
 import (

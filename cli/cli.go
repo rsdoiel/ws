@@ -1,9 +1,12 @@
-/**
- * cli.go - Process default environment values, log handling, version number
- * and uother common code blocks used to implement cli tools.
- */
-
-//Package cli provides common functions and variables used by the command line programs
+//
+// Package cli processes default environment values, log handling, version number
+// and other common code blocks used to implement cli tools.
+//
+// @author R. S. Doiel, <rsdoiel@gmail.com>
+// copyright (c) 2015 all rights reserved.
+// Released under the Simplified BSD License.
+// See: http://opensource.org/licenses/BSD-2-Clause
+//
 package cli
 
 import (

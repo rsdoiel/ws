@@ -7,6 +7,8 @@ if [ "$GO" = "" ]; then
     exit 1
 fi
 # Install dependent libraries
+# Add from shorthand
+go get github.com/rsdoiel/stngo/shorthand
 ## Used by wsjs
 go get github.com/robertkrimen/otto
 ## Use by wsmarkdown
