@@ -2,7 +2,9 @@
  * cli.go - Process default environment values, log handling, version number
  * and uother common code blocks used to implement cli tools.
  */
-package common
+
+//Package cli provides common functions and variables used by the command line programs
+package cli
 
 import (
 	"flag"
@@ -15,15 +17,18 @@ import (
 
 const revision = "v0.0.4-alpha"
 
+// CommandName takes a path and returns the basename of the command.
 var CommandName = func(s string) string {
 	return filepath.Base(s)
 }
 
+// Version info for the command
 var Version = func() {
 	fmt.Printf("%s version %s\n", os.Args[0], revision)
 	os.Exit(0)
 }
 
+// Usage info for the command
 var Usage = func(exit_code int, body string, msg string) {
 	var fh = os.Stderr
 	if exit_code == 0 {
@@ -50,6 +55,7 @@ var Usage = func(exit_code int, body string, msg string) {
 	os.Exit(exit_code)
 }
 
+// DefaultEnvBool returns the environment boolean value or default if not set.
 func DefaultEnvBool(environmentVar string, defaultValue bool) bool {
 	tmp := strings.ToLower(os.Getenv(environmentVar))
 	if tmp == "true" {
@@ -61,6 +67,7 @@ func DefaultEnvBool(environmentVar string, defaultValue bool) bool {
 	return defaultValue
 }
 
+// DefaultEnvString returns the environment value of the string or the default if not set.
 func DefaultEnvString(environmentVar string, defaultValue string) string {
 	tmp := os.Getenv(environmentVar)
 	if tmp != "" {
@@ -69,6 +76,7 @@ func DefaultEnvString(environmentVar string, defaultValue string) string {
 	return defaultValue
 }
 
+// DefaultEnvInt returns the environment value of the string or the default if not set.
 func DefaultEnvInt(environmentVar string, defaultValue int) int {
 	tmp := os.Getenv(environmentVar)
 	if tmp != "" {

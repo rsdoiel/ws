@@ -32,6 +32,7 @@ func LogRequest(method string, url *url.URL, remoteAddr, proto, referrer, userAg
 		userAgent)
 }
 
+// RequestLog is a request log handler.
 func RequestLog(handler http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		LogRequest(r.Method, r.URL, r.RemoteAddr, r.Proto, r.Referer(), r.UserAgent())

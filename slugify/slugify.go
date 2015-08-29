@@ -12,16 +12,20 @@
  * Released under the BSD 2-Clause license.
  * See: http://opensource.org/licenses/BSD-2-Clause
  */
+
+// Package slugify is a convience function for making CMS style titles into slugs and back
 package slugify
 
 import (
 	"strings"
 )
 
+// Slugify turns a title into a URL style slug name
 func Slugify(s string) string {
 	return strings.Replace(s, " ", "_", -1)
 }
 
+// Unslugify turns a slug back into a title
 func Unslugify(s string) string {
 	return strings.Replace(s, "_", " ", -1)
 }

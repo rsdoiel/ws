@@ -27,6 +27,27 @@ bin/shorthand: cmds/shorthand/shorthand.go shorthand/shorthand.go
 bin/wsmarkdown: cmds/wsmarkdown/wsmarkdown.go
 	go build -o bin/wsmarkdown cmds/wsmarkdown/wsmarkdown.go
 
+lint:
+	gofmt -w cfg/cfg.go && golint cfg/cfg.go
+	gofmt -w cli/cli.go && golint cli/cli.go
+	gofmt -w fsengine/fsengine.go && golint fsengine/fsengine.go
+	gofmt -w keygen/keygen.go && golint keygen/keygen.go
+	gofmt -w shorthand/shorthand.go && golint shorthand/shorthand.go
+	gofmt -w ottoengine/ottoengine.go && golint ottoengine/ottoengine.go
+	gofmt -w slugify/slugify.go && golint slugify/slugify.go
+	gofmt -w wslog/wslog.go && golint wslog/wslog.go
+	gofmt -w prompt/prompt.go && golint prompt/prompt.go
+	gofmt -w ok/ok.go && golint ok/ok.go
+	gofmt -w ok/ok_test.go && golint ok/ok_test.go
+	gofmt -w cmds/ws/ws.go && golint cmds/ws/ws.go
+	gofmt -w cmds/wsjs/wsjs.go && golint cmds/wsjs/wsjs.go
+	gofmt -w cmds/wsinit/wsinit.go && golint cmds/wsinit/wsinit.go
+	gofmt -w cmds/wskeygen/wskeygen.go && golint cmds/wskeygen/wskeygen.go
+	gofmt -w cmds/wsmarkdown/wsmarkdown.go && golint cmds/wsmarkdown/wsmarkdown.go
+	gofmt -w cmds/slugify/slugify.go && golint cmds/slugify/slugify.go
+	gofmt -w cmds/unslugify/unslugify.go && golint cmds/unslugify/unslugify.go
+	gofmt -w cmds/shorthand/shorthand.go && golint cmds/shorthand/shorthand.go
+
 
 install: bin/ws bin/wsjs bin/wskeygen bin/wsinit bin/slugify bin/unslugify bin/shorthand
 	go install cmds/ws/ws.go
