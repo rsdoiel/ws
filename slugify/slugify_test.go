@@ -1,14 +1,17 @@
-/**
- * slug.go - implements tests for slug Go package.
- * @author R. S. Doiel, <rsdoiel@gmail.com>
- * copyright (c) 2015 all rights reserved.
- * Released under the BSD 2-Clause license
- * See: http://opensource.org/licenses/BSD-2-Clause
- */
-package slug
+//
+// Package slugify implements simple mechanism to turn titles into URL slugs and back.
+//
+// tests for slug Go package.
+//
+// @author R. S. Doiel, <rsdoiel@gmail.com>
+// copyright (c) 2015 all rights reserved.
+// Released under the BSD 2-Clause license
+// See: http://opensource.org/licenses/BSD-2-Clause
+//
+package slugify
 
 import (
-	"../ok"
+	"github.com/rsdoiel/ok"
 	"testing"
 )
 

@@ -10,16 +10,13 @@
 package main
 
 import (
+	cli "../../cli"
 	"../../keygen"
 	"flag"
 	"fmt"
 	"log"
 	"os"
-	"strconv"
-	"strings"
 )
-
-var revision = "v0.0.2"
 
 // command line parameters that override environment variables
 var (
@@ -32,65 +29,6 @@ var (
 )
 
 type stringValue string
-
-var usage = func(exit_code int, msg string) {
-	var fh = os.Stderr
-	if exit_code == 0 {
-		fh = os.Stdout
-	}
-	fmt.Fprintf(fh, `%s
- USAGE %s [options]
-
- EXAMPLES
-      
- OPTIONS
-
-`, msg, os.Args[0])
-
-	flag.VisitAll(func(f *flag.Flag) {
-		fmt.Fprintf(fh, "\t-%s\t(defaults to %s) %s\n", f.Name, f.DefValue, f.Usage)
-	})
-
-	fmt.Fprintf(fh, `
-
- copyright (c) 2014 all rights reserved.
- Released under the Simplified BSD License
- See: http://opensource.org/licenses/bsd-license.php
-
-`)
-	os.Exit(exit_code)
-}
-
-func defaultEnvBool(environmentVar string, defaultValue bool) bool {
-	tmp := strings.ToLower(os.Getenv(environmentVar))
-	if tmp == "true" {
-		return true
-	}
-	if tmp == "false" {
-		return false
-	}
-	return defaultValue
-}
-
-func defaultEnvString(environmentVar string, defaultValue string) string {
-	tmp := os.Getenv(environmentVar)
-	if tmp != "" {
-		return tmp
-	}
-	return defaultValue
-}
-
-func defaultEnvInt(environmentVar string, defaultValue int) int {
-	tmp := os.Getenv(environmentVar)
-	if tmp != "" {
-		i, err := strconv.Atoi(tmp)
-		if err != nil {
-			usage(1, environmentVar+" must be an integer.")
-		}
-		return i
-	}
-	return defaultValue
-}
 
 func init() {
 	const (
@@ -109,10 +47,10 @@ func init() {
 	flag.BoolVar(&version, "v", false, versionUsage)
 
 	// Settable via environment
-	key = defaultEnvString("WS_KEY", "")
-	cert = defaultEnvString("WS_CERT", "")
-	host = defaultEnvString("WS_HOST", "localhost")
-	port = defaultEnvInt("WS_PORT", 8000)
+	key = cli.DefaultEnvString("WS_KEY", "")
+	cert = cli.DefaultEnvString("WS_CERT", "")
+	host = cli.DefaultEnvString("WS_HOST", "localhost")
+	port = cli.DefaultEnvInt("WS_PORT", 8000)
 
 	flag.StringVar(&key, "key", key, keyUsage)
 	flag.StringVar(&cert, "cert", cert, certUsage)
@@ -121,13 +59,18 @@ func init() {
 }
 
 func main() {
+	usageDescription := fmt.Sprintf(`
+ %s is an interactive program that generates SSL/TLS certificates for use with
+ the ws and wsjs web servers.
+
+`, cli.CommandName(os.Args[0]))
+
 	flag.Parse()
-	if version == true {
-		fmt.Println(revision)
-		os.Exit(0)
-	}
 	if help == true {
-		usage(0, "")
+		cli.Usage(0, usageDescription, "")
+	}
+	if version == true {
+		cli.Version()
 	}
 
 	certFilename, keyFilename, err := keygen.Keygen("etc/ssl", "cert.pem", "key.pem")

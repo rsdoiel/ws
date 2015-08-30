@@ -3,6 +3,11 @@
 // ws.go. The primary difference between the stock http file server
 // and fsengine is fsengine avoids exposing dot files via http requests.
 //
+// @author R. S. Doiel, <rsdoiel@gmail.com>
+// copyright (c) 2015 all rights reserved.
+// Released under the Simplified BSD License.
+// See: http://opensource.org/licenses/BSD-2-Clause
+//
 package fsengine
 
 import (

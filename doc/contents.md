@@ -1,5 +1,5 @@
 
-+ [HOME](index.html)
++ [HOME](/index.html)
 + [Github](https://github.com/rsdoiel/ws)
 + [LICENSE](http://opensource.org/licenses/BSD-3-Clause)
 + [Tutorial](index.html?main=TUTORIAL.md)

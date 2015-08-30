@@ -24,8 +24,3 @@ _testmain.go
 
 bin/*
 etc/certs/*
-ws
-wsinit
-wskeygen
-slugify
-unslugify

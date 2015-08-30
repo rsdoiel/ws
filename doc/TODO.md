@@ -3,7 +3,7 @@
 
 ## Someday Maybe
 
-+ separate ws JavaScript support into wsjs
++ wsjs improvements 
     + add a CURL like object to the wsjs
 + create wsedit for remote editing content of specific files over https connections.
     + look at CodeMirror and AceEditor as candidates for web browser editing
@@ -17,6 +17,8 @@
 + develop a generator and JS for browser side site specific search
     + create an inverted word list as JSON file
     + create a sitemap JSON file
++ Add support for Solr integration or other search option.
++ explore a wsphp based on PHP parse in https://github.com/stephens2424/php
 
 
 

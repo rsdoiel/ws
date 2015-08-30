@@ -1,4 +1,11 @@
 #!/bin/bash
+
+#echo -n "Update the index.html from README.md file? Y/N"
+#read UPDATE_INDEX
+#if [ "$UPDATE_INDEX" = "Y" ] || "$UPDATE_INDEX" = "y" ]; then
+#    shorthand < index.shorthand > index.html
+#fi
+
 WORKING_BRANCH=$(git branch | grep '* ' | cut -d \  -f 2)
 if [ "$WORKING_BRANCH" = "gh-pages" ]; then
     git commit -am "publishing to gh-pages branch"
