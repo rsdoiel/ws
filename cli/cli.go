@@ -18,7 +18,7 @@ import (
 	"strings"
 )
 
-const revision = "v0.0.4-alpha"
+const revision = "v0.0.4"
 
 // CommandName takes a path and returns the basename of the command.
 var CommandName = func(s string) string {
