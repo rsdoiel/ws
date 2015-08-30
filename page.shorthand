@@ -1,0 +1,26 @@
+@header :! wsmarkdown < text/header.md
+@nav :! wsmarkdown < text/nav.md
+@content :! wsmarkdown < README.md
+@footer :! wsmarkdown < text/footer.md
+<!DOCTYPE html>
+<html>
+    <head>
+          <title>ws: A light weight webserver for static content development.</title>
+          <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/pure/0.5.0/pure-min.css">
+          <link rel="stylesheet" href="doc/css/style.css">
+    </head>
+    <body>
+        <header>
+        @header
+        </header>
+        <section>
+        @content
+        </section>
+        <nav>
+        @nav
+        </nav>
+        <footer>
+        @footer
+        </footer>
+    </body>
+</html>

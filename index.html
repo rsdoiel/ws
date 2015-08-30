@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+    <head>
+          <title>ws: A light weight webserver for static content development.</title>
+          <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/pure/0.5.0/pure-min.css">
+          <link rel="stylesheet" href="doc/css/style.css">
+    </head>
+    <body>
+        <header>
+        <h1>ws - a nimple webserver with friends</h1>
+
+        </header>
+        <section>
+        <h1>ws</h1>
+
+<pre><code>A nimble webserver with friends
+</code></pre>
+
+<p><em>ws</em> started as a nimble static content webserver. It grew some friends along the way.  Now it is a small collection for command line utilities.</p>
+
+<h1><em>ws</em> has friends</h1>
+
+<p><em>ws</em> is simple static content webserver with optional support for SSL. It is careful to avoid dot files and by default with server the content of the directory where it is launch. <em>ws</em> has a companion webserver named <em>wsjs</em>. It is adds the ability to dynamic create content via JavaScript files.  Each JavaScript file becomes a route itself. <em>wsjs</em> is handy when you&rsquo;re mocking up services or RESTful API.</p>
+
+<p><em>ws</em> and <em>wsjs</em> have friends. These are additional command line utilities useful for quickly prototyping websites. They include <em>wsinit</em> which creates a project directory skeletons and configuration interactively, <em>wskeygen</em> which generates self signed SSL certificates. Additional commands that are helpful in preprocessing text or augmenting shell scripts.</p>
+
+<p>The complete list of utilities</p>
+
+<ul>
+<li><a href="doc/ws.md">ws</a> a nimple webserver for static content
+
+<ul>
+<li>Built on Golangs native http/https modules</li>
+<li>Restricted file service, only from the docroot and no &ldquo;dot files&rdquo; are served</li>
+<li>No dynamic content support</li>
+<li>Quick startup, everything logged to console for easy debugging or piping to a log processor</li>
+</ul></li>
+<li><a href="doc/wsjs.md">wsjs</a> a nimple webserver for static and JavaScript generated dynamic content
+
+<ul>
+<li>built on Robert Krimen&rsquo;s excellent <a href="https://github.com/robertkrimen/otto">otto</a> JavaScript VM</li>
+<li>Mockup your dynamic content via JavaScript defined routes (great for creating JSON blobs used by a browser side demo)</li>
+</ul></li>
+<li><a href="document">wsinit</a> will generate a project structure as well as a shell script for configuring <em>ws</em> and <em>wsjs</em> in a 12 factor app manor.</li>
+<li><a href="doc/wsmarkdown.md">wsmarkdown</a> renders markdown as HTML
+
+<ul>
+<li>this markdown is built on the <a href="https://github.com/russross/blackfriday">Blackfriday</a> Markdown library</li>
+</ul></li>
+<li><a href="doc/shorthand.md">shorthand</a> a domain specific language that expands shorthand labels into associated replacement values</li>
+<li><a href="doc/slugify.md">slugify</a> turns text phrases into readibly URL friendly phrases (e.g. &ldquo;Hello World&rdquo; becomes &ldquo;Hello_World&rdquo;)</li>
+<li><a href="doc/unslugify.md">unslugify</a> returns slugs into simple phrase (e.g. &ldquo;Hello_World&rdquo; becomes &ldquo;Hello World&rdquo;)</li>
+</ul>
+
+<p>Got an idea for a new project? Want to prototype it quickly?</p>
+
+<ol>
+<li>run &ldquo;wsinit&rdquo; to set things up</li>
+<li>run &ldquo;. etc/config.sh&rdquo; seed your environment</li>
+<li>run &ldquo;ws&rdquo; and start working!</li>
+<li>run &ldquo;wsjs&rdquo; to mockup a RESTful service</li>
+</ol>
+
+<p><em>ws</em> and <em>wsjs</em> feature sets have been kept minimal. Only what you need when you turn it on.</p>
+
+<p>Want to expand out the site quickly, write the HTML skeleton with
+markdown, sprinkle in some shorthand which can leverage some shell logic
+and now you have HTML pages with common nav, headers, and footers.</p>
+
+<h2>LICENSE</h2>
+
+<p>copyright &copy; 2014 - 2015 All rights reserved.
+Released under the <a href="http://opensource.org/licenses/bsd-license.php">Simplified BSD License</a></p>
+
+        </section>
+        <nav>
+        <ul>
+<li><a href="/">Home</a></li>
+<li><a href="doc/index.html">Documentation</a></li>
+<li><a href="doc/?main=TUTORIAL.md">Tutorial</a></li>
+</ul>
+
+        </nav>
+        <footer>
+        <h2>LICENSE</h2>
+
+<p>copyright &copy; 2014 - 2015 All rights reserved.
+Released under the <a href="http://opensource.org/licenses/bsd-license.php">Simplified BSD License</a></p>
+
+        </footer>
+    </body>
+</html>
