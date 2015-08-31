@@ -2,6 +2,7 @@
 # TODO fixes
 
 + Finish integrating utilities pulled in from stngo
++ if the docroot has a trailing '/' it returns unauthorized from browser call on Mac.
 
 # Todo ideas
 
