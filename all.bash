@@ -19,5 +19,6 @@ go get github.com/russross/blackfriday
 # go get github.com/knieriem/markdown
 # go get github.com/zhemao/glisp
 # go get github.com/kedebug/LispEx
+# go get github.com/stephen2424/php
 make
 make test
