@@ -2,6 +2,11 @@
 // Package keygen is based on the keygen code in the TLS package adapted
 // to fit the demands of this ws.go project.
 //
+// @author R. S. Doiel, <rsdoiel@gmail.com>
+// copyright (c) 2015 all rights reserved.
+// Released under the Simplified BSD License.
+// See: http://opensource.org/licenses/BSD-2-Clause
+//
 package keygen
 
 import (

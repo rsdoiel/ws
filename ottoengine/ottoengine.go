@@ -5,6 +5,11 @@
 // Otto is written by Robert Krimen, see https://github.com/robertkrimen/otto
 // Otto Engine is written by Robert Doiel, see https://github.com/rsdoiel/ws
 //
+// @author R. S. Doiel, <rsdoiel@gmail.com>
+// copyright (c) 2015 all rights reserved.
+// Released under the Simplified BSD License.
+// See: http://opensource.org/licenses/BSD-2-Clause
+//
 package ottoengine
 
 import (
@@ -143,13 +148,13 @@ func jsInjectMethod(name string, src string, buf []byte) string {
 	return src
 }
 
-func requestAsJson(r *http.Request) (buf []byte, err error) {
+func requestAsJSON(r *http.Request) (buf []byte, err error) {
 	jsonURL, err := json.Marshal(r.URL)
 	return []byte(fmt.Sprintf("{\"Method\":\"%s\",\"URL\":%s}", r.Method, jsonURL)), err
 }
 
 func createRequestLiteral(r *http.Request) string {
-	buf, err := requestAsJson(r)
+	buf, err := requestAsJSON(r)
 	if err != nil {
 		return "{}"
 	}

@@ -1,5 +1,12 @@
+//
 // Package prompt is a simple message and response functions. It is used by
 // ws.go when the generate config option is chosen.
+//
+// @author R. S. Doiel, <rsdoiel@gmail.com>
+// copyright (c) 2015 all rights reserved.
+// Released under the Simplified BSD License.
+// See: http://opensource.org/licenses/BSD-2-Clause
+//
 package prompt
 
 import (

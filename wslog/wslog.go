@@ -1,6 +1,11 @@
 //
 // Package wslog standardizes logging format for ws.go and ottoengine/ottoengine.go
 //
+// @author R. S. Doiel, <rsdoiel@gmail.com>
+// copyright (c) 2015 all rights reserved.
+// Released under the BSD 2-Clause license
+// See: http://opensource.org/licenses/BSD-2-Clause
+//
 package wslog
 
 import (
@@ -32,6 +37,7 @@ func LogRequest(method string, url *url.URL, remoteAddr, proto, referrer, userAg
 		userAgent)
 }
 
+// RequestLog is a request log handler.
 func RequestLog(handler http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		LogRequest(r.Method, r.URL, r.RemoteAddr, r.Proto, r.Referer(), r.UserAgent())
