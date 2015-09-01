@@ -1,10 +1,15 @@
 @page_heading := <h1>Example Page</h1>
-@copyright := copyright &copy;
-@copyright_date :! date +%Y
+@year :! date +%Y
+@copyright :{ copyright &copy; @year
 @now :! date
 @page_title :{ <title>Example Page - @now</title>
-@license :< LICENSE
-@nav :! find doc -type f | grep -E "\.md$" | while read ITEM; do T=${ITEM/doc\//}; L=$(unslugify -e .md $(echo $T | tr - _));echo "+ [$L]($T)"; done | ./wsmarkdown
+@license :=< LICENSE
+@navTxt :! find doc -type f | grep -E "\.md$" | while read ITEM; do T=${ITEM/doc\//}; L=$(unslugify -e .md $(echo $T | tr - _));echo "+ [$L]($T)"; done
+@navRaw1 :[ @navTxt
+@navRaw1
+@navRaw2 :{{ @navRaw1
+@navRaw2
+@navHTML :{[ @navRaw2
 <!DOCTYPE html>
 <html>
 <head>
@@ -15,8 +20,8 @@
 @page_heading
 </header>
 <article>This is a test of using shorthand to build a webpage.
-    <nav>@nav</nav>
-<footer>@copyright @copyright_date<br />@licence</footer>
+    <nav>@navHTML</nav>
+<footer>@copyright<br />@licence</footer>
 </body>
 </html>
 
