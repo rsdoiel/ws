@@ -19,5 +19,9 @@
 		+ [Lively Kernel](http://www.lively-kernel.org/repository/lively-kernel/trunk/doc/website-index.html)
 + Look at [Echo](http://echo.labstack.com/) router and see if this is a useful way to support FastCGI
 + Look at [libsecurity](https://developer.ibm.com/open/libsecurity/) and see how it might help *ws* stay safe.
++ Look at [takama/router](https://github.com/takama/router) as a possible solution for dynamic routes in _wsjs_
++ Look at [TiDB](https://github.com/pingcap/tidb) MySQL protocol compatible distributed database or [ql](https://github.com/cznic/ql) embedable SQL for Golang
+
+
 
 
