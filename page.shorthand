@@ -1,7 +1,7 @@
-@header :[< text/header.md
-@nav :[< text/nav.md
-@content :[< README.md
-@footer :[< text/footer.md
+@header :[<: text/header.md
+@nav :[<: text/nav.md
+@content :[<: README.md
+@footer :[<: text/footer.md
 <!DOCTYPE html>
 <html>
     <head>

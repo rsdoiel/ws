@@ -47,7 +47,6 @@
 <ul>
 <li>this markdown is built on the <a href="https://github.com/russross/blackfriday">Blackfriday</a> Markdown library</li>
 </ul></li>
-<li><a href="doc/shorthand.md">shorthand</a> a domain specific language that expands shorthand labels into associated replacement values</li>
 <li><a href="doc/slugify.md">slugify</a> turns text phrases into readibly URL friendly phrases (e.g. &ldquo;Hello World&rdquo; becomes &ldquo;Hello_World&rdquo;)</li>
 <li><a href="doc/unslugify.md">unslugify</a> returns slugs into simple phrase (e.g. &ldquo;Hello_World&rdquo; becomes &ldquo;Hello World&rdquo;)</li>
 </ul>
@@ -61,8 +60,7 @@
 <li>run &ldquo;wsjs&rdquo; to mockup a RESTful service</li>
 </ol>
 
-<p>&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD
-<em>ws</em> feature set has been kept minimal. Only what you need when you turn it on.</p>
+<p><em>ws</em> feature set has been kept minimal. Only what you need when you turn it on.</p>
 
 <ul>
 <li>Restricted file service, only from the docroot and no &ldquo;dot files&rdquo; are served</li>
@@ -225,14 +223,9 @@ example <em>ws</em> will listen on port 8007.</p>
     }(Request, Response));
 </code></pre>
 
-<h1>Assuming <em>ottoengine</em> is turned on then the page rendered should have a content type of &ldquo;text/html&rdquo; with the body shoulding the paragraph about exposing the request headers as a JSON blob.  Two command line options or environment variables turn <em>ottoengine</em> on.</h1>
+<p>Assuming <em>ottoengine</em> is turned on then the page rendered should have a content type of &ldquo;text/html&rdquo; with the body shoulding the paragraph about exposing the request headers as a JSON blob.  Two command line options or environment variables turn <em>ottoengine</em> on.</p>
 
-<p><em>ws</em> and <em>wsjs</em> feature sets have been kept minimal. Only what you need when you turn it on.
-&gt;&gt;&gt;&gt;&gt;&gt;&gt; 331b31400e1b078fd6070f2c40c25a536982221e</p>
-
-<p>Want to expand out the site quickly, write the HTML skeleton with
-markdown, sprinkle in some shorthand which can leverage some shell logic
-and now you have HTML pages with common nav, headers, and footers.</p>
+<p>Want to expand out the site quickly, write the HTML skeleton with markdown, sprinkle in some <a href="http://rsdoiel.github.io/shorthand">shorthand</a> which can leverage some shell logic and now you have HTML pages with common nav, headers, and footers.</p>
 
 <h2>LICENSE</h2>
 
