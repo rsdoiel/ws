@@ -24,7 +24,7 @@ The complete list of utilities
 + [wsinit](document) will generate a project structure as well as a shell script for configuring _ws_ and _wsjs_ in a 12 factor app manor.
 + [wsmarkdown](doc/wsmarkdown.md) renders markdown as HTML
     + this markdown is built on the [Blackfriday](https://github.com/russross/blackfriday) Markdown library
-+ [shorthand](doc/shorthand.md) a domain specific language that expands shorthand labels into associated replacement values
++ [shorthand](http://rsdoiel.github.io/shorthand) a domain specific language that expands shorthand labels into associated replacement values
 + [slugify](doc/slugify.md) turns text phrases into readibly URL friendly phrases (e.g. "Hello World" becomes "Hello_World")
 + [unslugify](doc/unslugify.md) returns slugs into simple phrase (e.g. "Hello_World" becomes "Hello World")
 
@@ -216,9 +216,7 @@ This was create a *cert.pem* and *key.pem* files in *$HOME/etc/ws* directory.
 
 Assuming _ottoengine_ is turned on then the page rendered should have a content type of "text/html" with the body shoulding the paragraph about exposing the request headers as a JSON blob.  Two command line options or environment variables turn _ottoengine_ on.
 
-Want to expand out the site quickly, write the HTML skeleton with
-markdown, sprinkle in some shorthand which can leverage some shell logic
-and now you have HTML pages with common nav, headers, and footers.
+Want to expand out the site quickly, write the HTML skeleton with markdown, sprinkle in some [shorthand](http://rsdoiel.github.io/shorthand) which can leverage some shell logic and now you have HTML pages with common nav, headers, and footers.
 
 ## LICENSE
 
