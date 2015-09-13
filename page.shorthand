@@ -1,7 +1,7 @@
-@header :! wsmarkdown < text/header.md
-@nav :! wsmarkdown < text/nav.md
-@content :! wsmarkdown < README.md
-@footer :! wsmarkdown < text/footer.md
+@header :!: wsmarkdown < text/header.md
+@nav :!: wsmarkdown < text/nav.md
+@content :!: wsmarkdown < README.md
+@footer :!: wsmarkdown < text/footer.md
 <!DOCTYPE html>
 <html>
     <head>
