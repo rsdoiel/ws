@@ -262,7 +262,55 @@ func Engine(program Program) {
 		closureScript = `JSON.stringify((function(Request,Response){var value = %s;if (value) { Response.setContent(value); };return Response;}(%s,%s)));`
 		runScript = fmt.Sprintf(closureScript, script, requestLiteral, responseLiteral)
 
-		// 4. Run the VM wrapped with a closure containing`Request, Response
+		// 4. Load built in commands (e.g. Getenv, HttpGet, HttpPost)
+		vm.Set("Getenv", func(call otto.FunctionCall) otto.Value {
+			envvar := call.Argument(0).String()
+			result, err := vm.ToValue(os.Getenv(envvar))
+			if err != nil {
+				log.Fatalf("Getenv(%q) error, %s", envvar, err)
+			}
+			return result
+		})
+		vm.Set("HttpGet", func(call otto.FunctionCall) otto.Value {
+			uri := call.Argument(0).String()
+			resp, err := http.Get(uri)
+			if err != nil {
+				log.Fatalf("Can't connect to %s, %s", uri, err)
+			}
+			defer resp.Body.Close()
+			content, err := ioutil.ReadAll(resp.Body)
+			if err != nil {
+				log.Fatalf("Can't read response %s, %s", uri, err)
+			}
+			result, err := vm.ToValue(fmt.Sprintf("%s", content))
+			if err != nil {
+				log.Fatalf("HttpGet(%q) error, %s", uri, err)
+			}
+			return result
+		})
+		vm.Set("HttpPost", func(call otto.FunctionCall) otto.Value {
+			uri := call.Argument(0).String()
+			mimeType := call.Argument(1).String()
+			payload := call.Argument(2).String()
+			buf := strings.NewReader(payload)
+
+			resp, err := http.Post(uri, mimeType, buf)
+			if err != nil {
+				log.Fatalf("Can't connect to %s, %s", uri, err)
+			}
+			defer resp.Body.Close()
+			content, err := ioutil.ReadAll(resp.Body)
+			if err != nil {
+				log.Fatalf("Can't read response %s, %s", uri, err)
+			}
+			result, err := vm.ToValue(fmt.Sprintf("%s", content))
+			if err != nil {
+				log.Fatalf("HttpGet(%q) error, %s", uri, err)
+			}
+			return result
+		})
+
+		// 5. Run the VM wrapped with a closure containing`Request, Response
 		output, err := vm.Run(runScript)
 		if err != nil {
 			msg := fmt.Sprintf("JavaScript Error: %s", err)
