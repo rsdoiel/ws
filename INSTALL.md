@@ -24,25 +24,30 @@ I have assumed your running some type of *NIX with Bash or Sh.
         - git clone git@github.com:rsdoiel/ws.git
 2. Change to your _ws_ directory. E.g.
     - cd $GOPATH/src/ws
-3. Make sure [otto](https://github.com/robertkrimen/otto) is available
+3. Install the other Go packages needed
     - go get github.com/robertkrimen/otto
-4. Compile _ws_, _wsjs_, and related utilities. E.g.
-    - make build
-    - make test
+    - go get github.com/blevesearch/bleve
+4. Compile _ws_, _wsint_, and _wsindexer_
+    - go build
+    - go build cmds/ws/ws.go
+    - go build cmds/wsinit/wsinit.go
+    - go build cmds/wsindexer/wsindexer.go
+    - go test
 5. Setup for testing
-    - export WS_HOST=localhost
-    - export WS_PORT=8000
-    - export WS_DOCROOT=$(pwd)
-    - export WS_OTTO=true
-    - export WS_OTTO_PATH=$(pwd)/demo
+    - export WS_URL=http://localhost:8000
+    - export WS_HTDOCS=$(pwd)/htdocs
+    - export WS_JSDOCS=$(pwd)/jsdocs
+    - export WS_SSL_KEY=$(pwd)/etc/site.key
+    - export WS_SSL_PEM=$(pwd)/etc/site.pem
+    - export WS_BLEVE_INDEX=$(pwd)/site.bleve
 6. Test web server with JavaScript support
-    + Start the _wsjs_ webserver
-        - ./wsjs
+    + Index the demo site
+        - ./wsindexer site.bleve htdocs
+    + Start the _ws_ web server
+        - ./ws
     + Try the following URLs in your favorite web browser
         - http://localhost:8000
         - http://localhost:8000/helloworld
-        - http://localhost:8000/test
-        - http://localhost:8000/json
-        - http://localhost:8000/html
-7. From your web browser click around and see if everything works OK
-
+        - http://localhost:8000/api?q=hello%20world
+    + Kill the web server with Ctrl-C
+7. Experiment adding content, server side JavaScript, re-indexing and restart
