@@ -18,7 +18,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/robertkrimen/otto"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -26,6 +25,8 @@ import (
 	"path"
 	"path/filepath"
 	"strings"
+
+	"github.com/robertkrimen/otto"
 )
 
 // Program keeps track of assigned route, the JS file, the source of
@@ -108,19 +109,19 @@ func jsMethodHandler(method string, data string) string {
             debug = false;
         }
         if (this.Method === "%s") {
-            // Is it a JSON post?  
-            if ((data_as_string.substr(0,1) === "{" && 
+            // Is it a JSON post?
+            if ((data_as_string.substr(0,1) === "{" &&
                     data_as_string.substr(-1, 1) === "}") ||
-                    (data_as_string.substr(0,1) === "[" && 
+                    (data_as_string.substr(0,1) === "[" &&
                     data_as_string.substr(-1, 1) === "]")) {
-                 data = JSON.parse(data_as_string) 
+                 data = JSON.parse(data_as_string)
             } else {
                 // It's a normal URL encoded post
                 key_value_as_string = data_as_string.split("&");
                 if (key_value_as_string.length > 0) {
                     key_value_as_string.forEach(function (item) {
                         var parts = item.split("=",2);
-                
+
                         if (parts.length === 2) {
                             key = decodeURIComponent(parts[0].replace(space_re, ' '));
                             value = decodeURIComponent(parts[1].replace(space_re, ' '));
@@ -262,7 +263,106 @@ func Engine(program Program) {
 		closureScript = `JSON.stringify((function(Request,Response){var value = %s;if (value) { Response.setContent(value); };return Response;}(%s,%s)));`
 		runScript = fmt.Sprintf(closureScript, script, requestLiteral, responseLiteral)
 
-		// 4. Run the VM wrapped with a closure containing`Request, Response
+		// 4. Load built in commands (e.g. Getenv, HttpGet, HttpPost)
+		vm.Set("Getenv", func(call otto.FunctionCall) otto.Value {
+			envvar := call.Argument(0).String()
+			result, err := vm.ToValue(os.Getenv(envvar))
+			if err != nil {
+				log.Fatalf("Getenv(%q) error, %s", envvar, err)
+			}
+			return result
+		})
+		vm.Set("HttpGet", func(call otto.FunctionCall) otto.Value {
+			var headers []map[string]string
+
+			argc := len(call.ArgumentList)
+			uri := call.Argument(0).String()
+			if argc > 1 {
+				raw, err := call.Argument(1).Export()
+				if err != nil {
+					log.Fatalf("Can't get headers for %s, %s", uri, err)
+				}
+				src, err := json.Marshal(raw)
+				if err != nil {
+					log.Fatalf("Can't marshal headers for %s, %s", uri, err)
+				}
+				err = json.Unmarshal(src, &headers)
+				if err != nil {
+					log.Fatalf("Can't unmarshal headers for %s, %s", uri, err)
+				}
+			}
+			client := &http.Client{}
+			req, err := http.NewRequest("GET", uri, nil)
+			if err != nil {
+				log.Fatalf("Can't make a new GET request %s, %s", uri, err)
+			}
+			for _, header := range headers {
+				for k, v := range header {
+					req.Header.Set(k, v)
+				}
+			}
+			resp, err := client.Do(req)
+			if err != nil {
+				log.Fatalf("Can't connect to %s, %s", uri, err)
+			}
+			defer resp.Body.Close()
+			content, err := ioutil.ReadAll(resp.Body)
+			if err != nil {
+				log.Fatalf("Can't read response %s, %s", uri, err)
+			}
+			result, err := vm.ToValue(fmt.Sprintf("%s", content))
+			if err != nil {
+				log.Fatalf("HttpGet(%q) error, %s", uri, err)
+			}
+			return result
+		})
+		vm.Set("HttpPost", func(call otto.FunctionCall) otto.Value {
+			var headers []map[string]string
+
+			uri := call.Argument(0).String()
+			raw, err := call.Argument(1).Export()
+			if err != nil {
+				log.Fatalf("Can't get headers for %s, %s", uri, err)
+			}
+			src, err := json.Marshal(raw)
+			if err != nil {
+				log.Fatalf("Can't marshal headers for %s, %s", uri, err)
+			}
+			err = json.Unmarshal(src, &headers)
+			if err != nil {
+				log.Fatalf("Can't unmarshal headers for %s, %s", uri, err)
+			}
+
+			payload := call.Argument(2).String()
+			buf := strings.NewReader(payload)
+
+			client := &http.Client{}
+			req, err := http.NewRequest("POST", uri, buf)
+			if err != nil {
+				log.Fatalf("Can't make a new GET request %s, %s", uri, err)
+			}
+			for _, header := range headers {
+				for k, v := range header {
+					req.Header.Set(k, v)
+				}
+			}
+			resp, err := client.Do(req)
+			if err != nil {
+				log.Fatalf("Can't connect to %s, %s", uri, err)
+			}
+			defer resp.Body.Close()
+			content, err := ioutil.ReadAll(resp.Body)
+			if err != nil {
+				log.Fatalf("Can't read response %s, %s", uri, err)
+			}
+			result, err := vm.ToValue(fmt.Sprintf("%s", content))
+			if err != nil {
+				log.Fatalf("HttpGet(%q) error, %s", uri, err)
+			}
+			return result
+		})
+
+		// 5. Run the VM wrapped with a closure containing`Request, Response
 		output, err := vm.Run(runScript)
 		if err != nil {
 			msg := fmt.Sprintf("JavaScript Error: %s", err)
