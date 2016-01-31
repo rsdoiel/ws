@@ -5,10 +5,10 @@ ws
 
 _ws_ is a prototyping platform for web based services and websites.
 
-_ws_ started as a nimble static content web server.  It now include a
-friend - _wsinit_.  The friend setups a project directory structure,
-creates self signed SSL keys and displays suggested
-environment variables for use with _ws_.
+_ws_ started as a nimble static content web server.  It now includes
+support for server side JavaScript and has a friend - _wsinit_. The friend 
+setups a project directory structure, creates self signed SSL keys and 
+displays suggested environment variables for use with _ws_.
 
 ## Requirements
 
@@ -25,7 +25,6 @@ Here's my basic approach to get things setup. I assume you've got *Golang* alrea
   git clone https://github.com/rsdoiel/ws
   cd ws
   go get -u github.com/robertkrimen/otto
-  go get -u github.com/blevesearch/bleve
   go test
   go build
   go build cmds/ws/ws.go
@@ -46,9 +45,6 @@ If everything compiles fine then I do something like this--
 + static file server
 + a simplified server side JavaScript platform
   + if you need more, I suggest [NodeJS](http://nodejs.org)
-+ built-in engine via Bleve
-
-The server side JavaScript environment also supports template rendering via Golang's html/template system.
 
 ### _wsinit_ features
 

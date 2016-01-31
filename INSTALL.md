@@ -27,11 +27,10 @@ I have assumed your running some type of *NIX with Bash or Sh.
 3. Install the other Go packages needed
     - go get github.com/robertkrimen/otto
     - go get github.com/blevesearch/bleve
-4. Compile _ws_, _wsint_, and _wsindexer_
+4. Compile _ws_, and _wsint_
     - go build
     - go build cmds/ws/ws.go
     - go build cmds/wsinit/wsinit.go
-    - go build cmds/wsindexer/wsindexer.go
     - go test
 5. Setup for testing
     - export WS_URL=http://localhost:8000
@@ -39,15 +38,12 @@ I have assumed your running some type of *NIX with Bash or Sh.
     - export WS_JSDOCS=$(pwd)/jsdocs
     - export WS_SSL_KEY=$(pwd)/etc/site.key
     - export WS_SSL_PEM=$(pwd)/etc/site.pem
-    - export WS_BLEVE_INDEX=$(pwd)/site.bleve
 6. Test web server with JavaScript support
-    + Index the demo site
-        - ./wsindexer site.bleve htdocs
     + Start the _ws_ web server
         - ./ws
     + Try the following URLs in your favorite web browser
         - http://localhost:8000
         - http://localhost:8000/helloworld
-        - http://localhost:8000/api?q=hello%20world
     + Kill the web server with Ctrl-C
-7. Experiment adding content, server side JavaScript, re-indexing and restart
+7. Experiment adding content, server side JavaScript, and restarting
+
