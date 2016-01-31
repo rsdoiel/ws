@@ -22,6 +22,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
@@ -33,6 +34,27 @@ const (
 	// Version is used as a release number number for ws, wsinit, wsindexer
 	Version = "0.0.0"
 )
+
+// Configuration provides the basic settings used by _ws_ and _wsint_ commands.
+type Configuration struct {
+	URL    *url.URL
+	HTDocs string
+	JSDocs string
+	SSLKey string
+	SSLPem string
+}
+
+// Getenv scans the environment variables and updates the values in
+// the configuration.
+func (config *Configuration) Getenv() error {
+	u, err := url.Parse(os.Getenv("WS_URL"))
+	config.URL = u
+	config.HTDocs = os.Getenv("WS_HTDOCS")
+	config.JSDocs = os.Getenv("WS_JSDOCS")
+	config.SSLKey = os.Getenv("WS_SSL_KEY")
+	config.SSLPem = os.Getenv("WS_SSL_PEM")
+	return err
+}
 
 // ReadJSFiles walks a directory tree and then return the results
 // as a map of paths and JS source code in []byte.
@@ -144,4 +166,16 @@ func NewJSEngine() *otto.Otto {
 		return result
 	})
 	return vm
+}
+
+// JSPathToRoute converts a JSDocs path to a JavaScript file into a web server
+// route.
+func JSPathToRoute(p string, cfg *Configuration) (string, error) {
+	// Check to see if the route is relative to JSDocs
+	rel, err := filepath.Rel(cfg.JSDocs, p)
+	if err != nil {
+		return "", err
+	}
+	ext := filepath.Ext(rel)
+	return "/" + strings.TrimSuffix(rel, ext), nil
 }

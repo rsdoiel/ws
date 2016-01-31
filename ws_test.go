@@ -21,6 +21,51 @@ import (
 	"testing"
 )
 
+func TestConfigureFromEnv(t *testing.T) {
+	cfg := new(Configuration)
+	if cfg.URL != nil {
+		t.Errorf("cfg.URL should be nil, %v", cfg.URL)
+	}
+	if cfg.HTDocs != "" {
+		t.Errorf("cfg.HTDocs should be empty, %s", cfg.HTDocs)
+	}
+	if cfg.JSDocs != "" {
+		t.Errorf("cfg.JSDocs should be empty, %s", cfg.JSDocs)
+	}
+	if cfg.SSLKey != "" {
+		t.Errorf("cfg.SSLKey should be empty, %s", cfg.SSLKey)
+	}
+	if cfg.SSLPem != "" {
+		t.Errorf("cfg.SSLPem should be empty, %s", cfg.SSLPem)
+	}
+
+	os.Setenv("WS_URL", "https://example.org:8001")
+	os.Setenv("WS_HTDOCS", "htdocs")
+	os.Setenv("WS_JSDOCS", "jsdocs")
+	os.Setenv("WS_SSL_KEY", "/etc/ssl/site.key")
+	os.Setenv("WS_SSL_PEM", "/etc/ssl/site.pem")
+
+	err := cfg.Getenv()
+	if err != nil {
+		t.Errorf("cfg.Getenv() error, %s", err)
+	}
+	if cfg.URL.Host != "example.org:8001" {
+		t.Errorf("cfg.URL.Host != example.org:8001, %s", cfg.URL.Host)
+	}
+	if cfg.HTDocs != "htdocs" {
+		t.Errorf("cfg.HTDocs != htdocs, %s", cfg.HTDocs)
+	}
+	if cfg.JSDocs != "jsdocs" {
+		t.Errorf("cfg.JSDocs != jsdocs, %s", cfg.JSDocs)
+	}
+	if cfg.SSLKey != "/etc/ssl/site.key" {
+		t.Errorf("cfg.SSLKey != /etc/ssl/site.key, %s", cfg.SSLKey)
+	}
+	if cfg.SSLPem != "/etc/ssl/site.pem" {
+		t.Errorf("cfg.SSLPem != /etc/ssl/site.pem, %s", cfg.SSLPem)
+	}
+}
+
 func TestReadJSFiles(t *testing.T) {
 	jsSources, err := ReadJSFiles("jsdocs")
 	if err != nil {
@@ -90,5 +135,27 @@ func TestJSEngine(t *testing.T) {
 	}
 	if s != "hello world" {
 		t.Errorf("Expected JS to return s of 'hello world', got %s", s)
+	}
+}
+
+func TestJSPathToRoute(t *testing.T) {
+	os.Setenv("WS_JSDOCS", "jsdocs")
+	cfg := new(Configuration)
+	cfg.Getenv()
+	p := "jsdocs/helloworld.js"
+	r, err := JSPathToRoute(p, cfg)
+	if err != nil {
+		t.Errorf("JSPathToRoute() error, %s", err)
+	}
+	if r != "/helloworld" {
+		t.Errorf("Failed converting path to route /helloworld, %s", r)
+	}
+	p = "jsdocs/api/search.js"
+	r, err = JSPathToRoute(p, cfg)
+	if err != nil {
+		t.Errorf("JSPathToRoute() error, %s", err)
+	}
+	if r != "/api/search" {
+		t.Errorf("Failed converting path to route /api/search, %s", r)
 	}
 }
