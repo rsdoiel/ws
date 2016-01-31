@@ -6,16 +6,18 @@ ws
 _ws_ is a prototyping platform for web based services and websites.
 
 _ws_ started as a nimble static content web server.  It now includes
-support for server side JavaScript and has a friend - _wsinit_. The friend 
-setups a project directory structure, creates self signed SSL keys and 
-displays suggested environment variables for use with _ws_.
+support for server side JavaScript and can initialize a basic project
+layout. The *init* option generates a project directory
+structure, creates self signed SSL keys and displays suggested environment
+variables for use with _ws_.  If the directory structure already exists it
+will display the suggest setup.
 
 ## Requirements
 
 + [Golang](http://golang.org) version 1.5.3 or better
 + A 3rd Party Go package
   + [Otto](https://github.com/robertkrimen/otto) by Robert Krimen, MIT license
-    + a JavaScript engine for Go
+    + a JavaScript interpreter written in Go
 
 ## Compile
 
@@ -28,14 +30,12 @@ Here's my basic approach to get things setup. I assume you've got *Golang* alrea
   go test
   go build
   go build cmds/ws/ws.go
-  go build cmds/wsinit/wsinit.go
 ```
 
 If everything compiles fine then I do something like this--
 
 ```
   go install cmds/ws/ws.go
-  go install cmds/wsinit/wsinit.go
 ```
 
 
@@ -45,19 +45,18 @@ If everything compiles fine then I do something like this--
 + static file server
 + a simplified server side JavaScript platform
   + if you need more, I suggest [NodeJS](http://nodejs.org)
++ a project setup option called *init*
 
-### _wsinit_ features
+*_ws_ init* takes three actions
 
-_wsinit_ takes three actions
-
-+ create a basic site directory structure (e.g. htdocs, jsdocs, etc)
-+ create self signed SSL certificates (e.g. etc/site.key, etc/site.pem)
++ create a basic site directory structure (e.g. htdocs, jsdocs, etc) if needed
++ creates self signed SSL certificates (e.g. etc/site.key, etc/site.pem) if appropriate
 + suggests environment variable settings (e.g like you might put in etc/setup.conf)
 
 
 ## Configuration
 
-All configuration for _ws_ and friends can be configured via environment
+Configuration for _ws_  can be passed directly from environment
 variables. That makes them container friendly.  The environment can be
 overwritten by command line options.
 
@@ -69,9 +68,9 @@ The standard set of environment variables are
   + the default is ./htdocs
 + WS_JSDOCS the directory for any server side JavaScript processing
   + the default is ./jsdocs (if not found then server side JavaScript is turned off)
-+ WS_SSL_KEY the path the the SSL key file
++ WS_SSL_KEY the path the the SSL key file (e.g. etc/ssl/site.key)
   + default is empty, only checked if your WS_URL is starts with https://
-+ WS_SSL_PEM the path the the SSL pem file
++ WS_SSL_CERT the path the the SSL cert file (e.g. etc/ssl/site.crt)
   + default is empty, only checked if your WS_URL is starts with https://
 
 ### command line options
@@ -81,6 +80,7 @@ The standard set of environment variables are
 + -jsdocs overrides WS_JSDOCS
 + -ssl-key overrides WS_SSL_KEY
 + -ssl-pem overrides WS_SSL_PEM
++ -init triggers the initialization process
 + -h, --help displays the help documentation
 + -v, --version display the version of the command
 

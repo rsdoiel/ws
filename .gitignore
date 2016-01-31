@@ -22,5 +22,9 @@ _testmain.go
 *.exe
 *.test
 
+# Project ignores
 bin/*
-etc/certs/*
+*.key
+*.crt
+*.conf
+testout
