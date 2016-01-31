@@ -5,20 +5,17 @@ ws
 
 _ws_ is a prototyping platform for web based services and websites.
 
-_ws_ started as a nimble static content web server.  It now includes two
-friends - _wsinit_ and _wsindexer_.  The first setups a project
-directory structures, creates self signed SSL keys or displays suggested
-environment variables whilethe second creates and updates
-[bleve](http://blevesearch.com) based indexes for use with _ws_.
+_ws_ started as a nimble static content web server.  It now include a
+friend - _wsinit_.  The friend setups a project directory structure,
+creates self signed SSL keys and displays suggested
+environment variables for use with _ws_.
 
 ## Requirements
 
 + [Golang](http://golang.org) version 1.5.3 or better
-+ 3rd Party Go packages
++ A 3rd Party Go package
   + [Otto](https://github.com/robertkrimen/otto) by Robert Krimen, MIT license
     + a JavaScript engine for Go
-  + [Bleve](https://github.com/blevesearch/bleve) by [Blevesearch](http://blevesearch.com), Apache License, Version 2.0
-    + think lucene-lite for Go
 
 ## Compile
 
@@ -33,7 +30,6 @@ Here's my basic approach to get things setup. I assume you've got *Golang* alrea
   go build
   go build cmds/ws/ws.go
   go build cmds/wsinit/wsinit.go
-  go build cmds/wsindexer/wsindexer.go
 ```
 
 If everything compiles fine then I do something like this--
@@ -41,7 +37,6 @@ If everything compiles fine then I do something like this--
 ```
   go install cmds/ws/ws.go
   go install cmds/wsinit/wsinit.go
-  go install cmds/wsindexer/wsindexer.go
 ```
 
 
@@ -63,10 +58,6 @@ _wsinit_ takes three actions
 + create self signed SSL certificates (e.g. etc/site.key, etc/site.pem)
 + suggests environment variable settings (e.g like you might put in etc/setup.conf)
 
-### _wsindexer_ features
-
-_wsindexer_ does one of two things - create a Bleve index or update a Bleve index
-
 
 ## Configuration
 
@@ -86,18 +77,15 @@ The standard set of environment variables are
   + default is empty, only checked if your WS_URL is starts with https://
 + WS_SSL_PEM the path the the SSL pem file
   + default is empty, only checked if your WS_URL is starts with https://
-+ WS_BLEVE_INDEX sets the path for the BLEVE index and turns on the search features
-  + default is empty, search is only enabled if this is defined
 
 ### command line options
 
-+ -h, --help displays the help documentation
 + -url overrides WS_URL
 + -htdocs overrides WS_HTDOCS
 + -jsdocs overrides WS_JSDOCS
 + -ssl-key overrides WS_SSL_KEY
 + -ssl-pem overrides WS_SSL_PEM
-+ -bleve-index overrides WS_BLEVE_INDEX
++ -h, --help displays the help documentation
 + -v, --version display the version of the command
 
 
@@ -127,19 +115,18 @@ Assuming server side JavaScript is enabled then the page rendered should have a
 content type of "text/html" with the body should be holding the paragraph and
 pre element.
 
-Some additional objects are provided to facilitate server side
+Some additional functions are provided to facilitate server side
 JavaScript development--
 
-+ http
-  + http.Get(url, array_of_headers) which performs a HTTP GET
-  + http.Post(url, array_of_headers, payload) which performs an HTTP POST
-+ os
-  + os.Getenv(varname) which will read an environment variable
-+ site
-  + site.Search(query, all, exact, excluded) a simple search service for your site
++ http related
+  + httpGet(url, array_of_headers) which performs a HTTP GET
+  + httpPost(url, array_of_headers, payload) which performs an HTTP POST
++ os related
+  + Getenv(varname) which will read an environment variable
 
 
 ## LICENSE
 
-copyright (c) 2014 - 2016 All rights reserved.
-Released under the [Simplified BSD License](http://opensource.org/licenses/bsd-license.php)
+copyright (c) 2014 - 2016, R. S. Doiel
+All rights reserved.
+Released under the [BSD 3 Clause License](http://opensource.org/licenses/BSD-3-Clause)
