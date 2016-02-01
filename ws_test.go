@@ -18,8 +18,10 @@ package ws
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 )
@@ -88,7 +90,7 @@ func TestConfigureString(t *testing.T) {
 	cfg.Getenv()
 
 	expected := fmt.Sprintf(`#!/bin/bash
-# generated %d-%02d-%02d by wsinit version %s
+# generated %d-%02d-%02d by ws version %s
 export WS_URL=%q
 export WS_HTDOCS=%q
 export WS_JSDOCS=%q
@@ -97,8 +99,8 @@ export WS_SSL_CERT=%q
 `, yr, mn, dy, Version, u, htdocs, jsdocs, sslkey, sslcert)
 
 	s := cfg.String()
-	if s != expected {
-		t.Errorf("found %s, expected %s", s, expected)
+	if strings.Compare(s, expected) != 0 {
+		t.Errorf("found\n%s\nexpected\n%s\n", s, expected)
 	}
 }
 
@@ -200,6 +202,66 @@ func TestConfigureInitializeProject(t *testing.T) {
 	}
 }
 
+func TestConfigureValidate(t *testing.T) {
+	cfg := new(Configuration)
+	u := "https://example.org"
+	htdocs := "testout/www-01/htdocs"
+	jsdocs := "testout/www-01/jsdocs"
+	sslkey := "testout/www-01/ssl/site.key"
+	sslcert := "testout/www-01/ssl/site.crt"
+
+	// Set some example configuration
+	os.Setenv("WS_URL", u)
+	os.Setenv("WS_HTDOCS", htdocs)
+	os.Setenv("WS_JSDOCS", jsdocs)
+	os.Setenv("WS_SSL_KEY", sslkey)
+	os.Setenv("WS_SSL_CERT", sslcert)
+	cfg.Getenv()
+	cfg.InitializeProject()
+
+	if err := cfg.Validate(); err != nil {
+		t.Errorf("Should have been valid %+v, %s", cfg, err)
+	}
+
+	u = "http://example.org"
+	htdocs = "testout/www-02/htdocs"
+	jsdocs = "testout/www-02/jsdocs"
+	sslkey = ""
+	sslcert = ""
+	os.Setenv("WS_URL", u)
+	os.Setenv("WS_HTDOCS", htdocs)
+	os.Setenv("WS_JSDOCS", jsdocs)
+	os.Setenv("WS_SSL_KEY", sslkey)
+	os.Setenv("WS_SSL_CERT", sslcert)
+	cfg.Getenv()
+	cfg.InitializeProject()
+
+	if err := cfg.Validate(); err != nil {
+		t.Errorf("Should have been valid %+v, %s", cfg, err)
+	}
+
+	os.Setenv("WS_URL", "https://example.org")
+	cfg.Getenv()
+	if err := cfg.Validate(); err == nil {
+		t.Errorf("https without ssl files, should have been invalid %+v, %s", cfg, err)
+	}
+
+	u = "http://example.org"
+	htdocs = "testout/www-02/htdocs"
+	jsdocs = "testout/www-02/htdocs/js"
+	sslkey = ""
+	sslcert = ""
+	os.Setenv("WS_URL", u)
+	os.Setenv("WS_HTDOCS", htdocs)
+	os.Setenv("WS_JSDOCS", jsdocs)
+	os.Setenv("WS_SSL_KEY", sslkey)
+	os.Setenv("WS_SSL_CERT", sslcert)
+	cfg.Getenv()
+	if err := cfg.Validate(); err == nil {
+		t.Errorf("jsdocs a child of htdocs, should have been invalid %+v, %s", cfg, err)
+	}
+}
+
 func TestReadJSFiles(t *testing.T) {
 	jsSources, err := ReadJSFiles("jsdocs")
 	if err != nil {
@@ -219,7 +281,7 @@ func TestReadJSFiles(t *testing.T) {
 }
 
 func TestJSEngine(t *testing.T) {
-	vm := NewJSEngine()
+	vm := NewJSEngine(nil, nil)
 	if vm == nil {
 		t.Errorf("should have created a new JavaScript VM")
 	}
@@ -298,5 +360,12 @@ func TestMain(m *testing.M) {
 	// Clean up any stale test data
 	os.RemoveAll("testout")
 	// Run tests
-	os.Exit(m.Run())
+	exitCode := m.Run()
+	if exitCode == 0 {
+		log.Println("Cleaning up")
+		os.RemoveAll("testout")
+	} else {
+		log.Println("Output saved in ./testout")
+	}
+	os.Exit(exitCode)
 }

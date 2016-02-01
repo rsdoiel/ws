@@ -22,6 +22,7 @@ import (
 	"crypto/rsa"
 	"crypto/x509"
 	"crypto/x509/pkix"
+	"encoding/json"
 	"encoding/pem"
 	"fmt"
 	"io/ioutil"
@@ -52,8 +53,23 @@ type Configuration struct {
 	SSLCert string
 }
 
+// JSRequest provides a struct for server side JS request processing
+type JSRequest struct {
+	URL    *url.URL               `json:"url"`
+	Method string                 `json:"method"`
+	Body   []byte                 `json:"body"`
+	Form   map[string]interface{} `json:"form"`
+}
+
+// JSResponse provides a structure for server side JS responses
+type JSResponse struct {
+	Code    int64               `json:"code,omitempty"`
+	Headers []map[string]string `json:"headers,omitempty"`
+	Content string              `json:"content,omitempty"`
+}
+
 var configFileTemplate = `#!/bin/bash
-# generated %d-%02d-%02d by wsinit version %s
+# generated %d-%02d-%02d by ws version %s
 export WS_URL=%q
 export WS_HTDOCS=%q
 export WS_JSDOCS=%q
@@ -83,6 +99,47 @@ func (config *Configuration) String() string {
 		u = config.URL.String()
 	}
 	return fmt.Sprintf(configFileTemplate, yr, mn, dy, Version, u, config.HTDocs, config.JSDocs, config.SSLKey, config.SSLCert)
+}
+
+// Validate performs a sanity check of the values in the configuration
+// Returns nil if OK otherwise returns error
+func (config *Configuration) Validate() error {
+	scheme := config.URL.Scheme
+	htdocs := config.HTDocs
+	jsdocs := config.JSDocs
+	sslkey := config.SSLKey
+	sslcert := config.SSLCert
+	if scheme == "https" {
+		if sslkey == "" || sslcert == "" {
+			return fmt.Errorf("Cannot use https without specifying SSL Cert and Key")
+		}
+		if _, err := os.Stat(sslkey); os.IsNotExist(err) {
+			return fmt.Errorf("Cannot find %s, %s", sslkey, err)
+		}
+		if _, err := os.Stat(sslcert); os.IsNotExist(err) {
+			return fmt.Errorf("Cannot find %s, %s", sslcert, err)
+		}
+	}
+	if _, err := os.Stat(htdocs); os.IsNotExist(err) {
+		return fmt.Errorf("Can't find %s, %s", htdocs, err)
+	}
+	if jsdocs != "" {
+		if _, err := os.Stat(jsdocs); os.IsNotExist(err) {
+			return fmt.Errorf("Can't find %s, %s", jsdocs, err)
+		}
+		htdir, err := filepath.Abs(htdocs)
+		if err != nil {
+			return fmt.Errorf("Can't determine htdocs path %s, %s", htdocs, err)
+		}
+		jsdir, err := filepath.Abs(jsdocs)
+		if err != nil {
+			return fmt.Errorf("Can't determine jsdocs path %s, %s", jsdocs, err)
+		}
+		if strings.HasPrefix(jsdir, htdir) == true {
+			return fmt.Errorf("Unsafe jsdocs location %s, is child of %s", jsdocs, htdocs)
+		}
+	}
+	return nil
 }
 
 // GenerateKeyAndCert will generate a new SSL Key/Cert pair if none exist.
@@ -155,6 +212,14 @@ func (config *Configuration) GenerateKeyAndCert() error {
 	}
 
 	log.Printf("Creating %s\n", config.SSLCert)
+	// make the directory if needed.
+	dname, _ := filepath.Split(config.SSLCert)
+	if _, err := os.Stat(dname); os.IsNotExist(err) {
+		err := os.MkdirAll(dname, 0770)
+		if err != nil {
+			return fmt.Errorf("Can't create directory %s, %s", dname, err)
+		}
+	}
 
 	certOut, err := os.Create(config.SSLCert)
 	if err != nil {
@@ -165,6 +230,14 @@ func (config *Configuration) GenerateKeyAndCert() error {
 	certOut.Close()
 	log.Printf("Wrote %s\n", config.SSLCert)
 
+	// make the directory if needed.
+	dname, _ = filepath.Split(config.SSLKey)
+	if _, err := os.Stat(dname); os.IsNotExist(err) {
+		err := os.MkdirAll(dname, 0770)
+		if err != nil {
+			return fmt.Errorf("Can't create directory %s, %s", dname, err)
+		}
+	}
 	log.Printf("Creating %s\n", config.SSLKey)
 	keyOut, err := os.OpenFile(config.SSLKey, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
 	if err != nil {
@@ -233,7 +306,7 @@ func ReadJSFiles(jsDocs string) (map[string][]byte, error) {
 
 // NewJSEngine creates a new JavaScript version machine from otto.New() but
 // adds additional functionality such as WS.Getenv(), WW.httpGet(), WS.httpPost()
-func NewJSEngine() *otto.Otto {
+func NewJSEngine(w http.ResponseWriter, r *http.Request) *otto.Otto {
 	vm := otto.New()
 	vm.Set("Getenv", func(call otto.FunctionCall) otto.Value {
 		if len(call.ArgumentList) != 1 {
@@ -260,25 +333,25 @@ func NewJSEngine() *otto.Otto {
 		client := &http.Client{}
 		req, err := http.NewRequest("GET", uri, nil)
 		if err != nil {
-			log.Fatalf("Can't create a GET request for %s, %s", uri, err)
+			log.Printf("Can't create a GET request for %s, %s", uri, err)
 		}
 		for _, header := range headers {
 			for k, v := range header {
 				req.Header.Set(k, v)
 			}
 		}
-		resp, err := client.Do(req)
+		res, err := client.Do(req)
 		if err != nil {
-			log.Fatalf("Can't connect to %s, %s", uri, err)
+			log.Printf("Can't connect to %s, %s", uri, err)
 		}
-		defer resp.Body.Close()
-		content, err := ioutil.ReadAll(resp.Body)
+		defer res.Body.Close()
+		content, err := ioutil.ReadAll(res.Body)
 		if err != nil {
-			log.Fatalf("Can't read response %s, %s", uri, err)
+			log.Printf("Can't read response %s, %s", uri, err)
 		}
 		result, err := vm.ToValue(fmt.Sprintf("%s", content))
 		if err != nil {
-			log.Fatalf("HttpGet(%q) error, %s", uri, err)
+			log.Printf("HttpGet(%q) error, %s", uri, err)
 		}
 		return result
 	})
@@ -294,35 +367,64 @@ func NewJSEngine() *otto.Otto {
 		err := call.Argument(1).ToStruct(&headers)
 		payload := call.Argument(2).String()
 		if err != nil {
-			log.Fatalf("Could not write headers to struct, %s", err)
+			log.Printf("Could not write headers to struct, %s", err)
 		}
 		buf := strings.NewReader(payload)
 
 		client := &http.Client{}
 		req, err := http.NewRequest("POST", uri, buf)
 		if err != nil {
-			log.Fatalf("Can't create a POST request %s, %s", uri, err)
+			log.Printf("Can't create a POST request %s, %s", uri, err)
 		}
 		for _, header := range headers {
 			for k, v := range header {
 				req.Header.Set(k, v)
 			}
 		}
-		resp, err := client.Do(req)
+		res, err := client.Do(req)
 		if err != nil {
-			log.Fatalf("Can't connect to %s, %s", uri, err)
+			log.Printf("Can't connect to %s, %s", uri, err)
 		}
-		defer resp.Body.Close()
-		content, err := ioutil.ReadAll(resp.Body)
+		defer res.Body.Close()
+		content, err := ioutil.ReadAll(res.Body)
 		if err != nil {
-			log.Fatalf("Can't read response %s, %s", uri, err)
+			log.Printf("Can't read response %s, %s", uri, err)
 		}
 		result, err := vm.ToValue(fmt.Sprintf("%s", content))
 		if err != nil {
-			log.Fatalf("HttpGet(%q) error, %s", uri, err)
+			log.Printf("HttpGet(%q) error, %s", uri, err)
 		}
 		return result
 	})
+
+	// Add request and reponse of available
+	req := new(JSRequest)
+	res := new(JSResponse)
+	route := ""
+	if r != nil {
+		route = r.URL.Path
+		req.URL = r.URL
+		req.Method = r.Method
+		// FIXME: need to handle GET, POST, PUT, DELETE here...
+		src, err := json.Marshal(req)
+		if err != nil {
+			log.Printf("Can't marshal request %s, %+v, %s", route, req, err)
+			http.Error(w, "Internal Server Error", 500)
+			return vm
+		}
+		vm.Eval(fmt.Sprintf(`var Request = %s;`, src))
+	}
+
+	if w != nil {
+		src, err := json.Marshal(res)
+		if err != nil {
+			log.Printf("Can't marshal response %s, %+v, %s", route, res, err)
+			http.Error(w, "Internal Server Error", 500)
+			return vm
+		}
+		vm.Eval(fmt.Sprintf(`var Response = %s;`, src))
+	}
+
 	return vm
 }
 
