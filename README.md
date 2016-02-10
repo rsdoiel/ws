@@ -23,6 +23,15 @@ will display the suggest setup.
 
 Here's my basic approach to get things setup. I assume you've got *Golang* already installed.
 
++ [ws](README.md) a nimple webserver for static content
+    + Built on Golangs native http/https modules
+    + Restricted file service, only from the docroot and no "dot files" are served
+    + No dynamic content support 
+    + Quick startup, everything logged to console for easy debugging or piping to a log processor
++ [ws js support](README.md) a nimple webserver for static and JavaScript generated dynamic content
+    + built on Robert Krimen's excellent [otto](https://github.com/robertkrimen/otto) JavaScript VM
+    + Mockup your dynamic content via JavaScript defined routes (great for creating JSON blobs used by a browser side demo)
+
 ```
   git clone https://github.com/rsdoiel/ws
   cd ws
@@ -120,6 +129,7 @@ JavaScript development--
 + os related
   + WS.getEnv(varname) which will read an environment variable
 
+Want to expand out the site quickly, write the HTML skeleton with markdown, sprinkle in some [shorthand](http://rsdoiel.github.io/shorthand) which can leverage some shell logic and now you have HTML pages with common nav, headers, and footers.
 
 ## LICENSE
 
