@@ -7,11 +7,9 @@ if [ "$GO" = "" ]; then
     exit 1
 fi
 # Install dependent libraries
-go get -u github.com/rsdoiel/otto
-# Now run tests
-go test
-# Now build everything
-mkdir -p bin
-go build -o bin/ws cmds/ws/ws.go
-go build -o bin/wsinit cmds/wsinit/wsinit.go
-echo "Binaries written to $(pwd)/bin"
+# Add from shorthand for generating website
+go get github.com/rsdoiel/shorthand
+## Used by ws js support
+go get github.com/rsdoiel/otto
+make
+make test

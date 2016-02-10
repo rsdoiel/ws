@@ -287,39 +287,39 @@ func TestJSEngine(t *testing.T) {
 	}
 
 	val, err := vm.Eval(`
-    Getenv != undefined
+    WS.getEnv != undefined
   `)
 	b, err := val.ToBoolean()
 	if err != nil {
-		t.Errorf("Error from Getenv != undefined, %s", err)
+		t.Errorf("Error from WS.getEnv != undefined, %s", err)
 	}
 	if b == false {
-		t.Errorf("Expected Getenv != undefined to return true, %b", b)
+		t.Errorf("Expected WS.getEnv != undefined to return true, %b", b)
 	}
 	val, err = vm.Eval(`
-    HttpGet != undefined
+    WS.httpGet != undefined
   `)
 	b, err = val.ToBoolean()
 	if err != nil {
-		t.Errorf("Error from HttpGet != undefined, %s", err)
+		t.Errorf("Error from WS.httpGet != undefined, %s", err)
 	}
 	if b == false {
-		t.Errorf("Expected HttpGet != undefined to return true, %b", b)
+		t.Errorf("Expected WS.httpGet != undefined to return true, %b", b)
 	}
 	val, err = vm.Eval(`
-    HttpPost != undefined
+    WS.httpPost != undefined
   `)
 	b, err = val.ToBoolean()
 	if err != nil {
-		t.Errorf("Error from HttpPost != undefined, %s", err)
+		t.Errorf("Error from WS.httpPost != undefined, %s", err)
 	}
 	if b == false {
-		t.Errorf("Expected HttpPost != undefined to return true, %b", b)
+		t.Errorf("Expected WS.httpPost != undefined to return true, %b", b)
 	}
 
 	err = os.Setenv("WS_TEST", "hello world")
 	val, err = vm.Eval(`
-    s = Getenv("WS_TEST");
+    s = WS.getEnv("WS_TEST");
     s;
   `)
 	if err != nil {

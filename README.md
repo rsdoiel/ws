@@ -23,6 +23,15 @@ will display the suggest setup.
 
 Here's my basic approach to get things setup. I assume you've got *Golang* already installed.
 
++ [ws](README.md) a nimple webserver for static content
+    + Built on Golangs native http/https modules
+    + Restricted file service, only from the docroot and no "dot files" are served
+    + No dynamic content support 
+    + Quick startup, everything logged to console for easy debugging or piping to a log processor
++ [ws js support](README.md) a nimple webserver for static and JavaScript generated dynamic content
+    + built on Robert Krimen's excellent [otto](https://github.com/robertkrimen/otto) JavaScript VM
+    + Mockup your dynamic content via JavaScript defined routes (great for creating JSON blobs used by a browser side demo)
+
 ```
   git clone https://github.com/rsdoiel/ws
   cd ws
@@ -44,7 +53,7 @@ If everything compiles fine then I do something like this--
 + http/https protocols
 + static file server
 + a simplified server side JavaScript platform
-  + if you need more, I suggest [NodeJS](http://nodejs.org)
+  + if you need more, check out [NodeJS](http://nodejs.org)
 + a project setup option called *init*
 
 *_ws_ init* takes three actions
@@ -115,11 +124,12 @@ Some additional functions are provided to facilitate server side
 JavaScript development--
 
 + http related
-  + httpGet(url, array_of_headers) which performs a HTTP GET
-  + httpPost(url, array_of_headers, payload) which performs an HTTP POST
+  + WS.httpGet(url, array_of_headers) which performs a HTTP GET
+  + WS.httpPost(url, array_of_headers, payload) which performs an HTTP POST
 + os related
-  + Getenv(varname) which will read an environment variable
+  + WS.getEnv(varname) which will read an environment variable
 
+Want to expand out the site quickly, write the HTML skeleton with markdown, sprinkle in some [shorthand](http://rsdoiel.github.io/shorthand) which can leverage some shell logic and now you have HTML pages with common nav, headers, and footers.
 
 ## LICENSE
 

@@ -41,7 +41,7 @@ import (
 
 const (
 	// Version is used as a release number number for ws, wsinit, wsindexer
-	Version = "0.0.6"
+	Version = "0.0.7"
 )
 
 // Configuration provides the basic settings used by _ws_ and _wsint_ commands.
@@ -308,23 +308,24 @@ func ReadJSFiles(jsDocs string) (map[string][]byte, error) {
 // adds additional functionality such as WS.Getenv(), WW.httpGet(), WS.httpPost()
 func NewJSEngine(w http.ResponseWriter, r *http.Request) *otto.Otto {
 	vm := otto.New()
-	vm.Set("Getenv", func(call otto.FunctionCall) otto.Value {
+	wsObject, _ := vm.Object(`WS = {}`)
+	wsObject.Set("getEnv", func(call otto.FunctionCall) otto.Value {
 		if len(call.ArgumentList) != 1 {
-			log.Println("Getenv() expect one environment variable name.")
+			log.Println("WS.getEnv() expect one environment variable name.")
 			result, _ := otto.ToValue("")
 			return result
 		}
 		env := call.Argument(0).String()
 		result, err := otto.ToValue(os.Getenv(env))
 		if err != nil {
-			log.Printf("Getenv() error, %s", err)
+			log.Printf("WS.getEnv() error, %s", err)
 		}
 		return result
 	})
-	vm.Set("HttpGet", func(call otto.FunctionCall) otto.Value {
+	wsObject.Set("httpGet", func(call otto.FunctionCall) otto.Value {
 		var headers []map[string]string
 		if len(call.ArgumentList) != 2 {
-			log.Printf("HttpGet() missing parameters, got %d", len(call.ArgumentList))
+			log.Printf("WS.httpGet() missing parameters, got %d", len(call.ArgumentList))
 		}
 
 		uri := call.Argument(0).String()
@@ -351,16 +352,16 @@ func NewJSEngine(w http.ResponseWriter, r *http.Request) *otto.Otto {
 		}
 		result, err := vm.ToValue(fmt.Sprintf("%s", content))
 		if err != nil {
-			log.Printf("HttpGet(%q) error, %s", uri, err)
+			log.Printf("WS.httpGet(%q) error, %s", uri, err)
 		}
 		return result
 	})
-	vm.Set("HttpPost", func(call otto.FunctionCall) otto.Value {
+	wsObject.Set("httpPost", func(call otto.FunctionCall) otto.Value {
 		var (
 			headers []map[string]string
 		)
 		if len(call.ArgumentList) != 3 {
-			log.Printf("HttpPost() missing parameters, got %d", len(call.ArgumentList))
+			log.Printf("WS.httpPost() missing parameters, got %d", len(call.ArgumentList))
 		}
 
 		uri := call.Argument(0).String()
@@ -392,7 +393,7 @@ func NewJSEngine(w http.ResponseWriter, r *http.Request) *otto.Otto {
 		}
 		result, err := vm.ToValue(fmt.Sprintf("%s", content))
 		if err != nil {
-			log.Printf("HttpGet(%q) error, %s", uri, err)
+			log.Printf("WS.httpGet(%q) error, %s", uri, err)
 		}
 		return result
 	})
