@@ -28,3 +28,4 @@ bin/*
 *.crt
 *.conf
 testout
+setup.bash

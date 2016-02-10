@@ -26,11 +26,9 @@ I have assumed your running some type of *NIX with Bash or Sh.
     - cd $GOPATH/src/ws
 3. Install the other Go packages needed
     - go get github.com/robertkrimen/otto
-    - go get github.com/blevesearch/bleve
 4. Compile _ws_, and _wsint_
     - go build
     - go build cmds/ws/ws.go
-    - go build cmds/wsinit/wsinit.go
     - go test
 5. Setup for testing
     - export WS_URL=http://localhost:8000

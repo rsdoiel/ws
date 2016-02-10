@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html>
+    <head>
+          <title>ws: A light weight webserver for static content development.</title>
+          <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/pure/0.5.0/pure-min.css">
+          <link rel="stylesheet" href="doc/css/style.css">
+    </head>
+    <body>
+        <header>
+        <h1>ws - a nimple webserver with friends</h1>
+
+        </header>
+        <section>
+        <h1>ws</h1>
+
+<h2>A nimble web server</h2>
+
+<p><em>ws</em> is a prototyping platform for web based services and websites.</p>
+
+<p><em>ws</em> started as a nimble static content web server.  It now includes
+support for server side JavaScript and can initialize a basic project
+layout. The <em>init</em> option generates a project directory
+structure, creates self signed SSL keys and displays suggested environment
+variables for use with <em>ws</em>.  If the directory structure already exists it
+will display the suggest setup.</p>
+
+<h2>Requirements</h2>
+
+<ul>
+<li><a href="http://golang.org">Golang</a> version 1.5.3 or better</li>
+<li>A 3rd Party Go package
+
+<ul>
+<li><a href="https://github.com/robertkrimen/otto">Otto</a> by Robert Krimen, MIT license</li>
+<li>a JavaScript interpreter written in Go</li>
+</ul></li>
+</ul>
+
+<h2>Compile</h2>
+
+<p>Here&rsquo;s my basic approach to get things setup. I assume you&rsquo;ve got <em>Golang</em> already installed.</p>
+
+<pre><code>  git clone https://github.com/rsdoiel/ws
+  cd ws
+  go get -u github.com/robertkrimen/otto
+  go test
+  go build
+  go build cmds/ws/ws.go
+</code></pre>
+
+<p>If everything compiles fine then I do something like this--</p>
+
+<pre><code>  go install cmds/ws/ws.go
+</code></pre>
+
+<h3><em>ws</em> features</h3>
+
+<ul>
+<li>http/https protocols</li>
+<li>static file server</li>
+<li>a simplified server side JavaScript platform
+
+<ul>
+<li>if you need more, check out <a href="http://nodejs.org">NodeJS</a></li>
+</ul></li>
+<li>a project setup option called <em>init</em></li>
+</ul>
+
+<p><em><em>ws</em> init</em> takes three actions</p>
+
+<ul>
+<li>create a basic site directory structure (e.g. htdocs, jsdocs, etc) if needed</li>
+<li>creates self signed SSL certificates (e.g. etc/site.key, etc/site.pem) if appropriate</li>
+<li>suggests environment variable settings (e.g like you might put in etc/setup.conf)</li>
+</ul>
+
+<h2>Configuration</h2>
+
+<p>Configuration for <em>ws</em>  can be passed directly from environment
+variables. That makes them container friendly.  The environment can be
+overwritten by command line options.</p>
+
+<p>The standard set of environment variables are</p>
+
+<ul>
+<li>WS_URL the URL to listen for by <em>ws</em>
+
+<ul>
+<li>default is <a href="http://localhost:8000">http://localhost:8000</a></li>
+</ul></li>
+<li>WS_HTDOCS the directory of your static content you need to serve
+
+<ul>
+<li>the default is ./htdocs</li>
+</ul></li>
+<li>WS_JSDOCS the directory for any server side JavaScript processing
+
+<ul>
+<li>the default is ./jsdocs (if not found then server side JavaScript is turned off)</li>
+</ul></li>
+<li>WS_SSL_KEY the path the the SSL key file (e.g. etc/ssl/site.key)
+
+<ul>
+<li>default is empty, only checked if your WS_URL is starts with https://</li>
+</ul></li>
+<li>WS_SSL_CERT the path the the SSL cert file (e.g. etc/ssl/site.crt)
+
+<ul>
+<li>default is empty, only checked if your WS_URL is starts with https://</li>
+</ul></li>
+</ul>
+
+<h3>command line options</h3>
+
+<ul>
+<li>-url overrides WS_URL</li>
+<li>-htdocs overrides WS_HTDOCS</li>
+<li>-jsdocs overrides WS_JSDOCS</li>
+<li>-ssl-key overrides WS_SSL_KEY</li>
+<li>-ssl-pem overrides WS_SSL_PEM</li>
+<li>-init triggers the initialization process</li>
+<li>-h, --help displays the help documentation</li>
+<li>-v, --version display the version of the command</li>
+</ul>
+
+<h2>A word about the Server Side JavaScript implementation</h2>
+
+<p><a href="https://github.com/robertkrimen/otto">otto</a> is a JavaScript virtual machine
+written by Robert Krimen. It is the engine that powers <em>ws</em> server side
+JavaScript capabilities. Each JavaScript file in the <em>jsdocs</em> directory tree
+becomes a URL end point or route. E.g. <em>jsdocs/example-1.js</em> becomes the
+route <em>/example-1</em>. <em>example-1</em>. Each of the server side JavaScript files
+should contain a closure accepting a &ldquo;Request&rdquo; and &ldquo;Response&rdquo; object as
+parameters.  E.g.</p>
+
+<pre><code class="language-JavaScript">    /* example-1.js - a simple example of Request and Response objects */
+    (function (req, res) {
+        var header = req.Header;
+
+        res.setHeader(&quot;content-type&quot;, &quot;text/html&quot;);
+        res.setContent(
+          &quot;&lt;p&gt;Here is the Header array received by this request&lt;/p&gt;&quot; +
+          &quot;&lt;pre&gt;&quot; + JSON.stringify(header) + &quot;&lt;/pre&gt;&quot;);
+    }(Request, Response));
+</code></pre>
+
+<p>Assuming server side JavaScript is enabled then the page rendered should have a
+content type of &ldquo;text/html&rdquo; with the body should be holding the paragraph and
+pre element.</p>
+
+<p>Some additional functions are provided to facilitate server side
+JavaScript development--</p>
+
+<ul>
+<li>http related
+
+<ul>
+<li>WS.httpGet(url, array_of_headers) which performs a HTTP GET</li>
+<li>WS.httpPost(url, array_of_headers, payload) which performs an HTTP POST</li>
+</ul></li>
+<li>os related
+
+<ul>
+<li>WS.getEnv(varname) which will read an environment variable</li>
+</ul></li>
+</ul>
+
+<h2>LICENSE</h2>
+
+<p>copyright &copy; 2014 - 2016, R. S. Doiel
+All rights reserved.
+Released under the <a href="http://opensource.org/licenses/BSD-3-Clause">BSD 3 Clause License</a></p>
+
+        </section>
+        <nav>
+        <ul>
+<li><a href="/">Home</a></li>
+<li><a href="doc/index.html">Documentation</a></li>
+<li><a href="doc/?main=TUTORIAL.md">Tutorial</a></li>
+</ul>
+
+        </nav>
+        <footer>
+        
+        </footer>
+    </body>
+</html>

@@ -44,7 +44,7 @@ If everything compiles fine then I do something like this--
 + http/https protocols
 + static file server
 + a simplified server side JavaScript platform
-  + if you need more, I suggest [NodeJS](http://nodejs.org)
+  + if you need more, check out [NodeJS](http://nodejs.org)
 + a project setup option called *init*
 
 *_ws_ init* takes three actions
@@ -115,10 +115,10 @@ Some additional functions are provided to facilitate server side
 JavaScript development--
 
 + http related
-  + httpGet(url, array_of_headers) which performs a HTTP GET
-  + httpPost(url, array_of_headers, payload) which performs an HTTP POST
+  + WS.httpGet(url, array_of_headers) which performs a HTTP GET
+  + WS.httpPost(url, array_of_headers, payload) which performs an HTTP POST
 + os related
-  + Getenv(varname) which will read an environment variable
+  + WS.getEnv(varname) which will read an environment variable
 
 
 ## LICENSE
