@@ -26,7 +26,7 @@ import (
 	"os"
 	"strconv"
 
-	"../../../ws"
+	"github.com/rsdoiel/ws"
 )
 
 // Flag options
