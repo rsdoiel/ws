@@ -36,7 +36,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/rsdoiel/otto"
+    // Caltech Library Packages
+	"github.com/caltechlibrary/otto"
 )
 
 const (
