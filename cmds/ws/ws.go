@@ -26,6 +26,7 @@ import (
 	"os"
 	"strconv"
 
+    // Local package
 	"github.com/rsdoiel/ws"
 )
 

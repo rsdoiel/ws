@@ -10,6 +10,6 @@ fi
 # Add from shorthand for generating website
 go get github.com/rsdoiel/shorthand
 ## Used by ws js support
-go get github.com/rsdoiel/otto
+go get github.com/caltechlibrary/otto
 make
 make test
