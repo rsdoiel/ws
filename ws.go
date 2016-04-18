@@ -36,8 +36,8 @@ import (
 	"strings"
 	"time"
 
-    // Caltech Library Packages
-	"github.com/caltechlibrary/otto"
+	// 3rd Party Packages
+	"github.com/robertkrimen/otto"
 )
 
 const (
