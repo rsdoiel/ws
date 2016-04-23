@@ -144,7 +144,7 @@ func makeJSHandler(route string, jsSource []byte) http.HandlerFunc {
 		}
 		val, _ := vm.Get("Response")
 		res := new(ws.JSResponse)
-		err = val.ToStruct(&res)
+		err = ws.ToStruct(val, &res)
 		if err != nil {
 			log.Printf("Can't unpack response %s, %s", route, err)
 			http.Error(w, "Internal Server Error", 500)

@@ -36,8 +36,8 @@ import (
 	"strings"
 	"time"
 
-    // Caltech Library Packages
-	"github.com/caltechlibrary/otto"
+	// 3rd Party Packages
+	"github.com/robertkrimen/otto"
 )
 
 const (
@@ -305,6 +305,32 @@ func ReadJSFiles(jsDocs string) (map[string][]byte, error) {
 	return jsSources, err
 }
 
+// ToStruct will attempt populate a struct passed in as a parameter.
+//
+// ToStruct returns an error if it runs into a problem.
+//
+// Example:
+// a := struct{One int, Two string}{}
+// val, _ := vm.Run(`(function (){ return {One: 1, Two: "two"}}())`)
+// _ := ToSruct(val, &a)
+// fmt.Printf("One: %d, Two: %s\n", a.One, a.Two)
+//
+func ToStruct(value otto.Value, aStruct interface{}) error {
+	raw, err := value.Export()
+	if err != nil {
+		return fmt.Errorf("failed to export value, %s", err)
+	}
+	src, err := json.Marshal(raw)
+	if err != nil {
+		return fmt.Errorf("failed to marshal value, %s", err)
+	}
+	err = json.Unmarshal(src, &aStruct)
+	if err != nil {
+		return fmt.Errorf("failed to unmarshal value, %s", err)
+	}
+	return nil
+}
+
 // NewJSEngine creates a new JavaScript version machine from otto.New() but
 // adds additional functionality such as WS.Getenv(), WW.httpGet(), WS.httpPost()
 func NewJSEngine(w http.ResponseWriter, r *http.Request) *otto.Otto {
@@ -330,7 +356,7 @@ func NewJSEngine(w http.ResponseWriter, r *http.Request) *otto.Otto {
 		}
 
 		uri := call.Argument(0).String()
-		err := call.Argument(1).ToStruct(&headers)
+		err := ToStruct(call.Argument(1), &headers)
 
 		client := &http.Client{}
 		req, err := http.NewRequest("GET", uri, nil)
@@ -366,7 +392,7 @@ func NewJSEngine(w http.ResponseWriter, r *http.Request) *otto.Otto {
 		}
 
 		uri := call.Argument(0).String()
-		err := call.Argument(1).ToStruct(&headers)
+		err := ToStruct(call.Argument(1), &headers)
 		payload := call.Argument(2).String()
 		if err != nil {
 			log.Printf("Could not write headers to struct, %s", err)
