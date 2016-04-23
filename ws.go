@@ -425,7 +425,7 @@ func NewJSEngine(w http.ResponseWriter, r *http.Request) *otto.Otto {
 		return result
 	})
 
-	// Add request and reponse of available
+	// Add request and response of available
 	req := new(JSRequest)
 	res := new(JSResponse)
 	route := ""

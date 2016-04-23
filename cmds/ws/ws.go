@@ -190,7 +190,7 @@ func main() {
 	// Merge the environment changes
 	cfg.Getenv()
 
-	// Run through intialiation process if requested.
+	// Run through initialization process if requested.
 	if initialize == true {
 		if cfg.HTDocs == "" || cfg.HTDocs == "." {
 			cfg.HTDocs = "htdocs"
