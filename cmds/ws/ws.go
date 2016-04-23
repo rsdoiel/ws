@@ -26,7 +26,7 @@ import (
 	"os"
 	"strconv"
 
-    // Local package
+	// Local package
 	"github.com/rsdoiel/ws"
 )
 
@@ -56,8 +56,10 @@ func usage() {
 
  OPTIONS
 `)
+	flag.VisitAll(func(f *flag.Flag) {
+		fmt.Printf("    -%s  (defaults to %s) %s\n", f.Name, f.DefValue, f.Usage)
+	})
 
-	flag.PrintDefaults()
 	fmt.Println(`
  EXAMPLES
 

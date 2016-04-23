@@ -131,6 +131,15 @@ JavaScript development--
 
 Want to expand out the site quickly, write the HTML skeleton with markdown, sprinkle in some [shorthand](http://rsdoiel.github.io/shorthand) which can leverage some shell logic and now you have HTML pages with common nav, headers, and footers.
 
+
+## Installation
+
+_ws_ can be installed with the *go get* command.
+
+```
+    go get github.com/rsdoiel/ws/...
+```
+
 ## LICENSE
 
 copyright (c) 2014 - 2016, R. S. Doiel
