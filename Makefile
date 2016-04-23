@@ -19,4 +19,5 @@ clean:
 
 test:
 	go test
+	gocyclo -over 15 .
 
