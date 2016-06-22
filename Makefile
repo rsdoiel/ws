@@ -11,13 +11,16 @@ lint:
 	gofmt -w cmds/ws/ws.go && golint cmds/ws/ws.go
 
 install: bin/ws ws.go
-	go install
-	go install cmds/ws/ws.go
+	env GOBIN=$HOME/bin go install
+	env GOBIN=$HOME/bin go install cmds/ws/ws.go
 
 clean: 
-	if [ -f bin/ws ]; then rm bin/ws; fi
+	if [ -d bin ]; then rm -fR bin; fi
+	if [ -d dist ]; then rm -fR dist; fi
 
 test:
 	go test
 	gocyclo -over 15 .
 
+release:
+	./mk-release.sh
