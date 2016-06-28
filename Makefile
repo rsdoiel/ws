@@ -11,8 +11,8 @@ lint:
 	gofmt -w cmds/ws/ws.go && golint cmds/ws/ws.go
 
 install: bin/ws ws.go
-	env GOBIN=$HOME/bin go install
-	env GOBIN=$HOME/bin go install cmds/ws/ws.go
+	env GOBIN=${HOME}/bin go install
+	env GOBIN=${HOME}/bin go install cmds/ws/ws.go
 
 clean: 
 	if [ -d bin ]; then rm -fR bin; fi
