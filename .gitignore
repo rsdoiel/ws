@@ -23,7 +23,10 @@ _testmain.go
 *.test
 
 # Project ignores
+dist/*
 bin/*
+*~
+*.swp
 *.key
 *.crt
 *.conf
