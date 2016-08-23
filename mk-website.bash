@@ -26,7 +26,7 @@ function MakePage () {
 
     echo "Rendering $html"
     $APP \
-	"title=text:ws: a simple webserver with friends" \
+	"title=text:ws: a nimble webserver with friends" \
         "nav=$nav" \
         "content=$content" \
         page.tmpl > $html
