@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ws: a simple webserver with friends</title>
+    <link href="css/site.css" rel="stylesheet" />
+<head>
+<body>
+    <header>
+        <h1>ws: a simple webserver with friends</h1>
+    </header>
+    <section><h1>Installation</h1>
+
+<h2>General go workspace setup</h2>
+
+<p>If you already have your golang workspace setup you can skip steps 1.
+I have assumed your running some type of *NIX with Bash or Sh.</p>
+
+<ol>
+<li>Setup our Go Workspace
+
+<ul>
+<li>Create your work space directory, PROJECT_NAME_HERE would be the name of your project. E.g.
+
+<ul>
+<li>mkdir -p $HOME/gocode/src</li>
+</ul></li>
+<li>Set GOPATH environment variable. E.g.
+
+<ul>
+<li>export GOPATH=$HOME/gocode</li>
+</ul></li>
+<li>Set GOBIN environment variable. E.g.
+
+<ul>
+<li>export GOBIN=$GOPATH</li>
+</ul></li>
+<li>Make sure Otto is available</li>
+</ul></li>
+</ol>
+
+<h2>Setup to build and test <em>ws</em></h2>
+
+<ol>
+<li>Checkout <em>ws</em> from github
+
+<ul>
+<li>Change to $GOPATH/src
+
+<ul>
+<li>cd $GOPATH/src</li>
+</ul></li>
+<li>Clone repository
+
+<ul>
+<li>git clone git@github.com:rsdoiel/ws.git</li>
+</ul></li>
+</ul></li>
+<li>Change to your <em>ws</em> directory. E.g.
+
+<ul>
+<li>cd $GOPATH/src/ws</li>
+</ul></li>
+<li>Install the other Go packages needed
+
+<ul>
+<li>go get github.com/robertkrimen/otto</li>
+</ul></li>
+<li>Compile <em>ws</em>, and <em>wsint</em>
+
+<ul>
+<li>go build</li>
+<li>go build cmds/ws/ws.go</li>
+<li>go test</li>
+</ul></li>
+<li>Setup for testing
+
+<ul>
+<li>export WS_URL=<a href="http://localhost:8000">http://localhost:8000</a></li>
+<li>export WS_HTDOCS=$(pwd)/htdocs</li>
+<li>export WS_JSDOCS=$(pwd)/jsdocs</li>
+<li>export WS_SSL_KEY=$(pwd)/etc/site.key</li>
+<li>export WS_SSL_PEM=$(pwd)/etc/site.pem</li>
+</ul></li>
+<li>Test web server with JavaScript support
+
+<ul>
+<li>Start the <em>ws</em> web server
+
+<ul>
+<li>./ws</li>
+</ul></li>
+<li>Try the following URLs in your favorite web browser
+
+<ul>
+<li><a href="http://localhost:8000">http://localhost:8000</a></li>
+<li><a href="http://localhost:8000/helloworld">http://localhost:8000/helloworld</a></li>
+</ul></li>
+<li>Kill the web server with Ctrl-C</li>
+</ul></li>
+<li>Experiment adding content, server side JavaScript, and restarting</li>
+</ol>
+</section>
+    <nav><ul>
+<li><a href="/">home</a></li>
+<li><a href="./">ws</a></li>
+<li><a href="license.html">LICENSE</a></li>
+<li><a href="install.html">Install</a></li>
+<li><a href="https://github.com/rsdoiel/ws">Github</a></li>
+</ul>
+</nav>
+    <footer>
+    copyright (c) 2016 R. S. Doiel
+    See: <a href="license.html">LICENSE</a>
+    </footer>
+</body>
+</html>
