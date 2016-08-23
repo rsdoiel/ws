@@ -1,17 +1,17 @@
 <!DOCTYPE html>
 <html>
-    <head>
-          <title>ws: A light weight webserver for static content development.</title>
-          <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/pure/0.5.0/pure-min.css">
-          <link rel="stylesheet" href="doc/css/style.css">
-    </head>
-    <body>
-        <header>
-        <h1>ws - a nimple webserver with friends</h1>
+<head>
+    <title>ws: a simple webserver with friends</title>
+    <link href="css/site.css" rel="stylesheet" />
+<head>
+<body>
+    <header>
+        <h1>ws: a simple webserver with friends</h1>
+    </header>
+    <section><p><a href="http://goreportcard.com/report/rsdoiel/ws"><img src="http://goreportcard.com/badge/rsdoiel/ws" alt="Go Report Card" /></a>
+<a href="https://opensource.org/licenses/BSD-3-Clause"><img src="https://img.shields.io/badge/License-BSD%203--Clause-blue.svg" alt="License" /></a></p>
 
-        </header>
-        <section>
-        <h1>ws</h1>
+<h1>ws</h1>
 
 <h2>A nimble web server</h2>
 
@@ -65,7 +65,7 @@ will display the suggest setup.</p>
   go build cmds/ws/ws.go
 </code></pre>
 
-<p>If everything compiles fine then I do something like this--</p>
+<p>If everything compiles fine then I do something like this&ndash;</p>
 
 <pre><code>  go install cmds/ws/ws.go
 </code></pre>
@@ -136,8 +136,8 @@ overwritten by command line options.</p>
 <li>-ssl-key overrides WS_SSL_KEY</li>
 <li>-ssl-pem overrides WS_SSL_PEM</li>
 <li>-init triggers the initialization process</li>
-<li>-h, --help displays the help documentation</li>
-<li>-v, --version display the version of the command</li>
+<li>-h, &ndash;help displays the help documentation</li>
+<li>-v, &ndash;version display the version of the command</li>
 </ul>
 
 <h2>A word about the Server Side JavaScript implementation</h2>
@@ -166,7 +166,7 @@ content type of &ldquo;text/html&rdquo; with the body should be holding the para
 pre element.</p>
 
 <p>Some additional functions are provided to facilitate server side
-JavaScript development--</p>
+JavaScript development&ndash;</p>
 
 <ul>
 <li>http related
@@ -184,23 +184,30 @@ JavaScript development--</p>
 
 <p>Want to expand out the site quickly, write the HTML skeleton with markdown, sprinkle in some <a href="http://rsdoiel.github.io/shorthand">shorthand</a> which can leverage some shell logic and now you have HTML pages with common nav, headers, and footers.</p>
 
+<h2>Installation</h2>
+
+<p><em>ws</em> can be installed with the <em>go get</em> command.</p>
+
+<pre><code>    go get github.com/rsdoiel/ws/...
+</code></pre>
+
 <h2>LICENSE</h2>
 
 <p>copyright &copy; 2014 - 2016, R. S. Doiel
 All rights reserved.
 Released under the <a href="http://opensource.org/licenses/BSD-3-Clause">BSD 3 Clause License</a></p>
-
-        </section>
-        <nav>
-        <ul>
-<li><a href="/">Home</a></li>
-<li><a href="doc/index.html">Documentation</a></li>
-<li><a href="doc/?main=TUTORIAL.md">Tutorial</a></li>
+</section>
+    <nav><ul>
+<li><a href="/">home</a></li>
+<li><a href="./">ws</a></li>
+<li><a href="license.html">LICENSE</a></li>
+<li><a href="install.html">Install</a></li>
+<li><a href="https://github.com/rsdoiel/ws">Github</a></li>
 </ul>
-
-        </nav>
-        <footer>
-        
-        </footer>
-    </body>
+</nav>
+    <footer>
+    copyright (c) 2016 R. S. Doiel
+    See: <a href="license.html">LICENSE</a>
+    </footer>
+</body>
 </html>
