@@ -143,8 +143,3 @@ _ws_ can be installed with the *go get* command.
     go get github.com/rsdoiel/ws/...
 ```
 
-## LICENSE
-
-copyright (c) 2014 - 2016, R. S. Doiel
-All rights reserved.
-Released under the [BSD 3 Clause License](http://opensource.org/licenses/BSD-3-Clause)
