@@ -23,8 +23,9 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
-	"strconv"
+	"path"
 
 	// Local package
 	"github.com/rsdoiel/ws"
@@ -32,20 +33,20 @@ import (
 
 // Flag options
 var (
-	help       bool
-	initialize bool
-	version    bool
-	uri        string
-	htdocs     string
-	jsdocs     string
-	sslkey     string
-	sslcert    string
-	cfg        *ws.Configuration
+	showHelp    bool
+	showVersion bool
+	showLicense bool
+	initialize  bool
+	uri         string
+	docRoot     string
+	sslKey      string
+	sslCert     string
+	cfg         *ws.Configuration
 )
 
-func usage() {
+func usage(fp *os.File, appName string) {
 	fmt.Println(`
- USAGE: ws [OPTIONS]
+ USAGE: %s [OPTIONS]
 
  OVERVIEW
 
@@ -55,70 +56,77 @@ func usage() {
  for uses the https protocol (e.g. ws -url https://localhost:8443 init).
 
  OPTIONS
-`)
+`, appName)
 	flag.VisitAll(func(f *flag.Flag) {
-		fmt.Printf("    -%s  (defaults to %s) %s\n", f.Name, f.DefValue, f.Usage)
+		if len(f.Name) > 1 {
+			fmt.Fprintf(fp, "    -%s, -%s\t%s\n", f.Name[0:1], f.Name, f.Usage)
+		}
 	})
 
-	fmt.Println(`
+	fmt.Fprintln(fp, `
  EXAMPLES
 
- Run a static web server using the content in the current directory
- (assumes the environment variables WS_HTDOCS and WS_JSDOCS are not defined).
+ Run web server using the content in the current directory
+ (assumes the environment variables WS_DOCROOT are not defined).
 
    ws
 
+ Run web server using a specified directory
+
+   ws /www/htdocs
+
  Setup a SSL base site saving the configuration in setup.conf.
 
-   ws -url https://localhost:8443 -init
+   ws -url https://localhost:8443 -docs /www/htdocs -init
    . setup.bash
    ws
 
  Setup a standard project without SSL.
 
-   ws -url http://localhost:8000 -init
+   ws -url http://localhost:8000 -docs $HOME/Sites/example.me -init
    . setup.bash
    ws
 
- Turn on JavaScript server side support by providing a path for WS_JSDOCS
- and another location for WS_HTDOCS using local machine certs.
-
-   ws -url https://localhost:8443 \
-      -key /etc/ssl/sites/mysite.key \
-      -cert /etc/ssl/sites/mysite.crt \
-      -htdocs $HOME/Sites \
-      -jsdocs ./jsdocs
 `)
-	os.Exit(0)
+}
+
+func license(fp *os.File, appName string) {
+	fmt.Fprintf(fp, `
+%s %s
+
+Copyright (c) 2014 - 2016, R. S. Doiel
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+
+1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+
+2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+
+3. Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+`, appName, ws.Version)
 }
 
 func init() {
-	cfg = new(ws.Configuration)
-	cfg.Getenv()
-	uri = cfg.URL.String()
-	if uri == "" {
-		uri = "http://localhost:8000"
-	}
-	// If htdocs is NOT specified then turn off Server Side JavaScript support.
-	htdocs = cfg.HTDocs
-	jsdocs = cfg.JSDocs
-	sslkey = cfg.SSLKey
-	sslcert = cfg.SSLCert
-	if htdocs == "" {
-		htdocs = "."
-		jsdocs = ""
-	}
-
-	flag.BoolVar(&help, "h", false, "Display this help message")
-	flag.BoolVar(&help, "help", false, "Display this help message")
-	flag.BoolVar(&version, "v", false, "Should version info")
-	flag.BoolVar(&version, "version", false, "Should version info")
+	flag.BoolVar(&showHelp, "h", false, "Display this help message")
+	flag.BoolVar(&showHelp, "help", false, "Display this help message")
+	flag.BoolVar(&showVersion, "v", false, "Should version info")
+	flag.BoolVar(&showVersion, "version", false, "Should version info")
+	flag.BoolVar(&showLicense, "l", false, "Should license info")
+	flag.BoolVar(&showLicense, "license", false, "Should license info")
+	flag.BoolVar(&initialize, "i", false, "Initialize a project")
 	flag.BoolVar(&initialize, "init", false, "Initialize a project")
-	flag.StringVar(&htdocs, "htdocs", htdocs, "Set the htdocs path")
-	flag.StringVar(&jsdocs, "jsdocs", jsdocs, "Set the jsdocs path, turns on server side JavaScript support")
-	flag.StringVar(&uri, "url", uri, "The protocal and hostname listen for as a URL")
-	flag.StringVar(&sslkey, "key", sslkey, "Set the path for the SSL Key")
-	flag.StringVar(&sslcert, "cert", sslcert, "Set the path for the SSL Cert")
+	flag.StringVar(&docRoot, "d", "", "Set the htdocs path")
+	flag.StringVar(&docRoot, "docs", "", "Set the htdocs path")
+	flag.StringVar(&uri, "u", "", "The protocal and hostname listen for as a URL")
+	flag.StringVar(&uri, "url", "", "The protocal and hostname listen for as a URL")
+	flag.StringVar(&sslKey, "k", "", "Set the path for the SSL Key")
+	flag.StringVar(&sslKey, "key", "", "Set the path for the SSL Key")
+	flag.StringVar(&sslCert, "c", "", "Set the path for the SSL Cert")
+	flag.StringVar(&sslCert, "cert", "", "Set the path for the SSL Cert")
 }
 
 func logRequest(r *http.Request) {
@@ -132,71 +140,57 @@ func logger(next http.Handler) http.Handler {
 	})
 }
 
-func makeJSHandler(route string, jsSource []byte) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		logRequest(r)
-		vm := ws.NewJSEngine(w, r)
-		_, err := vm.Eval(jsSource)
-		if err != nil {
-			log.Printf("JavaScript error %s, %s", route, err)
-			http.Error(w, "Internal Server Error", 500)
-			return
-		}
-		val, _ := vm.Get("Response")
-		res := new(ws.JSResponse)
-		err = ws.ToStruct(val, &res)
-		if err != nil {
-			log.Printf("Can't unpack response %s, %s", route, err)
-			http.Error(w, "Internal Server Error", 500)
-			return
-		}
-		statusCode, _ := strconv.Atoi(fmt.Sprintf("%d", res.Code))
-		w.Header().Set("Status-Code", fmt.Sprintf("%d %s", statusCode, http.StatusText(statusCode)))
-		for _, header := range res.Headers {
-			for k, v := range header {
-				w.Header().Set(k, v)
-			}
-		}
-		w.Write([]byte(res.Content))
-	}
-}
-
 func main() {
+	appName := path.Base(os.Args[0])
 	flag.Parse()
 
 	// Process flags and update the environment as needed.
-	if help == true {
-		usage()
-	}
-	if version == true {
-		fmt.Printf("ws version %s\n", ws.Version)
+	if showHelp == true {
+		usage(os.Stdout, appName)
 		os.Exit(0)
 	}
-	if uri != "" {
-		os.Setenv("WS_URL", uri)
+	if showLicense == true {
+		license(os.Stdout, appName)
+		os.Exit(0)
 	}
-	if htdocs != "" {
-		os.Setenv("WS_HTDOCS", htdocs)
+	if showVersion == true {
+		fmt.Printf("%s version %s\n", appName, ws.Version)
+		os.Exit(0)
 	}
-	if jsdocs != "" {
-		os.Setenv("WS_JSDOCS", jsdocs)
-	}
-	if sslkey != "" {
-		os.Setenv("WS_SSL_KEY", sslkey)
-	}
-	if sslcert != "" {
-		os.Setenv("WS_SSL_CERT", sslcert)
-	}
-	// Merge the environment changes
+
+	cfg = new(ws.Configuration)
+	cfg.SetDefaults()
 	cfg.Getenv()
+
+	// Merge command line options
+	if uri != "" {
+		u, err := url.Parse(uri)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Can't parse url %s, %s\n", uri, err)
+			os.Exit(1)
+		}
+		cfg.URL = u
+	}
+	if docRoot != "" {
+		cfg.DocRoot = docRoot
+	}
+	if sslKey != "" {
+		cfg.SSLKey = sslKey
+	}
+	if sslCert != "" {
+		cfg.SSLCert = sslCert
+	}
+
+	// setup from command line
+	args := flag.Args()
+	if len(args) > 0 {
+		cfg.DocRoot = args[0]
+	}
 
 	// Run through initialization process if requested.
 	if initialize == true {
-		if cfg.HTDocs == "" || cfg.HTDocs == "." {
-			cfg.HTDocs = "htdocs"
-		}
-		if cfg.JSDocs == "" {
-			cfg.JSDocs = "jsdocs"
+		if cfg.DocRoot == "" || cfg.DocRoot == "." {
+			cfg.DocRoot = "htdocs"
 		}
 		if cfg.URL.Scheme == "https" {
 			if cfg.SSLKey == "" {
@@ -215,8 +209,12 @@ func main() {
 		if err != nil {
 			log.Fatalf("Proposed configuration not valid, %s", err)
 		}
+		// FIXME: this should go in etc/...
 		ioutil.WriteFile("setup.bash", []byte(setup), 0660)
 		log.Println("Wrote setup to setup.bash")
+		// FIXME: generate a suitable systemd startup script example
+		// FIXME: generate a default templates
+		// FIXME: generate a css/site.css file in doc root
 		os.Exit(0)
 	}
 
@@ -226,26 +224,9 @@ func main() {
 		log.Fatalf("Invalid configuration, %s", err)
 	}
 
-	if cfg.JSDocs != "" {
-		log.Printf("JSDocs %s", cfg.JSDocs)
-		jsSourceFiles, err := ws.ReadJSFiles(cfg.JSDocs)
-		if err != nil {
-			log.Fatalf("Could not read files in %s, %s", cfg.JSDocs, err)
-		}
-		for fname, jsSource := range jsSourceFiles {
-			route, err := ws.JSPathToRoute(fname, cfg)
-			if err != nil {
-				log.Fatalf("%s", err)
-			}
-			log.Printf("Adding route %s for %s", route, fname)
-			jsHandler := makeJSHandler(route, jsSource)
-			http.HandleFunc(route, jsHandler)
-		}
-	}
-
-	log.Printf("HTDocs %s", cfg.HTDocs)
+	log.Printf("DocRoot %s", cfg.DocRoot)
 	log.Printf("Listening for %s", cfg.URL.Host)
-	http.Handle("/", http.FileServer(http.Dir(cfg.HTDocs)))
+	http.Handle("/", http.FileServer(http.Dir(cfg.DocRoot)))
 	if cfg.URL.Scheme == "https" {
 		http.ListenAndServeTLS(cfg.URL.Host, cfg.SSLCert, cfg.SSLKey, logger(http.DefaultServeMux))
 	} else {

@@ -22,73 +22,67 @@ import (
 	"crypto/rsa"
 	"crypto/x509"
 	"crypto/x509/pkix"
-	"encoding/json"
 	"encoding/pem"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"math/big"
 	"net"
-	"net/http"
 	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
-
-	// 3rd Party Packages
-	"github.com/robertkrimen/otto"
 )
 
 const (
 	// Version is used as a release number number for ws, wsinit, wsindexer
-	Version = "0.0.7"
+	Version = "0.0.8"
 )
 
 // Configuration provides the basic settings used by _ws_ and _wsint_ commands.
 type Configuration struct {
 	URL     *url.URL
-	HTDocs  string
-	JSDocs  string
+	DocRoot string
 	SSLKey  string
 	SSLCert string
-}
-
-// JSRequest provides a struct for server side JS request processing
-type JSRequest struct {
-	URL    *url.URL               `json:"url"`
-	Method string                 `json:"method"`
-	Body   []byte                 `json:"body"`
-	Form   map[string]interface{} `json:"form"`
-}
-
-// JSResponse provides a structure for server side JS responses
-type JSResponse struct {
-	Code    int64               `json:"code,omitempty"`
-	Headers []map[string]string `json:"headers,omitempty"`
-	Content string              `json:"content,omitempty"`
 }
 
 var configFileTemplate = `#!/bin/bash
 # generated %d-%02d-%02d by ws version %s
 export WS_URL=%q
-export WS_HTDOCS=%q
-export WS_JSDOCS=%q
+export WS_DOCROOT=%q
 export WS_SSL_KEY=%q
 export WS_SSL_CERT=%q
 `
+
+// SetDefaults sets the structure to common default values
+// + DocRoot = "."
+// + URL = http://localhost:8000
+func (config *Configuration) SetDefaults() {
+	u, _ := url.Parse("http://localhost:8000")
+	config.URL = u
+	config.DocRoot = "."
+}
 
 // Getenv scans the environment variables and updates the fields in
 // the configuration. If there is a problem parsing WS_URL then an
 // error is returned.
 func (config *Configuration) Getenv() error {
-	u, err := url.Parse(os.Getenv("WS_URL"))
-	config.URL = u
-	config.HTDocs = os.Getenv("WS_HTDOCS")
-	config.JSDocs = os.Getenv("WS_JSDOCS")
-	config.SSLKey = os.Getenv("WS_SSL_KEY")
-	config.SSLCert = os.Getenv("WS_SSL_CERT")
-	return err
+	if s := os.Getenv("WS_DOCROOT"); s != "" {
+		config.DocRoot = s
+	}
+	if s := os.Getenv("WS_SSL_KEY"); s != "" {
+		config.SSLKey = s
+	}
+	if s := os.Getenv("WS_SSL_CERT"); s != "" {
+		config.SSLCert = s
+	}
+	if s := os.Getenv("WS_URL"); s != "" {
+		u, err := url.Parse(s)
+		config.URL = u
+		return err
+	}
+	return nil
 }
 
 // String returns a multiline block of text suitable to save in a text file.
@@ -99,15 +93,14 @@ func (config *Configuration) String() string {
 	if config.URL != nil {
 		u = config.URL.String()
 	}
-	return fmt.Sprintf(configFileTemplate, yr, mn, dy, Version, u, config.HTDocs, config.JSDocs, config.SSLKey, config.SSLCert)
+	return fmt.Sprintf(configFileTemplate, yr, mn, dy, Version, u, config.DocRoot, config.SSLKey, config.SSLCert)
 }
 
 // Validate performs a sanity check of the values in the configuration
 // Returns nil if OK otherwise returns error
 func (config *Configuration) Validate() error {
 	scheme := config.URL.Scheme
-	htdocs := config.HTDocs
-	jsdocs := config.JSDocs
+	docRoot := config.DocRoot
 	sslkey := config.SSLKey
 	sslcert := config.SSLCert
 	if scheme == "https" {
@@ -121,24 +114,8 @@ func (config *Configuration) Validate() error {
 			return fmt.Errorf("Cannot find %s, %s", sslcert, err)
 		}
 	}
-	if _, err := os.Stat(htdocs); os.IsNotExist(err) {
-		return fmt.Errorf("Can't find %s, %s", htdocs, err)
-	}
-	if jsdocs != "" {
-		if _, err := os.Stat(jsdocs); os.IsNotExist(err) {
-			return fmt.Errorf("Can't find %s, %s", jsdocs, err)
-		}
-		htdir, err := filepath.Abs(htdocs)
-		if err != nil {
-			return fmt.Errorf("Can't determine htdocs path %s, %s", htdocs, err)
-		}
-		jsdir, err := filepath.Abs(jsdocs)
-		if err != nil {
-			return fmt.Errorf("Can't determine jsdocs path %s, %s", jsdocs, err)
-		}
-		if strings.HasPrefix(jsdir, htdir) == true {
-			return fmt.Errorf("Unsafe jsdocs location %s, is child of %s", jsdocs, htdocs)
-		}
+	if _, err := os.Stat(docRoot); os.IsNotExist(err) {
+		return fmt.Errorf("Can't find document root %s, %s", docRoot, err)
 	}
 	return nil
 }
@@ -258,8 +235,7 @@ func (config *Configuration) GenerateKeyAndCert() error {
 func (config *Configuration) InitializeProject() (string, error) {
 	// Only append SSL dir and files if config.URL.Scheme is https
 	directories := []string{
-		config.HTDocs,
-		config.JSDocs,
+		config.DocRoot,
 	}
 	if config.URL.Scheme == "https" {
 		sslKeyDir, _ := filepath.Split(config.SSLKey)
@@ -286,184 +262,4 @@ func (config *Configuration) InitializeProject() (string, error) {
 	}
 	// return a suggested config file or error
 	return config.String(), nil
-}
-
-// ReadJSFiles walks a directory tree and then return the results
-// as a map of paths and JS source code in []byte.
-func ReadJSFiles(jsDocs string) (map[string][]byte, error) {
-	jsSources := make(map[string][]byte)
-	err := filepath.Walk(jsDocs, func(path string, _ os.FileInfo, _ error) error {
-		if strings.HasSuffix(path, ".js") {
-			src, err := ioutil.ReadFile(path)
-			if err != nil {
-				return err
-			}
-			jsSources[path] = src
-		}
-		return nil
-	})
-	return jsSources, err
-}
-
-// ToStruct will attempt populate a struct passed in as a parameter.
-//
-// ToStruct returns an error if it runs into a problem.
-//
-// Example:
-// a := struct{One int, Two string}{}
-// val, _ := vm.Run(`(function (){ return {One: 1, Two: "two"}}())`)
-// _ := ToSruct(val, &a)
-// fmt.Printf("One: %d, Two: %s\n", a.One, a.Two)
-//
-func ToStruct(value otto.Value, aStruct interface{}) error {
-	raw, err := value.Export()
-	if err != nil {
-		return fmt.Errorf("failed to export value, %s", err)
-	}
-	src, err := json.Marshal(raw)
-	if err != nil {
-		return fmt.Errorf("failed to marshal value, %s", err)
-	}
-	err = json.Unmarshal(src, &aStruct)
-	if err != nil {
-		return fmt.Errorf("failed to unmarshal value, %s", err)
-	}
-	return nil
-}
-
-// NewJSEngine creates a new JavaScript version machine from otto.New() but
-// adds additional functionality such as WS.Getenv(), WW.httpGet(), WS.httpPost()
-func NewJSEngine(w http.ResponseWriter, r *http.Request) *otto.Otto {
-	vm := otto.New()
-	wsObject, _ := vm.Object(`WS = {}`)
-	wsObject.Set("getEnv", func(call otto.FunctionCall) otto.Value {
-		if len(call.ArgumentList) != 1 {
-			log.Println("WS.getEnv() expect one environment variable name.")
-			result, _ := otto.ToValue("")
-			return result
-		}
-		env := call.Argument(0).String()
-		result, err := otto.ToValue(os.Getenv(env))
-		if err != nil {
-			log.Printf("WS.getEnv() error, %s", err)
-		}
-		return result
-	})
-	wsObject.Set("httpGet", func(call otto.FunctionCall) otto.Value {
-		var headers []map[string]string
-		if len(call.ArgumentList) != 2 {
-			log.Printf("WS.httpGet() missing parameters, got %d", len(call.ArgumentList))
-		}
-
-		uri := call.Argument(0).String()
-		err := ToStruct(call.Argument(1), &headers)
-
-		client := &http.Client{}
-		req, err := http.NewRequest("GET", uri, nil)
-		if err != nil {
-			log.Printf("Can't create a GET request for %s, %s", uri, err)
-		}
-		for _, header := range headers {
-			for k, v := range header {
-				req.Header.Set(k, v)
-			}
-		}
-		res, err := client.Do(req)
-		if err != nil {
-			log.Printf("Can't connect to %s, %s", uri, err)
-		}
-		defer res.Body.Close()
-		content, err := ioutil.ReadAll(res.Body)
-		if err != nil {
-			log.Printf("Can't read response %s, %s", uri, err)
-		}
-		result, err := vm.ToValue(fmt.Sprintf("%s", content))
-		if err != nil {
-			log.Printf("WS.httpGet(%q) error, %s", uri, err)
-		}
-		return result
-	})
-	wsObject.Set("httpPost", func(call otto.FunctionCall) otto.Value {
-		var (
-			headers []map[string]string
-		)
-		if len(call.ArgumentList) != 3 {
-			log.Printf("WS.httpPost() missing parameters, got %d", len(call.ArgumentList))
-		}
-
-		uri := call.Argument(0).String()
-		err := ToStruct(call.Argument(1), &headers)
-		payload := call.Argument(2).String()
-		if err != nil {
-			log.Printf("Could not write headers to struct, %s", err)
-		}
-		buf := strings.NewReader(payload)
-
-		client := &http.Client{}
-		req, err := http.NewRequest("POST", uri, buf)
-		if err != nil {
-			log.Printf("Can't create a POST request %s, %s", uri, err)
-		}
-		for _, header := range headers {
-			for k, v := range header {
-				req.Header.Set(k, v)
-			}
-		}
-		res, err := client.Do(req)
-		if err != nil {
-			log.Printf("Can't connect to %s, %s", uri, err)
-		}
-		defer res.Body.Close()
-		content, err := ioutil.ReadAll(res.Body)
-		if err != nil {
-			log.Printf("Can't read response %s, %s", uri, err)
-		}
-		result, err := vm.ToValue(fmt.Sprintf("%s", content))
-		if err != nil {
-			log.Printf("WS.httpGet(%q) error, %s", uri, err)
-		}
-		return result
-	})
-
-	// Add request and response of available
-	req := new(JSRequest)
-	res := new(JSResponse)
-	route := ""
-	if r != nil {
-		route = r.URL.Path
-		req.URL = r.URL
-		req.Method = r.Method
-		// FIXME: need to handle GET, POST, PUT, DELETE here...
-		src, err := json.Marshal(req)
-		if err != nil {
-			log.Printf("Can't marshal request %s, %+v, %s", route, req, err)
-			http.Error(w, "Internal Server Error", 500)
-			return vm
-		}
-		vm.Eval(fmt.Sprintf(`var Request = %s;`, src))
-	}
-
-	if w != nil {
-		src, err := json.Marshal(res)
-		if err != nil {
-			log.Printf("Can't marshal response %s, %+v, %s", route, res, err)
-			http.Error(w, "Internal Server Error", 500)
-			return vm
-		}
-		vm.Eval(fmt.Sprintf(`var Response = %s;`, src))
-	}
-
-	return vm
-}
-
-// JSPathToRoute converts a JSDocs path to a JavaScript file into a web server
-// route.
-func JSPathToRoute(p string, cfg *Configuration) (string, error) {
-	// Check to see if the route is relative to JSDocs
-	rel, err := filepath.Rel(cfg.JSDocs, p)
-	if err != nil {
-		return "", err
-	}
-	ext := filepath.Ext(rel)
-	return "/" + strings.TrimSuffix(rel, ext), nil
 }

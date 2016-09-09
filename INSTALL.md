@@ -1,47 +1,54 @@
 
 # Installation
 
-## General go workspace setup
+*ws* and companions are command line programs run from a shell like Bash. You can find compiled
+versions in [releases/latest](https://github.com/rsdoiel/ws/releases/latest) 
+on Github. What you want to download is the zip file named *ws-binary-release.zip*. Inside
+the zip file look for the directory that matches your computer and copy that someplace
+defined in your path (e.g. $HOME/bin). 
 
-If you already have your golang workspace setup you can skip steps 1.
-I have assumed your running some type of *NIX with Bash or Sh.
+Compiled versions are available for Mac OS X (amd64 processor), Linux (amd64), Windows
+(amd64) and Rapsberry Pi (both ARM6 and ARM7)
 
-1. Setup our Go Workspace
-    + Create your work space directory, PROJECT_NAME_HERE would be the name of your project. E.g.
-        - mkdir -p $HOME/gocode/src
-    + Set GOPATH environment variable. E.g.
-        - export GOPATH=$HOME/gocode
-    + Set GOBIN environment variable. E.g.
-        - export GOBIN=$GOPATH
-    + Make sure Otto is available
+## Mac OS X
 
-## Setup to build and test _ws_
+1. Go to [github.com/rsdoiel/ws/releases/latest](https://github.com/rsdoiel/ws/releases/latest)
+2. Click on the green "ws-binary-release.zip" link and download
+3. Open a finder window and find the downloaded file and unzip it (e.g. ws-binary-release.zip)
+4. Look in the unziped folder and find dist/macosx-amd64/
+5. Drag (or copy) the files inside to a "bin" directory in your path 
+    + e.g. `cp ~/Downloads/ws-binary-release/dist/macosx-amd64/* ~/bin/`
+6. Open and "Terminal" and run `ws -h` and run `reldocpath -h`
 
-2. Checkout _ws_ from github
-    + Change to $GOPATH/src
-        - cd $GOPATH/src
-    + Clone repository
-        - git clone git@github.com:rsdoiel/ws.git
-2. Change to your _ws_ directory. E.g.
-    - cd $GOPATH/src/ws
-3. Install the other Go packages needed
-    - go get github.com/robertkrimen/otto
-4. Compile _ws_, and _wsint_
-    - go build
-    - go build cmds/ws/ws.go
-    - go test
-5. Setup for testing
-    - export WS_URL=http://localhost:8000
-    - export WS_HTDOCS=$(pwd)/htdocs
-    - export WS_JSDOCS=$(pwd)/jsdocs
-    - export WS_SSL_KEY=$(pwd)/etc/site.key
-    - export WS_SSL_PEM=$(pwd)/etc/site.pem
-6. Test web server with JavaScript support
-    + Start the _ws_ web server
-        - ./ws
-    + Try the following URLs in your favorite web browser
-        - http://localhost:8000
-        - http://localhost:8000/helloworld
-    + Kill the web server with Ctrl-C
-7. Experiment adding content, server side JavaScript, and restarting
+## Windows
+
+1. Go to [github.com/rsdoiel/ws/releases/latest](https://github.com/rsdoiel/ws/releases/latest)
+2. Click on the green "ws-binary-release.zip" link and download
+3. Open the file manager find the downloaded file and unzip it (e.g. ws-binary-release.zip)
+4. Look in the unziped folder and find dist/windows-amd64/ws.exe
+5. Drag (or copy) the *ws.exe* and other files ending in ".exe" to a "bin" directory in your path
+6. Open Bash and and run `ws -h` and run `reldocpath -h`
+
+## Linux
+
+1. Go to [github.com/rsdoiel/ws/releases/latest](https://github.com/rsdoiel/ws/releases/latest)
+2. Click on the green "ws-binary-release.zip" link and download
+3. find the downloaded zip file and unzip it (e.g. unzip ~/Downloads/ws-binary-release.zip)
+4. In the unziped directory and find for dist/linux-amd64/
+5. copy the fils in that directory to a "bin" directory 
+    + e.g. `cp ~/Downloads/ws-binary-release/dist/linux-amd64/* ~/bin/`
+6. From the shell prompt run `ws -h` and run `reldocpath -h`
+
+## Raspberry Pi
+
+If you are using a Raspberry Pi 2 or later use the ARM7 binary, ARM6 is only for the first generaiton Raspberry Pi.
+
+1. Go to [github.com/rsdoiel/ws/releases/latest](https://github.com/rsdoiel/ws/releases/latest)
+2. Click on the green "ws-binary-release.zip" link and download
+3. find the downloaded zip file and unzip it (e.g. unzip ~/Downloads/ws-binary-release.zip)
+4. In the unziped directory and find for dist/raspberrypi-arm7/
+5. copy the files in that directory to a "bin" directory 
+    + e.g. `cp ~/Downloads/ws-binary-release/dist/raspberrypi-arm7/ws ~/bin/`
+    + if you are using an original Raspberry Pi you should copy the ARM6 version instead
+6. From the shell prompt run `ws -h` and run `reldocpath -h`
 
