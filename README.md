@@ -88,7 +88,7 @@ The standard set of environment variables are
 ### command line options
 
 + -u, -url overrides WS_URL
-+ -d, -docs overrides WS_HTDOCS
++ -d, -docs overrides WS_DOCROOT
 + -k, -key overrides WS_SSL_KEY
 + -c, -cert overrides WS_SSL_CERT
 + -i, -init triggers the initialization process
