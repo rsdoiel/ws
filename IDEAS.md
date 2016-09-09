@@ -7,9 +7,9 @@
 
 ## Someday, maybe
 
++ Integrate [mkpage](https://rsdoiel.github.io/mkpage) site development mode 
 + Add support for ACME SSL/TLS certs (SSL Everywhere)
 + Add support for on the fly compression (gzip) of text/* content types
-+ Integrate [mkpage](https://rsdoiel.github.io/mkpage) site development mode 
 + Look at [Echo](http://echo.labstack.com/) router and see if this is a useful way to support FastCGI
 + Look at [libsecurity](https://developer.ibm.com/open/libsecurity/) and see how it might help *ws* stay safe.
 + Consider adding site search support via Bleve search integration
