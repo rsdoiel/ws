@@ -45,7 +45,7 @@ var (
 )
 
 func usage(fp *os.File, appName string) {
-	fmt.Println(`
+	fmt.Printf(`
  USAGE: %s [OPTIONS] [DOCROOT]
 
  OVERVIEW
