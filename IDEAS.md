@@ -9,10 +9,16 @@
 
 + Integrate [mkpage](https://rsdoiel.github.io/mkpage) site development mode 
 + Add support for ACME SSL/TLS certs (SSL Everywhere)
+    + this may wind up in a future version Golang http package
 + Add support for on the fly compression (gzip) of text/* content types
-+ Look at [Echo](http://echo.labstack.com/) router and see if this is a useful way to support FastCGI
 + Look at [libsecurity](https://developer.ibm.com/open/libsecurity/) and see how it might help *ws* stay safe.
 + Consider adding site search support via Bleve search integration
++ Consider including a mime type map from file exitension setting
++ Consider adding support to treat a XLSX document as a read only DB.
+    + would need a good mapping to RESTful URLs row/cell range per URL end point
++ Consider assigning a default template for presenting Markdown files as HTML
+    + If file is requested as *.html but only *.md exists, use default template to render as *.html
++ Consider adding support for S3 like options for serving header content
 
 
 ## Old ideas
