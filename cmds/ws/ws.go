@@ -160,8 +160,14 @@ func main() {
 
 	http.Handle("/", http.FileServer(http.Dir(docRoot)))
 	if u.Scheme == "https" {
-		http.ListenAndServeTLS(u.Host, sslCert, sslKey, logger(http.DefaultServeMux))
+		err := http.ListenAndServeTLS(u.Host, sslCert, sslKey, ws.RequestLogger(ws.StaticRouter(http.DefaultServeMux)))
+		if err != nil {
+			log.Fatalf("%s", err)
+		}
 	} else {
-		http.ListenAndServe(u.Host, logger(http.DefaultServeMux))
+		err := http.ListenAndServe(u.Host, ws.RequestLogger(ws.StaticRouter(http.DefaultServeMux)))
+		if err != nil {
+			log.Fatalf("%s", err)
+		}
 	}
 }

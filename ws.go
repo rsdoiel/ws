@@ -16,6 +16,14 @@
 //
 package ws
 
+import (
+	"fmt"
+	"log"
+	"net/http"
+	"path"
+	"strings"
+)
+
 const (
 	// Version is used as a release number number for ws, wsinit, wsindexer
 	Version = "v0.0.9"
@@ -39,3 +47,50 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
 `
 )
+
+// IsDotPath checks to see if a path is requested with a dot file (e.g. docs/.git/* or docs/.htaccess)
+func IsDotPath(p string) bool {
+	for _, part := range strings.Split(path.Clean(p), "/") {
+		if strings.HasPrefix(part, "..") == false && strings.HasPrefix(part, ".") == true && len(part) > 1 {
+			return true
+		}
+	}
+	return false
+}
+
+// RequestLogger logs the request based on the request object passed into it.
+func RequestLogger(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		q := r.URL.Query()
+		if len(q) > 0 {
+			log.Printf("Request: %s Path: %s RemoteAddr: %s UserAgent: %s Query: %+v\n", r.Method, r.URL.Path, r.RemoteAddr, r.UserAgent(), q)
+		} else {
+			log.Printf("Request: %s Path: %s RemoteAddr: %s UserAgent: %s\n", r.Method, r.URL.Path, r.RemoteAddr, r.UserAgent())
+		}
+		next.ServeHTTP(w, r)
+	})
+}
+
+// ResponseLogger logs the response based on a request, status and error message
+func ResponseLogger(r *http.Request, status int, err error) {
+	q := r.URL.Query()
+	if len(q) > 0 {
+		log.Printf("Response: %s Path: %s RemoteAddr: %s UserAgent: %s Query: %+v Status: %d, %s %q\n", r.Method, r.URL.Path, r.RemoteAddr, r.UserAgent(), q, status, http.StatusText(status), err)
+	} else {
+		log.Printf("Response: %s Path: %s RemoteAddr: %s UserAgent: %s Status: %d, %s %q\n", r.Method, r.URL.Path, r.RemoteAddr, r.UserAgent(), status, http.StatusText(status), err)
+	}
+}
+
+// StaticRouter scans the request object to either add a .html extension or prevent serving a dot file path
+func StaticRouter(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// If given a dot file path, send forbidden
+		if IsDotPath(r.URL.Path) == true {
+			http.Error(w, "Forbidden", 403)
+			ResponseLogger(r, 403, fmt.Errorf("Forbidden, requested a dot path"))
+			return
+		}
+		// If we make it this far, fall back to the default handler
+		next.ServeHTTP(w, r)
+	})
+}
