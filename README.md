@@ -6,17 +6,16 @@
 
 ## A nimble web server
 
-_ws_ is a prototyping platform for websites.
-
-_ws_ started as a nimble static content web server.  
-It supports an *init* option which generates a project directory
-structure, creates self signed SSL keys and displays suggested environment
-variables for use with _ws_.  If the directory structure already exists it
-will display the suggest setup.
+_ws_ is a nimble static content web server.  That's it, no bells,
+no whistles. It can serve http and https version 1 and 2 websites
+as it is a minimal solution built on Go's http/https packages.
+By default it serves the content out your current working directory
+as http://localhost:8000.  It will NOT serve out content in directories
+beginning with a period (e.g. .ssh, .git).
 
 ## Requirements
 
-+ [Golang](http://golang.org) version 1.7.1 or better
++ [Golang](http://golang.org) version 1.7.3 or better
 
 ## Setup
 
@@ -59,14 +58,6 @@ You can also grab one of the precompiled version at https://github.com/rsdoiel/w
 
 + http/https protocols
 + static file server
-+ a project setup option called *init*
-
-*_ws_ init* takes three actions
-
-+ create a basic site directory structure (e.g. htdocs, etc) if needed
-+ creates self signed SSL certificates (e.g. etc/site.key, etc/site.pem) if appropriate
-+ suggests environment variable settings (e.g like you might put in etc/setup.conf)
-
 
 ## Configuration
 
@@ -91,7 +82,6 @@ The standard set of environment variables are
 + -d, -docs overrides WS_DOCROOT
 + -k, -key overrides WS_SSL_KEY
 + -c, -cert overrides WS_SSL_CERT
-+ -i, -init triggers the initialization process
 + -h, -help displays the help documentation
 + -v, -version display the version of the command
 + -l, -license display software license

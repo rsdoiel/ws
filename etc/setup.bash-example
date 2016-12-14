@@ -1,0 +1,15 @@
+#!/bin/bash
+
+#
+# This is an example default configuration for _ws_
+#
+
+# Set the document root
+export WS_DOCROOT=/Sites
+# Set the url to listen on
+export WS_URL=https://localhost:8443
+# Set the path to the SSL Key
+export WS_SSL_KEY=/etc/ws/key.pem
+# Set the path to the SSL Cert
+export WS_SSL_CERT=/etc/ws/cert.pem
+

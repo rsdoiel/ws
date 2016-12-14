@@ -15,12 +15,10 @@ Make sure _ws_ and friends are in your path. To run for basic _httpd_ service ch
 
 ```shell
     cd public_html
-    ws .
+    ws
 ```
 
 When _ws_ starts up you'll some configuration information and the URL that it is listening for. Notice the hostname is *localhost* and port is *8000*.  Either can be configured either via command line options (e.g. -H and -p) or through environment variables (e.g. WS_HOST and WS_PORT). By default the root document directory will be your current work directory. Again this can be configure via the command line or environment variables (e.g. -d and WS_DOCROOT). Log messages are display to the console and to stop the webserver you can press Control-C or use the Unix *kill* command and the process id.
-
-Getting a list of all the option that _ws_ (or _wsjs_) supports use the command line options of "-h" or "--help". Most options have a long and short form.
 
 ```shell
     ws --help
@@ -30,7 +28,7 @@ Getting a list of all the option that _ws_ (or _wsjs_) supports use the command 
 Here is an example of using _ws_ to server the document root of */www*.
 
 ```shell
-    ws -htdocs=/www
+    ws -docs=/www
 ```
 
 Notice that we used the long form of the option in this case. It works the same way of the environment variable and "-d".  Here is an example of configuration the above setting in a Bash script.
@@ -47,31 +45,28 @@ It is easy to use Bash files as configuration for _ws_. Just source your file wi
 ```bash
     #!/bin/bash
     export WS_DOCROOT=/www
-    export WS_HOST="me.example.org"
-    export WS_PORT="80"
+    export WS_URL="http://me.example.org:80"
 ```
 
-This would have _ws_ listen for http://me.example.org request on the default http port of 80. Note that on most system you'll your account will need special
-privilleges to run on port 80.
+This would have _ws_ listen for http://me.example.org request on the default http port of 80. Note that on most system you'll your account will need special privilleges to run on port 80.
 
 Here is the equivallent using only the command line.
 
 ```shell
-    ws -d /www -H me.example.org -p 80
+    ws -d /www -u http://me.example.org:80
 ```
 
 The long option name version.
 
 
 ```shell
-    ws -htdocs=/www -host=me.example.org -port=80
+    ws -docs=/www -url=http://me.example.org:80
 ```
 
 The environment variables for _http_ service are
 
 + WS_DOCROOT
-+ WS_HOST
-+ WS_PORT
++ WS_URL
 
 
 ## https support
@@ -80,15 +75,15 @@ If you want to run with _https_ support it works on the same principles as _http
 
 1. It needs to knows where to find your *cert.pem*
 2. It needs to know where to find your  *key.pem*
-3. It needs to know to use SSL/TLS support.
+3. You use the "https:" instead of "http:" in WS_URL or -url options
 
-By default _ws_ will look for *cert.pem* and *key.pem* in your *$HOME/etc/ws* directory. You can specify alternate locations with the _-cert_ and _-key_ command line options or the _WS_CERT_ and _WS_KEY_ environment variables.  To turn _https_ support on you need the option _-tls=true_ or the environment variable _WS_TLS_ set to "true".
+By _ws_ will look environment variables for *cert.pem* and *key.pem* in the values of _WS_SSL_KEY_ and _WS_SSL_CERT_. You can also specify where to find them via the _-key_ and _-cert_ command line option.
 
 
 ### Command line example
 
 ```bash
-    ws -tls=true -cert=etc/ssl/my-cert.pem -key=etc/ssl/my-key.pem -url=https://me.example.org:443 -htdocs=/www
+    ws -cert=etc/ssl/my-cert.pem -key=etc/ssl/my-key.pem -url=https://me.example.org:443 -htdocs=/www
 ```
 
 ### The environment version
@@ -96,62 +91,10 @@ By default _ws_ will look for *cert.pem* and *key.pem* in your *$HOME/etc/ws* di
 ```bash
     #!/bin/bash
     export WS_HTDOCS=/www
-    export WS_URL="http://me.example.org:443"
+    export WS_URL="https://me.example.org:443"
     export WS_CERT=/etc/ssl/cert.pem
     export WS_KEY=/etc/ssl/key.pem
 ```
 
 Like the *http* example running on port 443 will likely require a privilleged account.
-
-
-## Generating TLS certificates and keys
-
-_ws_ comes with _init_ for generating self-signed certificates and keys among other things.
-
-```shell
-    ws -init
-```
-
-This is an interactive problem. It will prompt for information about where to store the certificates. Alternatively if you want to also setup a basic directory structure you can use the _wsinit_ command which will include the option of generating (or replacing) the desired SSL certificates. Both are interactive.
-
-```shell
-    ws -init
-```
-
-### Generate a project folder and certificates
-
-_ws_ comes with _init_ for interactively generating a project tree and certificates.
-
-```SHELL
-    ws -init
-```
-
-## Dynamic content via server side JavaScript
-
-_wsjs_ provides a mechanism to define routes using JavaScript files where the JavaScript files can process teh http/https request and populate the http/https response. It relies on Robert Krimen's otto for enterpretting JavaScript.
-
-### Otto
-
-[otto](https://github.com/robertkrimen/otto) is a JavaScript virtual machine written by Robert Krimen.  The _ottoengine_ allows easy route oriented API prototyping.  Each JavaScript file rendered in the Otto virtual machine becomes a route.  E.g. *example-1.js* becomes the route */example-1*. *example-1* should contain a closure which can recieve a "Request" and "Response" object as parameters. The "Response" object is used to tell the web server what to send back to the browser requesting the route.
-
-### example JavaScript route definition
-
-If this file is in the directory defined by the environment variable WS_OTTO_PATH and is named *example-1.js" then the URL requesting (e.g. GET, POST, PUT, DELETE) of /example-1 will run receive the response based on the following JavaScript.
-
-```JavaScript
-    /* example-1.js - a simple example of Request and Response objects */
-    (function (req, res) {
-        var header = req.Header;
-
-        res.setHeader("content-type", "text/html");
-        res.setContent("<p>Here is the Header array received by this request</p>" +
-            "<pre>" + JSON.stringify(header) + "</pre>");
-    }(Request, Response));
-```
-
-Assuming _ottoengine_ is turned on then the page rendered should have a content type of "text/html" with the body shoulding the paragraph about exposing the request headers as a JSON blob.  Two command line options or environment variables turn _ottoengine_ on.
-
-+ -jsdocs, WS_JSDOCS - sets the path to the scripts used to defined the routes being handled. This path turns on otto engine support. Each file found in the path becomes a route.
-
-That's the basics of _ws_ a nimble webserver.
 

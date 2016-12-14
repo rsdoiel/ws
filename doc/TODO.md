@@ -3,6 +3,9 @@
 
 ## Someday Maybe
 
++ create a tool for collecting metadata for generating RSS 2 and Atom feeds
++ create a sitemapper tool to generate sitemaps based on Markdown content the related HTML files
++ create a idxpages to index the site and provide Bleve search support in _ws_
 + create wsedit for remote editing content of specific files over https connections.
     + look at CodeMirror and AceEditor as candidates for web browser editing
     + research best approach to embedding the editor in the go compiled binary

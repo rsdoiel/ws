@@ -11,14 +11,13 @@ You can easily make you own self signed certificates for development purposes us
 	chmod 700 key.pem
 ```
 
-Make sure your key.pem file is protected. For _ws_ and _wsjs_ use command line options or environment variables to specify the certs.
-
-You can also use the _ws -init_ command, to generate a directory structure as well as SSL certs if the WS_URL environment variable starts with an https protocol.
+Make sure your key.pem file is protected. For _ws_ command line options or environment variables to specify the key and cert pair.
 
 ```shell
+   export WS_DOCROOT=Site
    export WS_URL=https://mysite.example.org:443
-   ws -init
+   export WS_SSL_KEY=etc/ws/key.pem
+   export WS_SSL_CERT=etc/ws/cert.pem
+   ws 
 ```
-
-Same is try of the _ws -init_ command.
 
