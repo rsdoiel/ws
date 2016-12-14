@@ -36,7 +36,7 @@ import (
 
 const (
 	// Version is used as a release number number for ws, wsinit, wsindexer
-	Version = "0.0.8"
+	Version = "v0.0.9"
 )
 
 // Configuration provides the basic settings used by _ws_ and _wsint_ commands.
