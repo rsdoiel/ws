@@ -32,3 +32,4 @@ bin/*
 *.conf
 testout
 setup.bash
+*zip
