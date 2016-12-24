@@ -2,14 +2,16 @@
 # Biuld the project.
 #
 
+PROJECT = ws
+
 PROG = ws
 
-build: cmd/$(PROG)/$(PROG).go $(PROG).go
+VERSION = $(shell grep -m1 'Version = ' $(PROJECT).go | cut -d\"  -f 2)
 
-$(PROG).go:
-	env CGO_ENABLED=0 go build
+BRANCH = $(shell git branch | grep "* " | cut -d\  -f 2)
 
-cmd/$(PROG)/$(PROG).go:
+
+build:
 	env CGO_ENABLED=0 go build -o bin/$(PROG) cmds/$(PROG)/$(PROG).go
 
 lint:
@@ -22,7 +24,7 @@ install:
 clean: 
 	if [ -d bin ]; then /bin/rm -fR bin; fi
 	if [ -d dist ]; then /bin/rm -fR dist; fi
-	if [ -f ws-release.zip ]; then /bin/rm ws-release.zip; fi
+	if [ -f $(PROJECT)-$(VERSION)-release.zip ]; then /bin/rm $(PROJECT)-$(VERSION)-release.zip; fi
 
 test:
 	go test
@@ -31,7 +33,7 @@ test:
 
 save:
 	git commit -am "Quick save"
-	git push origin master
+	git push origin $(BRANCH)
 
 release:
 	./mk-release.bash
