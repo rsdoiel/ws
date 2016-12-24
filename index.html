@@ -15,18 +15,17 @@
 
 <h2>A nimble web server</h2>
 
-<p><em>ws</em> is a prototyping platform for websites.</p>
-
-<p><em>ws</em> started as a nimble static content web server.<br />
-It supports an <em>init</em> option which generates a project directory
-structure, creates self signed SSL keys and displays suggested environment
-variables for use with <em>ws</em>.  If the directory structure already exists it
-will display the suggest setup.</p>
+<p><em>ws</em> is a nimble static content web server.  That&rsquo;s it, no bells,
+no whistles. It can serve http and https version 1 and 2 websites
+as it is a minimal solution built on Go&rsquo;s http/https packages.
+By default it serves the content out your current working directory
+as <a href="http://localhost:8000">http://localhost:8000</a>.  It will NOT serve out content in directories
+beginning with a period (e.g. .ssh, .git).</p>
 
 <h2>Requirements</h2>
 
 <ul>
-<li><a href="http://golang.org">Golang</a> version 1.7.1 or better</li>
+<li><a href="http://golang.org">Golang</a> version 1.7.3 or better</li>
 </ul>
 
 <h2>Setup</h2>
@@ -72,15 +71,6 @@ will display the suggest setup.</p>
 <ul>
 <li>http/https protocols</li>
 <li>static file server</li>
-<li>a project setup option called <em>init</em></li>
-</ul>
-
-<p><em><em>ws</em> init</em> takes three actions</p>
-
-<ul>
-<li>create a basic site directory structure (e.g. htdocs, etc) if needed</li>
-<li>creates self signed SSL certificates (e.g. etc/site.key, etc/site.pem) if appropriate</li>
-<li>suggests environment variable settings (e.g like you might put in etc/setup.conf)</li>
 </ul>
 
 <h2>Configuration</h2>
@@ -121,7 +111,6 @@ overwritten by command line options.</p>
 <li>-d, -docs overrides WS_DOCROOT</li>
 <li>-k, -key overrides WS_SSL_KEY</li>
 <li>-c, -cert overrides WS_SSL_CERT</li>
-<li>-i, -init triggers the initialization process</li>
 <li>-h, -help displays the help documentation</li>
 <li>-v, -version display the version of the command</li>
 <li>-l, -license display software license</li>
