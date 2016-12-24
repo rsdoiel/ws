@@ -25,4 +25,4 @@ cp -v REAMDE.md dist/
 cp -v LICENSE dist/
 cp -v INSTALL.md dist/
 echo "Zipping $RELEASE_NAME"
-zip -r "$RELEASE_NAME-binary-release.zip" README.md INSTALL.md LICENSE dist/*
+zip -r "$RELEASE_NAME-release.zip" dist/*
